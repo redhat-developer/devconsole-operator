@@ -9,5 +9,7 @@ spec:
     listKind: EnvDeploymentList
     plural: envdeployments
     singular: envdeployment
+    shortNames:
+      - envdeploy
   scope: Namespaced
   version: v1alpha1

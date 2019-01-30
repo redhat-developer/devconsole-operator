@@ -9,5 +9,27 @@ spec:
     listKind: EnvironmentList
     plural: environments
     singular: environment
+    shortNames:
+      - env
   scope: Namespaced
+  validation:
+    # openAPIV3Schema is the schema for validating custom objects.
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            type:
+              type: string
+              enum:
+                - 'deploy'
+#            cluster:
+#              type: string
+            namespace:
+              type: string
   version: v1alpha1
