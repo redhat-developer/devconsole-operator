@@ -5,3 +5,5 @@ metadata:
 spec:
   # Add fields here
   type: 'deploy'
+  namespace: 'myproject'
+#  cluster:

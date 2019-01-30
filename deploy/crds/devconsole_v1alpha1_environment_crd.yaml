@@ -29,7 +29,7 @@ spec:
               enum:
                 - 'deploy'
 #            cluster:
-#              type: string
+#              type: object
             namespace:
               type: string
   version: v1alpha1
