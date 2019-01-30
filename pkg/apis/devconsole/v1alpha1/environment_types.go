@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	clusterv1alpha1 "github.com/alexeykazakov/devconsole/pkg/apis/clusterregistry/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -17,15 +16,27 @@ type EnvironmentSpec struct {
 	// +optional
 	Type string `json:"name,omitempty" protobuf:"bytes,2,opt,name=type"`
 
-	// Cluster contains information about a cluster.
+	// ClusterRef contains that points to the cluster.
 	// If empty then the current cluster should be used.
 	// +optional
-	Cluster clusterv1alpha1.Cluster `json:"cluster,omitempty" protobuf:"bytes,2,opt,name=cluster"`
+	ClusterRef ClusterRef `json:"clusterRef,omitempty" protobuf:"bytes,2,opt,name=clusterRef"`
 
 	// Namespace contains the namespace of the environment.
 	// If empty then the current namespace should be used.
 	// +optional
 	Namespace string `json:"namespace,omitempty" protobuf:"bytes,3,opt,name=namespace"`
+}
+
+// ClusterRef contains information that points to the cluster
+type ClusterRef struct {
+	// APIGroup is the group for the resource being referenced
+	APIGroup string `json:"apiGroup" protobuf:"bytes,1,opt,name=apiGroup"`
+
+	// Kind is the type of resource being referenced
+	Kind string `json:"kind" protobuf:"bytes,2,opt,name=kind"`
+
+	// Name is the name of resource being referenced
+	Name string `json:"name" protobuf:"bytes,3,opt,name=name"`
 }
 
 // EnvironmentStatus defines the observed state of Environment

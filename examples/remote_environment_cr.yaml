@@ -6,4 +6,7 @@ spec:
   # Add fields here
   type: 'deploy'
   namespace: 'myproject'
-#  cluster:
+  clusterRef:
+    kind: Cluster # this must be Cluster
+    name: dsaas-stg # this must match the name of the Cluster you wish to point to
+    apiGroup: devconsole.openshift.io
