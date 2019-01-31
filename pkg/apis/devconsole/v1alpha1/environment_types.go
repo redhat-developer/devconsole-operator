@@ -14,9 +14,9 @@ type EnvironmentSpec struct {
 	// Type contains the type of the environment.
 	// should be treated as "deploy" if nil
 	// +optional
-	Type string `json:"name,omitempty" protobuf:"bytes,2,opt,name=type"`
+	Type string `json:"name,omitempty" protobuf:"bytes,1,opt,name=type"`
 
-	// ClusterRef contains that points to the cluster.
+	// ClusterRef points to the cluster targeted by this environment
 	// If empty then the current cluster should be used.
 	// +optional
 	ClusterRef ClusterRef `json:"clusterRef,omitempty" protobuf:"bytes,2,opt,name=clusterRef"`

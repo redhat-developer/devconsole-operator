@@ -1,7 +1,0 @@
-apiVersion: devconsole.openshift.io/v1alpha1
-kind: EnvDeployment
-metadata:
-  name: example-envdeployment
-spec:
-  # Add fields here
-  size: 3

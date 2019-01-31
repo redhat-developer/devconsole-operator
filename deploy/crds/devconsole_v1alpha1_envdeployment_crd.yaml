@@ -12,4 +12,34 @@ spec:
     shortNames:
       - envdeploy
   scope: Namespaced
+  validation:
+    # openAPIV3Schema is the schema for validating custom objects.
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            environmentRef:
+              type: object
+              properties:
+                kind:
+                  type: string
+                name:
+                  type: string
+                apiGroup:
+                  type: string
+            deploymentRef:
+              type: object
+              properties:
+                kind:
+                  type: string
+                name:
+                  type: string
+                apiGroup:
+                  type: string
   version: v1alpha1

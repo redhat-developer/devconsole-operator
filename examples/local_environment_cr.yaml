@@ -1,7 +1,7 @@
 apiVersion: devconsole.openshift.io/v1alpha1
 kind: Environment
 metadata:
-  name: example-environment
+  name: devenv
 spec:
   # Add fields here
   type: 'deploy'
