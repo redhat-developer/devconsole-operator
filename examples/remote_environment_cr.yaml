@@ -1,4 +1,4 @@
-apiVersion: devconsole.openshift.io/v1alpha1
+apiVersion: devopsconsole-operator.openshift.io/v1alpha1
 kind: Environment
 metadata:
   name: dsaas-staging

@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/alexeykazakov/devconsole/pkg/apis/clusterregistry/v1alpha1"
+	"github.com/redhat-developer/devopsconsole-operator/pkg/apis/clusterregistry/v1alpha1"
 )
 
 func init() {
