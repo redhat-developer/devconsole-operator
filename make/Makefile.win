@@ -1,0 +1,11 @@
+BINARY_SERVER_BIN=$(INSTALL_PREFIX)/devconsole-operator.exe
+GO_BIN_NAME=go.exe
+GIT_BIN_NAME=git.exe
+DEP_BIN_NAME=dep.exe
+DOCKER_BIN_NAME=docker.exe
+CHECK_GOPATH_BIN= $(INSTALL_PREFIX)/check_gopath.exe
+GOCOV_BIN=$(VENDOR_DIR)/github.com/axw/gocov/gocov/gocov.exe
+GOCOVMERGE_BIN=$(VENDOR_DIR)/github.com/wadey/gocovmerge/gocovmerge.exe
+GOCYCLO_DIR=$(VENDOR_DIR)/github.com/fzipp/gocyclo
+GOCYCLO_BIN=$(GOCYCLO_DIR)/gocyclo.exe
+GOLANGCI_LINT_BIN_NAME:=golangci-lint.exe
