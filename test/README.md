@@ -1,7 +1,5 @@
 ## E2E Tests
 
-E2E tests are verifying successful deployment of the DevOps Console Operator and creation of self-provisioning service account.
-
 ### How to Run
 
 #### TL;DR

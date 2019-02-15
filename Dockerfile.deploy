@@ -2,17 +2,17 @@ FROM centos:7
 LABEL maintainer "Devtools <devtools@redhat.com>"
 LABEL author "Devtools <devtools@redhat.com>"
 ENV LANG=en_US.utf8
-ENV F8_INSTALL_PREFIX=/usr/local/devconsole-operator
+ENV INSTALL_PREFIX=/usr/local/devconsole-operator
 
 # Create a non-root user and a group with the same name: "devconsole-operator"
 ENV F8_USER_NAME=devconsole-operator
 RUN useradd --no-create-home -s /bin/bash ${F8_USER_NAME}
 
-COPY bin/devconsole-operator ${F8_INSTALL_PREFIX}/bin/devconsole-operator
+COPY bin/devconsole-operator ${INSTALL_PREFIX}/bin/devconsole-operator
 
 # From here onwards, any RUN, CMD, or ENTRYPOINT will be run under the following user
 USER ${F8_USER_NAME}
 
-WORKDIR ${F8_INSTALL_PREFIX}
+WORKDIR ${INSTALL_PREFIX}
 
 ENTRYPOINT [ "bin/devconsole-operator" ]

@@ -74,8 +74,6 @@ clean-resources:
 	@oc delete -f $(DEPLOY_DIR)/namespace.yaml || true
 	@echo "Deleting Custom Resource Definitions..."
 	@oc delete -f $(DEPLOY_DIR)/crds/devconsole_v1alpha1_envdeployment_crd.yaml || true
-	@echo "Deleting OAuthClient 'codeready-devconsole'"
-	@oc delete oauthclient codeready-devconsole || true
 
 .PHONY: deploy-operator
 deploy-operator: build build-image deploy-operator-only

@@ -1,5 +1,5 @@
 PROJECT_NAME=devopsconsole-operator
-PACKAGE_NAME:=github.com/fabric8-services/$(PROJECT_NAME)
+PACKAGE_NAME:=github.com/redhat-developer/$(PROJECT_NAME)
 CUR_DIR=$(shell pwd)
 TMP_PATH=$(CUR_DIR)/tmp
 INSTALL_PREFIX=$(CUR_DIR)/bin

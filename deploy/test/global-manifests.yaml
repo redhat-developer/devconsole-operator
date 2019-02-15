@@ -18,25 +18,6 @@ metadata:
   name: devconsole
 rules:
 - apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterrolebindings
-  verbs:
-  - '*'
-- apiGroups:
-  - oauth.openshift.io
-  resources:
-  - oauthclients
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  - project.openshift.io
-  resources:
-  - projectrequests
-  verbs:
-  - create
-- apiGroups:
   - codeready.io
   resources:
   - devconsole/finalizers

@@ -125,9 +125,6 @@ e2e-setup:  e2e-cleanup
 .PHONY: e2e-cleanup
 e2e-cleanup:
 	oc login -u system:admin
-	oc delete oauthclient codeready-devconsole || true
-	oc delete clusterrolebinding devconsole-enabler || true
-	oc delete clusterrole devconsole-enabler || true
 	oc delete project devconsole-e2e-test || true
 
 #-------------------------------------------------------------------------------
