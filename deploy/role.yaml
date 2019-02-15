@@ -33,7 +33,7 @@ rules:
   - get
   - create
 - apiGroups:
-  - devopsconsole-operator.openshift.io
+  - devopsconsole.openshift.io
   resources:
   - '*'
   - envdeployments
