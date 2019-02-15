@@ -14,7 +14,6 @@
 #
 #     $ make test-unit
 #
-#
 # To run all tests, type
 #
 #     $ make test-all
@@ -26,7 +25,6 @@
 # To generate unit-test HTML representation of coverage profile (opens a browser), type
 #
 #     $ make coverage-unit-html
-#
 #
 # To output all coverage profile information for each function, type
 #
@@ -100,22 +98,22 @@ GOANALYSIS_DIRS=$(shell go list -f {{.Dir}} ./... | grep -v -E $(GOANALYSIS_PKGS
 #-------------------------------------------------------------------------------
 
 .PHONY: test-all
-## Runs the test-unit targets.
-test-all: prebuild-check test-unit
+## Runs the unit tests and e2e tests
+test-all: prebuild-check test-unit test-e2e
 
-.PHONY: test-unit-with-coverage
 # Runs the unit tests and produces coverage files for each package.
+.PHONY: test-unit-with-coverage
 test-unit-with-coverage: prebuild-check clean-coverage-unit $(COV_PATH_UNIT)
 
 .PHONY: test-unit
-## Runs the unit tests and WITHOUT producing coverage files for each package.
+## Runs the unit tests without coverage
 test-unit: prebuild-check $(SOURCES)
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	ADMIN_LOG_LEVEL=$(ADMIN_LOG_LEVEL) go test -vet off $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
 
 .PHONY: test-e2e
-## Runs the e2e tests and WITHOUT producing coverage files for each package.
+## Runs the e2e tests without coverage
 test-e2e: build build-image e2e-setup
 	$(call log-info,"Running E2E test: $@")
 	go test ./test/e2e/... -root=$(PWD) -kubeconfig=$(HOME)/.kube/config -globalMan deploy/test/global-manifests.yaml -namespacedMan deploy/test/namespace-manifests.yaml -v -parallel=1 -singleNamespace
@@ -195,9 +193,10 @@ define cleanup-coverage-file
 @sed -i '/.*\/confbindata\.go.*/d' $(1)
 endef
 
-.PHONY: coverage-unit
 # Output coverage profile information for each function (only based on unit-tests).
 # Re-runs unit-tests if coverage information is outdated.
+.PHONY: coverage-unit
+## Runs the unit tests with producing coverage files for each package
 coverage-unit: prebuild-check $(COV_PATH_UNIT)
 	$(call cleanup-coverage-file,$(COV_PATH_UNIT))
 	@go tool cover -func=$(COV_PATH_UNIT)
@@ -214,9 +213,10 @@ coverage-all: prebuild-check clean-coverage-overall $(COV_PATH_OVERALL)
 
 # HTML coverage output:
 
-.PHONY: coverage-unit-html
 # Generate HTML representation (and show in browser) of coverage profile (based on unit tests).
 # Re-runs unit tests if coverage information is outdated.
+.PHONY: coverage-unit-html
+## Runs the unit tests with producing coverage html for each package
 coverage-unit-html: prebuild-check $(COV_PATH_UNIT)
 	$(call cleanup-coverage-file,$(COV_PATH_UNIT))
 	@go tool cover -html=$(COV_PATH_UNIT)

@@ -8,23 +8,24 @@ INCLUDE_DIR=make
 SOURCE_DIR ?= .
 SOURCES := $(shell find $(SOURCE_DIR) -path $(SOURCE_DIR)/vendor -prune -o -name '*.go' -print)
 
-ifeq ($(OS),Windows_NT)
-	include ./$(INCLUDE_DIR)/Makefile.win
-else
-	include ./$(INCLUDE_DIR)/Makefile.lnx
-endif
+BINARY_SERVER_BIN=$(INSTALL_PREFIX)/devconsole-operator
+GO_BIN_NAME=go
+GIT_BIN_NAME=git
+DEP_BIN_NAME=dep
+DOCKER_BIN_NAME=docker
+UNAME_S=$(shell uname -s)
+GOCOV_BIN=$(VENDOR_DIR)/github.com/axw/gocov/gocov/gocov
+GOCOVMERGE_BIN=$(VENDOR_DIR)/github.com/wadey/gocovmerge/gocovmerge
+GOCYCLO_DIR=$(VENDOR_DIR)/github.com/fzipp/gocyclo
+GOCYCLO_BIN=$(GOCYCLO_DIR)/gocyclo
+GOLANGCI_LINT_BIN_NAME:=golangci-lint
 
 # declares variable that are OS-sensitive
 include ./$(INCLUDE_DIR)/test.mk
 include ./$(INCLUDE_DIR)/Makefile.dev
 
 DOCKER_BIN := $(shell command -v $(DOCKER_BIN_NAME) 2> /dev/null)
-
-ifneq ($(OS),Windows_NT)
-	ifdef DOCKER_BIN
-		include ./$(INCLUDE_DIR)/docker.mk
-	endif
-endif
+include ./$(INCLUDE_DIR)/docker.mk
 
 # This is a fix for a non-existing user in passwd file when running in a docker
 # container and trying to clone repos of dependencies
@@ -82,7 +83,7 @@ image: clean-artifacts build-linux
 
 .PHONY: help
 # Based on https://gist.github.com/rcmachado/af3db315e31383502660
-## Display this help text.
+## Display this help text
 help:/
 	$(info Available targets)
 	$(info -----------------)
@@ -140,7 +141,7 @@ endif
 # -------------------------------------------------------------------
 
 .PHONY: deps
-## Download build dependencies.
+## Download build dependencies
 deps: $(DEP_BIN) $(VENDOR_DIR)
 
 # install dep in a the tmp/bin dir of the repo
@@ -171,8 +172,8 @@ $(VENDOR_DIR): Gopkg.toml
 GOFORMAT_FILES := $(shell find  . -name '*.go' | grep -vEf $(INCLUDE_DIR)/gofmt_exclude)
 
 .PHONY: check-go-format
-# Exists with an error if there are files whose formatting differs from gofmt's
-check-go-format: prebuild-check deps ## Exists with an error if there are files whose formatting differs from gofmt's
+## Exits with an error if there are files that do not match formatting defined by gofmt
+check-go-format: prebuild-check deps
 	@gofmt -s -l ${GOFORMAT_FILES} 2>&1 \
 		| tee /tmp/gofmt-errors \
 		| read \
@@ -182,22 +183,22 @@ check-go-format: prebuild-check deps ## Exists with an error if there are files 
 	|| true
 
 .PHONY: analyze-go-code
-# Run golangci analysis over the code.
-analyze-go-code: deps ## Run golangci analysis over the code.
+## Run golangci analysis over the code
+analyze-go-code: deps	
 	$(info >>--- RESULTS: GOLANGCI CODE ANALYSIS ---<<)
 	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 	@golangci-lint run
 
 .PHONY: format-go-code
-# Formats any go file that differs from gofmt's style
-format-go-code: prebuild-check ## Formats any go file that differs from gofmt's style
+## Formats any go file that does not match formatting defined by gofmt
+format-go-code: prebuild-check
 	@gofmt -s -l -w ${GOFORMAT_FILES}
 
 # -------------------------------------------------------------------
 # Code format/check with golangci-lint
 # -------------------------------------------------------------------
 .PHONY: check-go-code
-## Checks the code with golangci-lint (see .golangci.yaml)
+## Checks the code with golangci-lint
 check-go-code: $(GOLANGCI_LINT_BIN)
 	@echo "checking code..."
 	$(GOLANGCI_LINT_BIN) run
@@ -257,7 +258,7 @@ clean-tmp:
 
 # Keep this "clean" target here after all `clean-*` sub tasks
 .PHONY: clean
-## Runs all clean-* targets.
+## Cleans the project, removes all generated code/bins and vendor packages
 clean: $(CLEAN_TARGETS)
 
 # -------------------------------------------------------------------
@@ -265,7 +266,7 @@ clean: $(CLEAN_TARGETS)
 # -------------------------------------------------------------------
 
 .PHONY: build
-## Build the server
+## Build the operator
 build: prebuild-check deps
 	@echo "building $(BINARY_SERVER_BIN)..."
 	go build -v -o $(BINARY_SERVER_BIN) cmd/manager/main.go

@@ -28,13 +28,13 @@ GOPATH_IN_CONTAINER=/tmp/go
 PACKAGE_PATH=$(GOPATH_IN_CONTAINER)/src/$(PACKAGE_NAME)
 
 .PHONY: docker-image-builder
-## Builds the docker image used to build the software.
+## Builds the docker image used to build the software
 docker-image-builder:
 	@echo "Building docker image $(DOCKER_IMAGE_CORE)"
 	docker build --build-arg USE_GO_VERSION_FROM_WEBSITE=$(USE_GO_VERSION_FROM_WEBSITE) -t $(DOCKER_IMAGE_CORE) -f $(CUR_DIR)/Dockerfile.builder $(CUR_DIR)
 
 .PHONY: docker-image-deploy
-## Creates a runnable image using the artifacts from the bin directory.
+## Creates a runnable image using the artifacts from the bin directory
 docker-image-deploy:
 	docker build -t $(DOCKER_IMAGE_DEPLOY) -f $(CUR_DIR)/$(DOCKERFILE_DEPLOY) $(CUR_DIR)
 
