@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/alexeykazakov/devconsole/pkg/controller/envdeployment"
+	"github.com/redhat-developer/devopsconsole-operator/pkg/controller/envdeployment"
 )
 
 func init() {

@@ -1,4 +1,4 @@
-apiVersion: devconsole.openshift.io/v1alpha1
+apiVersion: devopsconsole.openshift.io/v1alpha1
 kind: EnvDeployment
 metadata:
   name: my-local-deployment
@@ -7,7 +7,7 @@ spec:
   environmentRef:
     kind: Environment # this must be Environment
     name: devenv # this must match the name of the Environment you wish to point to
-    apiGroup: devconsole.openshift.io
+    apiGroup: devopsconsole.openshift.io
   deploymentRef:
     kind: DeploymentConfig # this must be DeploymentConfig
     name: my-deployment # this must match the name of the DeploymentConfig you wish to point to

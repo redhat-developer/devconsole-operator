@@ -7,12 +7,12 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/alexeykazakov/devconsole/pkg/apis"
-	"github.com/alexeykazakov/devconsole/pkg/controller"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	"github.com/operator-framework/operator-sdk/pkg/ready"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	"github.com/redhat-developer/devopsconsole-operator/pkg/apis"
+	"github.com/redhat-developer/devopsconsole-operator/pkg/controller"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -53,7 +53,7 @@ func main() {
 	}
 
 	// Become the leader before proceeding
-	err = leader.Become(context.TODO(), "devconsole-lock")
+	err = leader.Become(context.TODO(), "devopsconsole-operator-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
