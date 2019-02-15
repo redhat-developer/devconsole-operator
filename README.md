@@ -15,13 +15,13 @@ $ make install
 Add a new API for the custom resource AppService
 
 ```sh
-$ operator-sdk add api --api-version=devconsole.openshift.io/v1alpha1 --kind=AppService
+$ operator-sdk add api --api-version=devopsconsole.openshift.io/v1alpha1 --kind=AppService
 ```
 
 Add a new controller that watches for AppService
 
 ```sh
-$ operator-sdk add controller --api-version=devconsole.openshift.io/v1alpha1 --kind=AppService
+$ operator-sdk add controller --api-version=devopsconsole.openshift.io/v1alpha1 --kind=AppService
 ```
 
 Apply the app-operator CRD.

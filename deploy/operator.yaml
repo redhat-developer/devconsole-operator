@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devconsole
+  name: devopsconsole-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: devconsole
+      name: devopsconsole-operator
   template:
     metadata:
       labels:
-        name: devconsole
+        name: devopsconsole-operator
     spec:
-      serviceAccountName: devconsole
+      serviceAccountName: devopsconsole-operator
       containers:
-        - name: devconsole
+        - name: devopsconsole-operator
           # Replace this with the built image name
           image: REPLACE_IMAGE
           ports:
           - containerPort: 60000
             name: metrics
           command:
-          - devconsole
+          - devopsconsole-operator
           imagePullPolicy: Always
           readinessProbe:
             exec:
@@ -41,4 +41,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "devconsole"
+              value: "devopsconsole-operator"

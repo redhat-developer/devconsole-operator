@@ -3,7 +3,7 @@ package envdeployment
 import (
 	"context"
 
-	devconsolev1alpha1 "github.com/alexeykazakov/devconsole/pkg/apis/devconsole/v1alpha1"
+	devopsconsoleoperatorv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,7 +46,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource EnvDeployment
-	err = c.Watch(&source.Kind{Type: &devconsolev1alpha1.EnvDeployment{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &devopsconsoleoperatorv1alpha1.EnvDeployment{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Watch for changes to secondary resource Pods and requeue the owner EnvDeployment
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &devconsolev1alpha1.EnvDeployment{},
+		OwnerType:    &devopsconsoleoperatorv1alpha1.EnvDeployment{},
 	})
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func (r *ReconcileEnvDeployment) Reconcile(request reconcile.Request) (reconcile
 	reqLogger.Info("Reconciling EnvDeployment")
 
 	// Fetch the EnvDeployment instance
-	instance := &devconsolev1alpha1.EnvDeployment{}
+	instance := &devopsconsoleoperatorv1alpha1.EnvDeployment{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -129,7 +129,7 @@ func (r *ReconcileEnvDeployment) Reconcile(request reconcile.Request) (reconcile
 }
 
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *devconsolev1alpha1.EnvDeployment) *corev1.Pod {
+func newPodForCR(cr *devopsconsoleoperatorv1alpha1.EnvDeployment) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
