@@ -1,0 +1,10 @@
+apiVersion: devopsconsole.openshift.io/v1alpha1
+kind: Component
+metadata:
+  name: f8-ui
+spec:
+  # Add fields here
+  app: "openshiftio"
+  buildtype: "nodejs"
+  codebase: "https://github.com/sbose78/nodejs-rest-http-crud"
+  listenport: 8080

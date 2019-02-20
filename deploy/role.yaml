@@ -37,6 +37,7 @@ rules:
   resources:
   - '*'
   - envdeployments
+  - components
   verbs:
   - '*'
 - apiGroups:
