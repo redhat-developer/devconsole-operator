@@ -191,7 +191,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Skip reconcile: Checking if bc exists", "ImageStream.Namespace", found.Namespace, "Pod.Name", found.Name)
+	reqLogger.Info("Skip reconcile: Checking if image stream exists", "ImageStream.Namespace", found.Namespace, "Pod.Name", found.Name)
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newIS.Name, Namespace: newIS.Namespace}, foundImageStream)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -202,7 +202,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 
-		// BuildConfig created successfully - don't requeue
 		reqLogger.Info("Skip reconcile: ImageStream already exists", "ImageStream.Namespace", foundImageStream.Namespace, "ImageStream.Name", foundImageStream.Name)
 
 		return reconcile.Result{}, nil
@@ -220,7 +219,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Skip reconcile: Checking if bc exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newDeploymentConfig.Name, Namespace: newDeploymentConfig.Namespace}, newDeploymentConfig)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -231,7 +229,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 
-		// BuildConfig created successfully - don't requeue
 		reqLogger.Info("Skip reconcile: DC already exists", "dc.Namespace", newDeploymentConfig.Namespace, "dc.Name", foundDeploymentConfig.Name)
 		return reconcile.Result{}, nil
 
@@ -239,7 +236,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
-	// Pod already exists - don't requeue
 	return reconcile.Result{}, nil
 }
 
