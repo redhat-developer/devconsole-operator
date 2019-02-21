@@ -65,31 +65,36 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner Component
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &devopsconsolev1alpha1.Component{},
-	})
-	if err != nil {
-		return err
-	}
+	/*
 
-	err = c.Watch(&source.Kind{Type: &imagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &devopsconsolev1alpha1.Component{},
-	})
-	if err != nil {
-		return err
-	}
+		// TODO(user): Modify this to be the types you create that are owned by the primary resource
+		// Watch for changes to secondary resource Pods and requeue the owner Component
+		err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &devopsconsolev1alpha1.Component{},
+		})
+		if err != nil {
+			return err
+		}
 
-	err = c.Watch(&source.Kind{Type: &buildv1.BuildConfig{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &devopsconsolev1alpha1.Component{},
-	})
-	if err != nil {
-		return err
-	}
+
+		err = c.Watch(&source.Kind{Type: &imagev1.ImageStream{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &devopsconsolev1alpha1.Component{},
+		})
+		if err != nil {
+			return err
+		}
+
+
+		err = c.Watch(&source.Kind{Type: &buildv1.BuildConfig{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &devopsconsolev1alpha1.Component{},
+		})
+		if err != nil {
+			return err
+		}
+	*/
 
 	return nil
 }
@@ -113,7 +118,7 @@ type ReconcileComponent struct {
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Component - because of primary resource or a secondary resource")
+	reqLogger.Info("Reconciling Component - because of primary resource.")
 
 	// Fetch the Component instance
 	instance := &devopsconsolev1alpha1.Component{}
@@ -123,36 +128,33 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			reqLogger.Info("Got triggered when owned objects are being deleted. Looks like primary resource is gone!")
+			reqLogger.Info("Looks like primary resource is gone!")
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
+	// // Define a new Pod object
+	// pod := newPodForCR(instance)
 
-	// Set Component instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
+	// // Set Component instance as the owner and controller
+	// if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
+	// 	return reconcile.Result{}, err
+	// }
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
-	}
+	// // Check if this Pod already exists
+	// found := &corev1.Pod{}
+	// err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+	// if err != nil && errors.IsNotFound(err) {
+	// 	reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
+	// 	err = r.client.Create(context.TODO(), pod)
+	// 	if err != nil {
+	// 		return reconcile.Result{}, err
+	// 	}
+	// } else if err != nil {
+	// 	return reconcile.Result{}, err
+	// }
 
 	newBuildConfig := newBuildConfigForCR(instance)
 	foundBuildConfig := &buildv1.BuildConfig{}
@@ -175,7 +177,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 
 		// BuildConfig created successfully - don't requeue
 		reqLogger.Info("BuildConfig created", "BuildConfig.Namespace", foundBuildConfig.Namespace, "BuildConfig.Name", foundBuildConfig.Name)
-		return reconcile.Result{}, nil
 
 	} else if err != nil {
 		return reconcile.Result{}, err
@@ -203,8 +204,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 
 		reqLogger.Info("ImageStream created", "ImageStream.Namespace", foundImageStream.Namespace, "ImageStream.Name", foundImageStream.Name)
 
-		return reconcile.Result{}, nil
-
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -229,7 +228,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		}
 
 		reqLogger.Info("DC created", "DeploymentConfig.Namespace", newDeploymentConfig.Namespace, "DeploymentConfig.Name", foundDeploymentConfig.Name)
-		return reconcile.Result{}, nil
 
 	} else if err != nil {
 		return reconcile.Result{}, err
