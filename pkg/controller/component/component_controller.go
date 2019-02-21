@@ -113,7 +113,7 @@ type ReconcileComponent struct {
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Component")
+	reqLogger.Info("Reconciling Component - because of primary resource or a secondary resource")
 
 	// Fetch the Component instance
 	instance := &devopsconsolev1alpha1.Component{}
@@ -123,6 +123,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			reqLogger.Info("Got triggered when owned objects are being deleted. Looks like primary resource is gone!")
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
@@ -152,7 +153,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 
 	newBuildConfig := newBuildConfigForCR(instance)
 	foundBuildConfig := &buildv1.BuildConfig{}
@@ -163,7 +163,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Skip reconcile: Checking if bc exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newBuildConfig.Name, Namespace: newBuildConfig.Namespace}, foundBuildConfig)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -175,7 +174,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		}
 
 		// BuildConfig created successfully - don't requeue
-		reqLogger.Info("Skip reconcile: BuildConfig already exists", "BuildConfig.Namespace", foundBuildConfig.Namespace, "BuildConfig.Name", foundBuildConfig.Name)
+		reqLogger.Info("BuildConfig created", "BuildConfig.Namespace", foundBuildConfig.Namespace, "BuildConfig.Name", foundBuildConfig.Name)
 		return reconcile.Result{}, nil
 
 	} else if err != nil {
@@ -191,7 +190,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
-	reqLogger.Info("Skip reconcile: Checking if image stream exists", "ImageStream.Namespace", found.Namespace, "Pod.Name", found.Name)
+	//reqLogger.Info("Checking if image stream exists", "ImageStream.Namespace", found.Namespace, "Pod.Name", found.Name)
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newIS.Name, Namespace: newIS.Namespace}, foundImageStream)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -202,7 +201,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 
-		reqLogger.Info("Skip reconcile: ImageStream already exists", "ImageStream.Namespace", foundImageStream.Namespace, "ImageStream.Name", foundImageStream.Name)
+		reqLogger.Info("ImageStream created", "ImageStream.Namespace", foundImageStream.Namespace, "ImageStream.Name", foundImageStream.Name)
 
 		return reconcile.Result{}, nil
 
@@ -222,14 +221,14 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newDeploymentConfig.Name, Namespace: newDeploymentConfig.Namespace}, newDeploymentConfig)
 	if err != nil && errors.IsNotFound(err) {
 
-		reqLogger.Info("Creating a new dc", "Buildconfig.Namespace", newDeploymentConfig.Namespace, "BuildConfig.Name", newDeploymentConfig.Name)
+		reqLogger.Info("Creating a new dc", "DeploymentConfig.Namespace", newDeploymentConfig.Namespace, "DeploymentConfig.Name", newDeploymentConfig.Name)
 
 		err = r.client.Create(context.TODO(), newDeploymentConfig)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
-		reqLogger.Info("Skip reconcile: DC already exists", "dc.Namespace", newDeploymentConfig.Namespace, "dc.Name", foundDeploymentConfig.Name)
+		reqLogger.Info("DC created", "DeploymentConfig.Namespace", newDeploymentConfig.Namespace, "DeploymentConfig.Name", foundDeploymentConfig.Name)
 		return reconcile.Result{}, nil
 
 	} else if err != nil {
