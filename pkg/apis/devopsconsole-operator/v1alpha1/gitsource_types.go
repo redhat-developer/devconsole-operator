@@ -34,6 +34,9 @@ type GitSourceSpec struct {
 
 	// SourceSecret is the name of the secret that contains credentials to access the git repo. Optional.
 	SourceSecret string `json:"sourceSecret,omitempty"`
+
+	// Flavor of the git provider like github, gitlab, bitbucket, generic, etc. Optional.
+	Flavor string `json:"flavor,omitempty"`
 }
 
 // GitSourceStatus defines the observed state of GitSource

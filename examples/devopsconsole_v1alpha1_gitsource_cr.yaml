@@ -3,5 +3,11 @@ kind: GitSource
 metadata:
   name: example-gitsource
 spec:
-  # Add fields here
   url: https://github.com/redhat-developer/devopsconsole-operator
+  ref: master
+  contextDir: /cmd/manager
+  httpProxy: http://proxy.example.com
+  httpsProxy: https://proxy.example.com
+  noProxy: somedomain.com, otherdomain.com
+  sourceSecret: mysecret
+  flavor: github

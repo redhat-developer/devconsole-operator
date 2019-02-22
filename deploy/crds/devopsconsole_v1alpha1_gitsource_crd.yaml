@@ -38,4 +38,6 @@ spec:
               type: string
             sourceSecret:
               type: string
+            flavor:
+              type: string
   version: v1alpha1
