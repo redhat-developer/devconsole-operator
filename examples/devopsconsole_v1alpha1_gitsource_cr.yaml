@@ -1,0 +1,7 @@
+apiVersion: devopsconsole.openshift.io/v1alpha1
+kind: GitSource
+metadata:
+  name: example-gitsource
+spec:
+  # Add fields here
+  url: https://github.com/redhat-developer/devopsconsole-operator
