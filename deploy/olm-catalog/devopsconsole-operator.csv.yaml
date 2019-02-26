@@ -1,0 +1,127 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  creationTimestamp: null
+  name: devopsconsole-operator.v0.1.0
+  namespace: devopsconsolesystem
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - kind: Cluster
+      name: clusters.clusterregistry.k8s.io
+      displayName: clusterregistry
+      description: A registry containing cluster metadata
+      version: v1alpha1
+    - kind: Component
+      name: components.devopsconsole.openshift.io
+      version: v1alpha1
+      displayName: component
+      description: Defines an application component
+    - kind: EnvDeployment
+      name: envdeployments.devopsconsole.openshift.io
+      version: v1alpha1
+      displayName: envdeployment
+      description: Defines the relationship between an environment and deployment
+    - kind: Environment
+      name: environments.devopsconsole.openshift.io
+      version: v1alpha1
+      displayName: environment
+      description: Defines an environment
+  description: The operator that manages the DevOps console services/CRDs on OpenShift 4.x for application creation , import and association of services from the Operator catalog.
+  displayName: OpenShift DevOps Console Operator
+  install:
+    spec:
+      deployments:
+      - name: devopsconsole-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              name: devopsconsole-operator
+          strategy: {}
+          template:
+            metadata:
+              creationTimestamp: null
+              labels:
+                name: devopsconsole-operator
+            spec:
+              containers:
+              - command:
+                - devopsconsole-operator
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: devopsconsole-operator
+                image: docker.io/sbose78/devopsconsole-operator.0.1.0
+                imagePullPolicy: Always
+                name: devopsconsole-operator
+                ports:
+                - containerPort: 60000
+                  name: metrics
+                readinessProbe:
+                  exec:
+                    command:
+                    - stat
+                    - /tmp/operator-sdk-ready
+                  failureThreshold: 1
+                  initialDelaySeconds: 4
+                  periodSeconds: 10
+                resources: {}
+              serviceAccountName: devopsconsole-operator
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - endpoints
+          - persistentvolumeclaims
+          - events
+          - configmaps
+          - secrets
+          verbs:
+          - '*'
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - daemonsets
+          - replicasets
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - devopsconsole.openshift.io
+          resources:
+          - '*'
+          - envdeployments
+          - components
+          verbs:
+          - '*'
+        - apiGroups:
+          - clusterregistry.k8s.io
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        serviceAccountName: devopsconsole-operator
+    strategy: deployment
+  maturity: alpha
+  provider: {}
+  version: 0.1.0

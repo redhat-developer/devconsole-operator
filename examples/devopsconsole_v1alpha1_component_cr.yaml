@@ -1,7 +1,7 @@
 apiVersion: devopsconsole.openshift.io/v1alpha1
 kind: Component
 metadata:
-  name: f8-ui
+  name: wit
 spec:
   # Add fields here
   app: "openshiftio"
