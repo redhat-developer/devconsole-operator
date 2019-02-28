@@ -1,7 +1,7 @@
 # TODO: change this to a sane base image
 FROM quay.io/openshiftio/toolchain-operator:faab15e
 
-ENV F8_INSTALL_PREFIX=/usr/local/devconsole-operator
+ENV INSTALL_PREFIX=/usr/local/devconsole-operator
 
-COPY bin/devconsole-operator ${F8_INSTALL_PREFIX}/bin/devconsole-operator
-RUN echo chmod +x ${F8_INSTALL_PREFIX}/bin/devconsole-operator
+COPY bin/devconsole-operator ${INSTALL_PREFIX}/bin/devconsole-operator
+RUN echo chmod +x ${INSTALL_PREFIX}/bin/devconsole-operator
