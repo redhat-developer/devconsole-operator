@@ -36,8 +36,11 @@ spec:
               type: string
             noProxy:
               type: string
-            sourceSecret:
-              type: string
+            secretRef:
+              properties:
+                name:
+                  type: string
+                  minimum: 1
             flavor:
               type: string
   version: v1alpha1

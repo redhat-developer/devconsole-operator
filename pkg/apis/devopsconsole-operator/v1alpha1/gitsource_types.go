@@ -32,11 +32,17 @@ type GitSourceSpec struct {
 	// NoProxy can be used to specify domains for which no proxying should be performed. Optional.
 	NoProxy string `json:"noProxy,omitempty"`
 
-	// SourceSecret is the name of the secret that contains credentials to access the git repo. Optional.
-	SourceSecret string `json:"sourceSecret,omitempty"`
+	// SecretRef refers to the secret that contains credentials to access the git repo. Optional.
+	SecretRef SecretRef `json:"secretRef,omitempty"`
 
 	// Flavor of the git provider like github, gitlab, bitbucket, generic, etc. Optional.
 	Flavor string `json:"flavor,omitempty"`
+}
+
+// SecretRef holds information about the secret that contains credentials to access the git repo
+type SecretRef struct {
+	// Name is the name of the secret that contains credentials to access the git repo
+	Name string `json:"name"`
 }
 
 // GitSourceStatus defines the observed state of GitSource
