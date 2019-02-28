@@ -52,3 +52,11 @@ required = [
   [[prune.project]]
     name = "k8s.io/code-generator"
     non-go = false
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.3.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/wadey/gocovmerge"

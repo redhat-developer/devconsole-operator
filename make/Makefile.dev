@@ -1,0 +1,87 @@
+DOCKER_REPO?=quay.io/openshiftio
+IMAGE_NAME?=devconsole-operator
+SHORT_COMMIT=$(shell git rev-parse --short HEAD)
+ifneq ($(GITUNTRACKEDCHANGES),)
+SHORT_COMMIT := $(SHORT_COMMIT)-dirty
+endif
+
+TIMESTAMP:=$(shell date +%s)
+TAG?=$(SHORT_COMMIT)-$(TIMESTAMP)
+
+DEPLOY_DIR:=deploy
+
+.PHONY: create-resources
+create-resources:
+	@echo "Logging using system:admin..."
+	@oc login -u system:admin
+	@echo "Creating sub resources..."
+	@echo "Creating CRDs..."
+	@oc create -f $(DEPLOY_DIR)/crds/devconsole_v1alpha1_envdeployment_crd.yaml
+	@echo "Creating Namespace"
+	@oc create -f $(DEPLOY_DIR)/namespace.yaml
+	@echo "oc project codeready-devconsole"
+	@oc project codeready-devconsole
+	@echo "Creating Service Account"
+	@oc create -f $(DEPLOY_DIR)/service_account.yaml
+	@echo "Creating Role"
+	@oc create -f $(DEPLOY_DIR)/role.yaml
+	@echo "Creating RoleBinding"
+	@oc create -f $(DEPLOY_DIR)/role_binding.yaml
+	@echo "Creating Cluster Role"
+	@oc create -f $(DEPLOY_DIR)/cluster_role.yaml
+	@echo "Creating ClusterRoleBinding"
+	@oc create -f $(DEPLOY_DIR)/cluster_role_binding.yaml
+
+.PHONY: create-cr
+create-cr:
+	@echo "Creating Custom Resource..."
+	@oc create -f $(DEPLOY_DIR)/crds/devconsole_v1alpha1_envdeployment_crd.yaml
+
+.PHONY: build-image
+build-image:
+	docker build -t $(DOCKER_REPO)/$(IMAGE_NAME):$(TAG) -f Dockerfile.dev .
+	docker tag $(DOCKER_REPO)/$(IMAGE_NAME):$(TAG) $(DOCKER_REPO)/$(IMAGE_NAME):test
+
+.PHONY: deploy-operator-only
+deploy-operator-only:
+	@echo "Creating Deployment for Operator"
+	@cat minishift/operator.yaml | sed s/\:dev/:$(TAG)/ | oc create -f -
+
+.PHONY: clean-all
+clean-all:  clean-operator clean-resources
+
+.PHONY: clean-operator
+clean-operator:
+	@echo "Deleting Deployment for Operator"
+	@cat minishift/operator.yaml | sed s/\:dev/:$(TAG)/ | oc delete -f - || true
+
+.PHONY: clean-resources
+clean-resources:
+	@echo "Deleting sub resources..."
+	@echo "Deleting RoleBinding"
+	@oc delete -f $(DEPLOY_DIR)/role_binding.yaml || true
+	@echo "Deleting ClusterRoleBinding"
+	@oc delete -f $(DEPLOY_DIR)/cluster_role_binding.yaml || true
+	@echo "Deleting Role"
+	@oc delete -f $(DEPLOY_DIR)/role.yaml || true
+	@echo "Deleting ClusterRole"
+	@oc delete -f $(DEPLOY_DIR)/cluster_role.yaml || true
+	@echo "Deleting Service Account"
+	@oc delete -f $(DEPLOY_DIR)/service_account.yaml || true
+	@echo "Deleting Custom Resources..."
+	@oc delete -f $(DEPLOY_DIR)/crds/devconsole_v1alpha1_envdeployment_crd.yaml|| true
+	@echo "Deleting Namespace"
+	@oc delete -f $(DEPLOY_DIR)/namespace.yaml || true
+	@echo "Deleting Custom Resource Definitions..."
+	@oc delete -f $(DEPLOY_DIR)/crds/devconsole_v1alpha1_envdeployment_crd.yaml || true
+
+.PHONY: deploy-operator
+deploy-operator: build build-image deploy-operator-only
+
+.PHONY: minishift-start
+minishift-start:
+	minishift start --cpus 4 --memory 8GB
+	-eval `minishift docker-env` && oc login -u system:admin
+
+.PHONY: deploy-all
+deploy-all: clean-resources create-resources deps prebuild-check deploy-operator create-cr
