@@ -5,13 +5,13 @@ ENV LANG=en_US.utf8
 ENV INSTALL_PREFIX=/usr/local/devconsole-operator
 
 # Create a non-root user and a group with the same name: "devconsole-operator"
-ENV F8_USER_NAME=devconsole-operator
-RUN useradd --no-create-home -s /bin/bash ${F8_USER_NAME}
+ENV USER_NAME=devconsole-operator
+RUN useradd --no-create-home -s /bin/bash ${USER_NAME}
 
 COPY bin/devconsole-operator ${INSTALL_PREFIX}/bin/devconsole-operator
 
 # From here onwards, any RUN, CMD, or ENTRYPOINT will be run under the following user
-USER ${F8_USER_NAME}
+USER ${USER_NAME}
 
 WORKDIR ${INSTALL_PREFIX}
 
