@@ -45,3 +45,9 @@ rules:
   - '*'
   verbs:
   - '*'
+- apiGroups:
+  - components.devopsconsole.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - '*'

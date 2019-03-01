@@ -10,8 +10,12 @@ spec:
   group: clusterregistry.k8s.io
   names:
     kind: Cluster
+    listKind: ClusterList
     plural: clusters
+    singular: cluster
   scope: Namespaced
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
@@ -80,9 +84,13 @@ spec:
                   type:
                     type: string
                 required:
-                  - type
-                  - status
+                - type
+                - status
                 type: object
               type: array
           type: object
   version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

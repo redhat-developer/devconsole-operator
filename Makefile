@@ -269,4 +269,42 @@ clean: $(CLEAN_TARGETS)
 ## Build the operator
 build: prebuild-check deps
 	@echo "building $(BINARY_SERVER_BIN)..."
+	operator-sdk generate k8s
+	operator-sdk generate openapi
 	go build -v -o $(BINARY_SERVER_BIN) cmd/manager/main.go
+
+# -------------------------------------------------------------------
+# deploy
+# -------------------------------------------------------------------
+APP_NAMESPACE ?= myproject
+.PHONY: local
+## Run Operator locally
+local: deploy-rbac build deploy-crd
+	@-oc new-project $(APP_NAMESPACE)
+	operator-sdk up local --namespace=$(APP_NAMESPACE)
+
+.PHONY: deploy-rbac
+## Setup service account and deploy RBAC
+deploy-rbac:
+	@-oc login -u system:admin
+	@-oc create -f deploy/service_account.yaml
+	@-oc create -f deploy/role.yaml
+	@-oc create -f deploy/role_binding.yaml
+
+.PHONY: deploy-crd
+## Deploy CRD
+deploy-crd:
+	@-oc apply -f deploy/crds/components_v1alpha1_component_crd.yaml
+	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_envdeployment_crd.yaml
+
+.PHONY: deploy-operator
+## Deploy Operator
+deploy-operator: deploy-crd
+	oc create -f deploy/operator.yaml
+
+.PHONY: deploy-cr
+## Deploy a CR as test
+deploy-test:
+	#@-oc delete ... TODO clean all created resource
+	oc create -f deploy/crds/components_v1alpha1_component_cr.yaml
+
