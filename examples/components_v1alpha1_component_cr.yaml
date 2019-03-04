@@ -1,7 +1,7 @@
 apiVersion: components.devopsconsole.openshift.io/v1alpha1
 kind: Component
 metadata:
-  name: example-component
+  name: mycomponent
 spec:
   # Add fields here
   size: 3

@@ -69,10 +69,8 @@ func schema_pkg_apis_components_v1alpha1_ComponentSpec(ref common.ReferenceCallb
 			SchemaProps: spec.SchemaProps{
 				Description: "ComponentSpec defines the desired state of Component",
 				Type:        []string{"object"},
-				Properties:  map[string]spec.Schema{},
 			},
 		},
-		Dependencies: []string{},
 	}
 }
 
@@ -82,9 +80,7 @@ func schema_pkg_apis_components_v1alpha1_ComponentStatus(ref common.ReferenceCal
 			SchemaProps: spec.SchemaProps{
 				Description: "ComponentStatus defines the observed state of Component",
 				Type:        []string{"object"},
-				Properties:  map[string]spec.Schema{},
 			},
 		},
-		Dependencies: []string{},
 	}
 }

@@ -17,4 +17,4 @@ limitations under the License.
 
 package template
 
-//go:generate vfsgendev -source="github.com/snowdrop/component-operator/pkg/util/template".Assets
+//go:generate vfsgendev -source="github.com/redhat-developer/devopsconsole-operator/pkg/util/template".Assets

@@ -22,17 +22,14 @@ import (
 	"fmt"
 	"github.com/shurcooL/httpfs/vfsutil"
 	log "github.com/sirupsen/logrus"
-	"github.com/snowdrop/component-operator/pkg/apis/component/v1alpha1"
-	// "github.com/snowdrop/component-operator/pkg/util/kubernetes"
-	// "k8s.io/apimachinery/pkg/runtime"
+	"github.com/redhat-developer/devopsconsole-operator/pkg/apis/components/v1alpha1"
 	"os"
-	"strings"
 	"text/template"
 )
 
 var (
 	TemplateAssets = Assets
-	TemplatePath   = []string{"innerloop", "servicecatalog","outerloop"}
+	TemplatePath   = []string{"outerloop"}
 	TemplateFiles  []string
 	Templates      = make(map[string]template.Template)
 )
@@ -96,18 +93,4 @@ func Parse(t template.Template, obj *v1alpha1.Component) bytes.Buffer {
 	}
 	log.Debug("Generated :", b.String())
 	return b
-}
-
-/*func ParseTemplateToRuntimeObject(tmpl template.Template, component *v1alpha1.Component) (runtime.Object, error) {
-		b := Parse(tmpl, component)
-		r, err := kubernetes.PopulateKubernetesObjectFromYaml(b.String())
-		if err != nil {
-			return nil, err
-		}
-		return r, nil
-}*/
-
-//
-func GetTemplateFullName(artifact string) string {
-	return strings.Join([]string{"java", artifact}, "/")
 }

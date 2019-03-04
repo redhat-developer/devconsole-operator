@@ -306,5 +306,17 @@ deploy-operator: deploy-crd
 ## Deploy a CR as test
 deploy-test:
 	#@-oc delete ... TODO clean all created resource
-	oc create -f deploy/crds/components_v1alpha1_component_cr.yaml
+	oc create -f examples/components_v1alpha1_component_cr.yaml
 
+# -------------------------------------------------------------------
+# generate template
+# -------------------------------------------------------------------
+
+$(GOPATH)/bin/vfsgendev:
+	go get -u github.com/shurcooL/httpfs/vfsutil
+	go get -u github.com/shurcooL/vfsgen/cmd/vfsgendev
+
+.PHONY: assets
+assets: $(GOPATH)/bin/vfsgendev
+	@echo ">> writing assets"
+	cd pkg/util/template && go generate
