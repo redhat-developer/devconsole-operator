@@ -42,16 +42,8 @@ rules:
   - devconsole.openshift.io
   resources:
   - '*'
-  - envdeployments
   verbs:
   - '*'
-- apiGroups:
-  - clusterregistry.k8s.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
-
 ---
 apiVersion: apps/v1
 kind: Deployment
