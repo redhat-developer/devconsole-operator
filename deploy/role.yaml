@@ -36,12 +36,5 @@ rules:
   - devopsconsole.openshift.io
   resources:
   - '*'
-  - envdeployments
-  verbs:
-  - '*'
-- apiGroups:
-  - clusterregistry.k8s.io
-  resources:
-  - '*'
   verbs:
   - '*'
