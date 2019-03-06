@@ -1,8 +1,0 @@
-apiVersion: devopsconsole.openshift.io/v1alpha1
-kind: Environment
-metadata:
-  name: devenv
-spec:
-  # Add fields here
-  type: 'deploy'
-  namespace: 'myproject'
