@@ -49,6 +49,28 @@ function run_tests_without_coverage() {
   echo "CICO: ran tests without coverage"
 }
 
+function run_tests_with_coverage() {
+  # Run the unit tests that generate coverage information
+  make docker-test-unit-with-coverage
+
+  # Output coverage
+  make docker-coverage-all
+
+  # Upload coverage to codecov.io
+  cp tmp/coverage.mode* coverage.txt
+  bash <(curl -s https://codecov.io/bash) -X search -f coverage.txt -t 6539a1b6-70f9-4ba1-8ab5-d1c8a104ec83 #-X fix
+
+  echo "CICO: ran tests and uploaded coverage"
+}
+
+function tag_push() {
+  local tag
+
+  tag=$1
+  docker tag devopsconsole-operator-deploy $tag
+  docker push $tag
+}
+
 function deploy() {
   # Login first
   REGISTRY="quay.io"
@@ -76,10 +98,8 @@ function deploy() {
   echo 'CICO: Image pushed, ready to update deployed app'
 }
 
-function tag_push() {
-  local tag
-
-  tag=$1
-  docker tag devopsconsole-operator-deploy $tag
-  docker push $tag
+function cico_setup() {
+  load_jenkins_vars;
+  install_deps;
+  prepare;
 }
