@@ -10,6 +10,7 @@ $ cd operator-sdk
 $ git checkout master
 $ make dep
 $ make install
+(start up your MiniShift cluster)
 ```
 
 Add a new API for the custom resource AppService
@@ -27,7 +28,8 @@ $ operator-sdk add controller --api-version=devopsconsole.openshift.io/v1alpha1 
 Apply the app-operator CRD.
 
 ```sh
-$ kubectl apply -f deploy/crds/app_v1alpha1_appservice_crd.yaml
+$ kubectl apply -f deploy/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
+
 ```
 
 Set the OPERATOR_NAME variable
@@ -47,7 +49,8 @@ Your operator is now watching for the existence of an object that matches: Group
 Apply the provided CR.yaml to your cluster. This should trigger the default logic specified in the handler.
 
 ```sh
-$ kubectl create -f deploy/examples/app_v1alpha1_appservice_cr.yaml
+$ kubectl create -f examples/devopsconsole_v1alpha1_gitsource_cr.yaml
+
 ```
 
 ## Directory layout
