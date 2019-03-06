@@ -108,6 +108,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 
 	if !instance.ObjectMeta.DeletionTimestamp.IsZero() {
 		log.Info( "** DELETION **")
+		return reconcile.Result{}, nil
 	}
 
 	// We only call the pipeline when the component has been created
