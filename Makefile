@@ -270,7 +270,6 @@ clean: $(CLEAN_TARGETS)
 build: prebuild-check deps
 	@echo "building $(BINARY_SERVER_BIN)..."
 	operator-sdk generate k8s
-	operator-sdk generate openapi
 	go build -v -o $(BINARY_SERVER_BIN) cmd/manager/main.go
 
 # -------------------------------------------------------------------

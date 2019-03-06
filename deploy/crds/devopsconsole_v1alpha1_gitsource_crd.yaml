@@ -1,7 +1,6 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  creationTimestamp: null
   name: gitsources.devopsconsole.openshift.io
 spec:
   group: devopsconsole.openshift.io
@@ -10,11 +9,38 @@ spec:
     listKind: GitSourceList
     plural: gitsources
     singular: gitsource
+    shortNames:
+    - gitsrc
   scope: Namespaced
-  subresources:
-    status: {}
+  validation:
+    # openAPIV3Schema is the schema for validating custom objects.
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            url:
+              type: string
+            ref:
+              type: string
+            contextDir:
+              type: string
+            httpProxy:
+              type: string
+            httpsProxy:
+              type: string
+            noProxy:
+              type: string
+            secretRef:
+              properties:
+                name:
+                  type: string
+                  minimum: 1
+            flavor:
+              type: string
   version: v1alpha1
-  versions:
-  - name: v1alpha1
-    served: true
-    storage: true
