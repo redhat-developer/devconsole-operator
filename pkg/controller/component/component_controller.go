@@ -56,15 +56,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource Pods and requeue the owner Component
-	//err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-	//	IsController: true,
-	//	OwnerType:    &componentsv1alpha1.Component{},
-	//})
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
