@@ -22,6 +22,7 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var log = logf.Log.WithName("controller_component")
@@ -130,9 +131,13 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		// Create an empty image name "nodejs-runtime"
 		newImageForRuntime := newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
 		err = r.client.Create(context.TODO(), newImageForRuntime)
-		if err != nil {
+		if err != nil || newImageForRuntime == nil {
 			log.Error(err, "** Creating new RUNTIME image fails **")
 			return reconcile.Result{}, err
+		}
+		if newImageForRuntime == nil {
+			log.Error(err, "** Creating new RUNTIME image fails **")
+			return reconcile.Result{}, errors.NewNotFound(schema.GroupResource{"", "ImageStream"}, "runtime image for build not found")
 		}
 		log.Info("** Image stream for RUNTIME created **")
 		if err := controllerutil.SetControllerReference(instance, newImageForRuntime, r.scheme); err != nil {
@@ -168,7 +173,7 @@ func newImageStreamFromDocker(namespace string, name string, buildType string) *
 		Namespace: namespace,
 		Labels:    labels,
 	}, Spec: imagev1.ImageStreamSpec{
-		LookupPolicy: imagev1.ImageLookupPolicy{ //optional?
+		LookupPolicy: imagev1.ImageLookupPolicy{
 			Local:false,
 		},
 		Tags:[]imagev1.TagReference{
