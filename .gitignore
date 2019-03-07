@@ -39,3 +39,6 @@ bin/
 tmp/
 
 # Generated assets
+
+# Infra
+.cico-prepare

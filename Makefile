@@ -24,6 +24,11 @@ GOLANGCI_LINT_BIN_NAME:=golangci-lint
 include ./$(INCLUDE_DIR)/test.mk
 include ./$(INCLUDE_DIR)/Makefile.dev
 
+# set the cache directory to an accessible location
+ifeq ($(XDG_CACHE_HOME),)
+	export XDG_CACHE_HOME:=/tmp
+endif
+
 DOCKER_BIN := $(shell command -v $(DOCKER_BIN_NAME) 2> /dev/null)
 include ./$(INCLUDE_DIR)/docker.mk
 
