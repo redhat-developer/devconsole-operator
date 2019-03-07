@@ -145,8 +145,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 
-		log.Info("** Build config created **")
-
 		// Create build config with s2i
 		bc := generateBuildConfig(instance.Namespace, instance.Name, instance.Spec.Codebase, "master")
 		err = r.client.Create(context.TODO(), &bc)
