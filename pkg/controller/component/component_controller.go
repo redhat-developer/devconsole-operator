@@ -129,6 +129,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		}
 
 		// Create an empty image name "nodejs-runtime"
+		// todo(corinne): check if we can reuse openshift's image stream
 		newImageForRuntime := newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
 		err = r.client.Create(context.TODO(), newImageForRuntime)
 		if err != nil {
@@ -234,7 +235,7 @@ func generateBuildConfig(namespace string, name string, gitURL string, gitRef st
 					},
 				},
 			},
-			Triggers:[]buildv1.BuildTriggerPolicy{ //todo add gh webhook secret
+			Triggers:[]buildv1.BuildTriggerPolicy{
 				{
 					Type: "ConfigChange",
 				}, {

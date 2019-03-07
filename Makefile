@@ -314,5 +314,4 @@ deploy-clean:
 .PHONY: deploy-test
 ## Deploy a CR as test
 deploy-test:
-	#@-oc delete ... TODO clean all created resource
 	oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml
