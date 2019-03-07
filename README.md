@@ -1,53 +1,80 @@
-## Quick Start
+# DevOpsConsole
 
-Install the operator-sdk CLI:
+This repository was initially bootstrapped using [CoreOS operator](https://github.com/operator-framework/operator-sdk). 
 
-```sh
-$ mkdir -p $GOPATH/src/github.com/operator-framework
-$ cd $GOPATH/src/github.com/operator-framework
-$ git clone https://github.com/operator-framework/operator-sdk
-$ cd operator-sdk
-$ git checkout master
-$ make dep
-$ make install
+## Build
+
+### Pre-requisites
+- [operator-sdk v0.5.0](https://github.com/operator-framework/operator-sdk#quick-start) 
+- [dep][dep_tool] version v0.5.0+.
+- [git][git_tool]
+- [go][go_tool] version v1.10+.
+- [docker][docker_tool] version 17.03+.
+- [kubectl][kubectl_tool] version v1.11.0+ or [oc] version 3.11
+- Access to a kubernetes v.1.11.0+ cluster or openshift cluster version 3.11
+
+### Build
+```
+make build
+```
+## Deployment
+
+### Set up Minishift (one-off)
+* create a new profile to test the operator
+```
+minishift profile set devopsconsole
+```
+* enable the admin-user add-on
+```
+minishift addon enable admin-user
+```
+* optionally, configure the VM 
+```
+minishift config set cpus 4
+minishift config set memory 8GB
+minishift config set vm-driver virtualbox
+```
+* start the instance
+```
+minishift start
+```
+> NOTE: this setup should be deprecated in favor of [OCP4 install]().
+
+### Deploy the operator
+
+In dev mode, simply run your operator locally:
+```
+make local
 ```
 
-Add a new API for the custom resource AppService
-
-```sh
-$ operator-sdk add api --api-version=devopsconsole.openshift.io/v1alpha1 --kind=AppService
+### Deploy the CR for testing
+* Make sure minishift is running and use myproject
 ```
-
-Add a new controller that watches for AppService
-
-```sh
-$ operator-sdk add controller --api-version=devopsconsole.openshift.io/v1alpha1 --kind=AppService
+oc project myproject
 ```
-
-Apply the app-operator CRD.
-
-```sh
-$ kubectl apply -f deploy/crds/app_v1alpha1_appservice_crd.yaml
+* Clean previously created resources
 ```
-
-Set the OPERATOR_NAME variable
-
-```sh
-$ export OPERATOR_NAME=app-operator
+make deploy-clean
 ```
-
-Run the operator from outside the Minishift environment.
-
-```sh
-$ operator-sdk up local --namespace myproject
+* Deploy CR
 ```
+make deploy-test
+```
+* See the newly created resources
+```
+oc get is,bc,svc,component.devopsconsole,build
+NAME                                           DOCKER REPO                               TAGS      UPDATED
+imagestream.image.openshift.io/myapp-output    172.30.1.1:5000/myproject/myapp-output
+imagestream.image.openshift.io/myapp-runtime   172.30.1.1:5000/myproject/myapp-runtime   latest    46 seconds ago
 
-Your operator is now watching for the existence of an object that matches: GroupVersionKind(app.example.com/v1alpha1, Kind=App)
+NAME                                      TYPE      FROM         LATEST
+buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
 
-Apply the provided CR.yaml to your cluster. This should trigger the default logic specified in the handler.
+NAME                                         AGE
+component.devopsconsole.openshift.io/myapp   48s
 
-```sh
-$ kubectl create -f deploy/examples/app_v1alpha1_appservice_cr.yaml
+NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
+build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 seconds ago
 ```
 
 ## Directory layout
@@ -63,3 +90,11 @@ Please consult [the documentation](https://github.com/operator-framework/operato
 | deploy | Contains various YAML manifests for registering CRDs, setting up [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/), and deploying the operator as a Deployment.|
 | Gopkg.toml Gopkg.lock | The [dep](https://github.com/golang/dep) manifests that describe the external dependencies of this operator.|
 | vendor | The golang [Vendor](https://golang.org/cmd/go/#hdr-Vendor_Directories) folder that contains the local copies of the external dependencies that satisfy the imports of this project. [dep](https://github.com/golang/dep) manages the vendor directly.|
+
+
+
+[dep_tool]:https://golang.github.io/dep/docs/installation.html
+[git_tool]:https://git-scm.com/downloads
+[go_tool]:https://golang.org/dl/
+[docker_tool]:https://docs.docker.com/install/
+[kubectl_tool]:https://kubernetes.io/docs/tasks/tools/install-kubectl/

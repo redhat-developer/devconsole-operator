@@ -274,4 +274,49 @@ clean: $(CLEAN_TARGETS)
 ## Build the operator
 build: prebuild-check deps
 	@echo "building $(BINARY_SERVER_BIN)..."
+	operator-sdk generate k8s
 	go build -v -o $(BINARY_SERVER_BIN) cmd/manager/main.go
+
+# -------------------------------------------------------------------
+# deploy
+# -------------------------------------------------------------------
+
+APP_NAMESPACE ?= myproject
+.PHONY: local
+## Run Operator locally
+local: deploy-rbac build deploy-crd
+	@-oc new-project $(APP_NAMESPACE)
+	operator-sdk up local --namespace=$(APP_NAMESPACE)
+
+.PHONY: deploy-rbac
+## Setup service account and deploy RBAC
+deploy-rbac:
+	@-oc login -u system:admin
+	@-oc create -f deploy/service_account.yaml
+	@-oc create -f deploy/role.yaml
+	@-oc create -f deploy/role_binding.yaml
+
+.PHONY: deploy-crd
+## Deploy CRD
+deploy-crd:
+	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_envdeployment_crd.yaml
+
+.PHONY: deploy-operator
+## Deploy Operator
+deploy-operator: deploy-crd
+	oc create -f deploy/operator.yaml
+
+.PHONY: deploy-clean
+## Deploy a CR as test
+deploy-clean:
+	@-oc delete imagestream.image.openshift.io/myapp-runtime
+	@-oc delete imagestream.image.openshift.io/myapp-output
+	@-oc delete buildconfig.build.openshift.io/myapp-bc
+	@-oc delete deploymentconfig.apps.openshift.io/myapp
+	@-oc delete component.devopsconsole.openshift.io/myapp
+
+.PHONY: deploy-test
+## Deploy a CR as test
+deploy-test:
+	oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml
