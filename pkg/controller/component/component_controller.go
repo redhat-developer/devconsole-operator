@@ -131,7 +131,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		// Create an empty image name "nodejs-runtime"
 		newImageForRuntime := newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
 		err = r.client.Create(context.TODO(), newImageForRuntime)
-		if err != nil || newImageForRuntime == nil {
+		if err != nil {
 			log.Error(err, "** Creating new RUNTIME image fails **")
 			return reconcile.Result{}, err
 		}
