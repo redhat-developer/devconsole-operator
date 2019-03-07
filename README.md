@@ -93,7 +93,7 @@ Please consult [the documentation](https://github.com/operator-framework/operato
 
 ## Check for the presence of DevOpsConsole
 
-Currently frontend can check the presence of DevOpsConsole using Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devopsconsole.openshift.io`.  If it exists, the DevOpsConsole can be enabled from the frontend.
+Currently frontend can check the presence of DevOpsConsole using Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devopsconsole.openshift.io`.  If it exists, it will enable the DevOps perspective in the Openshift Console.
 
 [dep_tool]:https://golang.github.io/dep/docs/installation.html
 [git_tool]:https://git-scm.com/downloads
