@@ -91,7 +91,43 @@ Please consult [the documentation](https://github.com/operator-framework/operato
 | Gopkg.toml Gopkg.lock | The [dep](https://github.com/golang/dep) manifests that describe the external dependencies of this operator.|
 | vendor | The golang [Vendor](https://golang.org/cmd/go/#hdr-Vendor_Directories) folder that contains the local copies of the external dependencies that satisfy the imports of this project. [dep](https://github.com/golang/dep) manages the vendor directly.|
 
+## Enabling the DevOps perspective in OpenShift
 
+The frontend can check for the presence of the DevOpsConsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devopsconsole.openshift.io`.  If it exists, it will enable the DevOps perspective in the Openshift Console.
+
+To install the DevOps Console operator and run it using OLM
+
+```
+kubectl create -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
+
+kubectl create -f http://operator-hub-shbose-preview1-stage.b542.starter-us-east-2a.openshiftapps.com/install/devopsconsole.v0.1.0.yaml
+```
+
+A `CatalogSource` followed by a new `Subscription` is created when the above commands are executed.
+
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: rhd-operatorhub-catalog
+  namespace: olm
+spec:
+  sourceType: grpc
+  image: sbose78/operator-registry:latest
+  displayName: Community Operators
+  publisher: RHD Operator Hub
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: my-devopsconsole
+  namespace: operators
+spec:
+  channel: alpha
+  name: devopsconsole
+  source: rhd-operatorhub-catalog
+  sourceNamespace: olm
+```
 
 [dep_tool]:https://golang.github.io/dep/docs/installation.html
 [git_tool]:https://git-scm.com/downloads
