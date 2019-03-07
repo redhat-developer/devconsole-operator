@@ -61,7 +61,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 }
 
 var _ reconcile.Reconciler = &ReconcileComponent{}
-var buildTyppeImages = map[string]string{"nodejs":"nodeshift/centos7-s2i-nodejs:10.x"}
+var buildTypeImages = map[string]string{"nodejs":"nodeshift/centos7-s2i-nodejs:10.x"}
 
 // ReconcileComponent reconciles a Component object
 type ReconcileComponent struct {
@@ -165,7 +165,7 @@ func newImageStreamFromDocker(namespace string, name string, buildType string) *
 	labels := map[string]string{
 		"app": name,
 	}
-	if _, ok := buildTyppeImages[buildType]; !ok {
+	if _, ok := buildTypeImages[buildType]; !ok {
 		return nil
 	}
 	return &imagev1.ImageStream{ObjectMeta:metav1.ObjectMeta{
@@ -181,7 +181,7 @@ func newImageStreamFromDocker(namespace string, name string, buildType string) *
 				Name:"latest",
 				From:&corev1.ObjectReference{
 					Kind: "DockerImage",
-					Name: buildTyppeImages[buildType],
+					Name: buildTypeImages[buildType],
 				},
 			},
 		},
