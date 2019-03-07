@@ -26,6 +26,9 @@ spec:
           properties:
             buildType:
               type: string
+              description: The type of the image that is required to build your component.
+              enum:
+              - nodejs
             codebase:
               type: string
           required:
