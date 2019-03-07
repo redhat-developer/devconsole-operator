@@ -36,5 +36,12 @@ rules:
   - devopsconsole.openshift.io
   resources:
   - '*'
+  - components
+  verbs:
+  - '*'
+- apiGroups:
+  - components.devopsconsole.openshift.io
+  resources:
+  - '*'
   verbs:
   - '*'
