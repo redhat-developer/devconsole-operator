@@ -118,7 +118,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	// We only call the pipeline when the component has been created
 	// and if the Status Revision Number is the same
 	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
-		// Create an empty image name "nodejs-output"
+		// Create an empty image name "myapp-output"
 		newImageForOutput := newImageStream(instance.Namespace, instance.Name)
 		err = r.client.Create(context.TODO(), newImageForOutput)
 		if err != nil {
@@ -130,34 +130,15 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			log.Error(err, "** Setting owner reference fails **")
 			return reconcile.Result{}, err
 		}
-
-		found := &imagev1.ImageStream{}
-		err := r.client.Get(context.TODO(), types.NamespacedName{Name: "nodejs", Namespace: "openshift"}, found)
+		// Create a build image named either "myapp-runtime" or reuse openshift "nodejs" runtime
+		ir, err := r.getImageRuntime(instance)
 		if err != nil {
-			log.Error(err,"!!!!Searching in namespace openshift imagestream nodejs fails")
-		}
-		log.Info("** nodejs' openshift namespace imagestream found **")
-		// Create an empty image name "nodejs-runtime"
-		// todo(corinne): check if we can reuse openshift's image stream
-		newImageForRuntime := newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
-		if newImageForRuntime == nil {
-			log.Error(err, "** Creating new RUNTIME image fails **")
-			return reconcile.Result{}, errors.NewNotFound(schema.GroupResource{Resource: "ImageStream"}, "runtime image for build not found")
-		}
-		err = r.client.Create(context.TODO(), newImageForRuntime)
-		if err != nil {
-			log.Error(err, "** Creating new RUNTIME image fails **")
-			return reconcile.Result{}, err
-		}
-
-		log.Info("** Image stream for RUNTIME created **")
-		if err := controllerutil.SetControllerReference(instance, newImageForRuntime, r.scheme); err != nil {
-			log.Error(err, "** Setting owner reference fails **")
+			log.Error(err, "** ImageStream runtime creation fails **")
 			return reconcile.Result{}, err
 		}
 
 		// Create build config with s2i
-		bc := generateBuildConfig(instance.Namespace, instance.Name, instance.Spec.Codebase, "master")
+		bc := generateBuildConfig(instance.Namespace, instance.Name, ir, instance.Spec.Codebase, "master")
 		err = r.client.Create(context.TODO(), &bc)
 		if err != nil {
 			log.Error(err, "** BuildConfig creation fails **")
@@ -167,6 +148,47 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	return reconcile.Result{}, nil
+}
+
+type ImageRuntime struct {
+	runtimeNamespace string
+	runtimeName string
+}
+func (r *ReconcileComponent) getImageRuntime(instance *componentsv1alpha1.Component) (*ImageRuntime, error) {
+	var newImageForRuntime *imagev1.ImageStream
+	var runtimeName string
+	var runtimeNamespace string
+	// Check if runtime image exist in openshift namespace
+	found := &imagev1.ImageStream{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.BuildType, Namespace: openshiftNamespace}, found)
+	if err != nil {
+		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **"), openshiftNamespace, instance.Spec.BuildType)
+		// Create an empty image name "nodejs-runtime"
+		newImageForRuntime = newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
+		if newImageForRuntime == nil {
+			log.Error(err, "** Creating new RUNTIME image fails **")
+			return nil, errors.NewNotFound(schema.GroupResource{Resource: "ImageStream"}, "runtime image for build not found")
+		}
+		err = r.client.Create(context.TODO(), newImageForRuntime)
+		if err != nil {
+			log.Error(err, "** Creating new RUNTIME image fails **")
+			return nil, err
+		}
+
+		log.Info("** Image stream for RUNTIME created **")
+		if err := controllerutil.SetControllerReference(instance, newImageForRuntime, r.scheme); err != nil {
+			log.Error(err, "** Setting owner reference fails **")
+			return nil, err
+		}
+		runtimeName = instance.Name + "-runtime"
+		runtimeNamespace = instance.Namespace
+	} else {
+		log.Info("** nodejs' openshift namespace imagestream found **")
+		newImageForRuntime = found
+		runtimeName = newImageForRuntime.Name
+		runtimeNamespace = newImageForRuntime.Namespace
+	}
+	return &ImageRuntime{runtimeNamespace,runtimeName }, nil
 }
 
 func newImageStreamFromDocker(namespace string, name string, buildType string) *imagev1.ImageStream {
@@ -216,7 +238,7 @@ func getMetaObj(name string, imageNamespace string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{Name: name, Namespace: imageNamespace, Labels: labels}
 }
 
-func generateBuildConfig(namespace string, name string, gitURL string, gitRef string) buildv1.BuildConfig {
+func generateBuildConfig(namespace string, name string, runtime *ImageRuntime, gitURL string, gitRef string) buildv1.BuildConfig {
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{
 			URI: gitURL,
@@ -225,6 +247,7 @@ func generateBuildConfig(namespace string, name string, gitURL string, gitRef st
 		Type: buildv1.BuildSourceGit,
 	}
 	incremental := true
+
 	return buildv1.BuildConfig{
 		ObjectMeta: getMetaObj(name+"-bc", namespace),
 		Spec: buildv1.BuildConfigSpec{
@@ -240,8 +263,8 @@ func generateBuildConfig(namespace string, name string, gitURL string, gitRef st
 					SourceStrategy: &buildv1.SourceBuildStrategy{
 						From: corev1.ObjectReference{
 							Kind:      "ImageStreamTag",
-							Name:      name + "-runtime:latest",
-							Namespace: namespace,
+							Name:      runtime.runtimeName + ":latest",
+							Namespace: runtime.runtimeNamespace,
 						},
 						Incremental: &incremental,
 					},
