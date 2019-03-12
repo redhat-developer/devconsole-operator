@@ -131,7 +131,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 		// Create a build image named either "myapp-runtime" or reuse openshift "nodejs" runtime
-		ir, err := r.getImageRuntime(instance)
+		ir, err := r.getBuilderImage(instance)
 		if err != nil {
 			log.Error(err, "** ImageStream runtime creation fails **")
 			return reconcile.Result{}, err
@@ -150,11 +150,12 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	return reconcile.Result{}, nil
 }
 
-type ImageRuntime struct {
-	runtimeNamespace string
-	runtimeName string
+type builderImage struct {
+	namespace string
+	name string
 }
-func (r *ReconcileComponent) getImageRuntime(instance *componentsv1alpha1.Component) (*ImageRuntime, error) {
+
+func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Component) (*builderImage, error) {
 	var newImageForRuntime *imagev1.ImageStream
 	var runtimeName string
 	var runtimeNamespace string
@@ -188,7 +189,7 @@ func (r *ReconcileComponent) getImageRuntime(instance *componentsv1alpha1.Compon
 		runtimeName = newImageForRuntime.Name
 		runtimeNamespace = newImageForRuntime.Namespace
 	}
-	return &ImageRuntime{runtimeNamespace,runtimeName }, nil
+	return &builderImage{namespace: runtimeNamespace, name: runtimeName }, nil
 }
 
 func newImageStreamFromDocker(namespace string, name string, buildType string) *imagev1.ImageStream {
@@ -238,7 +239,7 @@ func getMetaObj(name string, imageNamespace string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{Name: name, Namespace: imageNamespace, Labels: labels}
 }
 
-func generateBuildConfig(namespace string, name string, runtime *ImageRuntime, gitURL string, gitRef string) buildv1.BuildConfig {
+func generateBuildConfig(namespace string, name string, runtime *builderImage, gitURL string, gitRef string) buildv1.BuildConfig {
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{
 			URI: gitURL,
@@ -263,8 +264,8 @@ func generateBuildConfig(namespace string, name string, runtime *ImageRuntime, g
 					SourceStrategy: &buildv1.SourceBuildStrategy{
 						From: corev1.ObjectReference{
 							Kind:      "ImageStreamTag",
-							Name:      runtime.runtimeName + ":latest",
-							Namespace: runtime.runtimeNamespace,
+							Name:      runtime.name + ":latest",
+							Namespace: runtime.namespace,
 						},
 						Incremental: &incremental,
 					},
