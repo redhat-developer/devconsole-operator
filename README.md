@@ -46,6 +46,9 @@ In dev mode, simply run your operator locally:
 ```
 make local
 ```
+> NOTE: To watch all namespaces, `APP_NAMESPACE` is set to empty string. 
+If a specific namespace is provided only that project will watched. 
+As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
 
 ### Deploy the CR for testing
 * Make sure minishift is running and use myproject

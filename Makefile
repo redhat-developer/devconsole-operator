@@ -281,7 +281,8 @@ build: prebuild-check deps
 # deploy
 # -------------------------------------------------------------------
 
-APP_NAMESPACE ?= myproject
+# to watch all namespaces, keep namespace empty
+APP_NAMESPACE ?= ""
 .PHONY: local
 ## Run Operator locally
 local: deploy-rbac build deploy-crd
