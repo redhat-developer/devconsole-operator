@@ -163,7 +163,7 @@ func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Compon
 	found := &imagev1.ImageStream{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.BuildType, Namespace: openshiftNamespace}, found)
 	if err != nil {
-		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **"), openshiftNamespace, instance.Spec.BuildType)
+		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, instance.Spec.BuildType))
 		// Create an empty image name "nodejs-runtime"
 		newImageForRuntime = newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
 		if newImageForRuntime == nil {

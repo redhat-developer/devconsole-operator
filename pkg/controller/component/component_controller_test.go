@@ -7,6 +7,7 @@ import (
 	compv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -84,9 +85,9 @@ func TestComponentController(t *testing.T) {
 		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
 		require.NoError(t, errGetImage, "output imagestream is not created")
 
-		isRuntime := &imagev1.ImageStream{}
-		errGetRuntimeImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isRuntime)
-		require.NoError(t, errGetRuntimeImage, "runtime imagestream is not created")
+		isBuilder := &imagev1.ImageStream{}
+		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isBuilder)
+		require.NoError(t, errGetBuilderImage, "builder imagestream is not created")
 
 		bc := &buildv1.BuildConfig{}
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
@@ -129,13 +130,15 @@ func TestComponentController(t *testing.T) {
 		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
 		require.NoError(t, errGetImage, "output imagestream is not created")
 
-		isRuntime := &imagev1.ImageStream{}
-		errGetRuntimeImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isRuntime)
-		require.Error(t, errGetRuntimeImage, "runtime imagestream should not be created with missing CR's buildtype")
+		isBuilder := &imagev1.ImageStream{}
+		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isBuilder)
+		require.Error(t, errGetBuilderImage, "builder imagestream should not be created with missing CR's buildtype")
+		require.Equal(t, errors.ReasonForError(errGetBuilderImage), metav1.StatusReasonNotFound, "bc could not found associated imagestream ")
 
 		bc := &buildv1.BuildConfig{}
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
 		require.Error(t, errGetBC, "build config should not not created with missing CR's buildtype")
+		require.Equal(t, errors.ReasonForError(errGetBC), metav1.StatusReasonNotFound, "bc could not found associated imagestream ")
 	})
 
 	t.Run("with ReconcileComponent CR without codebases", func(t *testing.T) {
@@ -173,9 +176,9 @@ func TestComponentController(t *testing.T) {
 		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
 		require.NoError(t, errGetImage, "output imagestream is not created")
 
-		isRuntime := &imagev1.ImageStream{}
-		errGetRuntimeImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isRuntime)
-		require.NoError(t, errGetRuntimeImage, "runtime imagestream is not created")
+		isBuilder := &imagev1.ImageStream{}
+		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isBuilder)
+		require.NoError(t, errGetBuilderImage, "builder imagestream is not created")
 
 		bc := &buildv1.BuildConfig{}
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
