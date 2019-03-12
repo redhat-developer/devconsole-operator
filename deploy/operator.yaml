@@ -33,9 +33,7 @@ spec:
             failureThreshold: 1
           env:
             - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: ""
+              value: ""
             - name: POD_NAME
               valueFrom:
                 fieldRef:
