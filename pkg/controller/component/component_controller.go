@@ -130,7 +130,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			log.Error(err, "** Setting owner reference fails **")
 			return reconcile.Result{}, err
 		}
-		// Create a build image named either "myapp-builder" or reuse openshift "nodejs" builder image
+		// Create a build image named either "myapp-builder" or reuse openshift's builder image
 		ir, err := r.getBuilderImage(instance)
 		if err != nil {
 			log.Error(err, "** ImageStream builder creation fails **")
@@ -164,7 +164,7 @@ func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Compon
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.BuildType, Namespace: openshiftNamespace}, found)
 	if err != nil {
 		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, instance.Spec.BuildType))
-		// Create an empty image name "nodejs-builder"
+		// Create an empty image name "<BuildType>-builder"
 		newImageForBuilder = newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
 		if newImageForBuilder == nil {
 			log.Error(err, "** Creating new BUILDER image fails **")
@@ -184,7 +184,7 @@ func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Compon
 		builderName = instance.Name + "-builder"
 		builderNamespace = instance.Namespace
 	} else {
-		log.Info("** nodejs' openshift namespace imagestream found **")
+		log.Info("** Found openshift's imagestream to use as builder **")
 		newImageForBuilder = found
 		builderName = newImageForBuilder.Name
 		builderNamespace = newImageForBuilder.Namespace
