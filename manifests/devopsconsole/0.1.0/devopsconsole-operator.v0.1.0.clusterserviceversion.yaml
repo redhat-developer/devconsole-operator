@@ -14,9 +14,13 @@ spec:
     - kind: Component
       name: components.devopsconsole.openshift.io
       version: v1alpha1
+      displayName: Component
+      description: Component
     - kind: GitSource
       name: gitsources.devopsconsole.openshift.io
       version: v1alpha1
+      displayName: Git Source
+      description: Describes a Git repository to be used as a codebase.
   description: The operator that enables the DevOps perspective in OpenShift 4.x
   displayName: OpenShift DevOps Console
   install:
