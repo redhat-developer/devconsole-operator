@@ -3,8 +3,9 @@ package component
 import (
 	"context"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"strconv"
+
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 
@@ -61,7 +62,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 }
 
 var _ reconcile.Reconciler = &ReconcileComponent{}
-var buildTypeImages = map[string]string{"nodejs":"nodeshift/centos7-s2i-nodejs:10.x"}
+var buildTypeImages = map[string]string{"nodejs": "nodeshift/centos7-s2i-nodejs:10.x"}
 
 // ReconcileComponent reconciles a Component object
 type ReconcileComponent struct {
@@ -108,7 +109,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	if !instance.ObjectMeta.DeletionTimestamp.IsZero() {
-		log.Info( "** DELETION **")
+		log.Info("** DELETION **")
 		return reconcile.Result{}, nil
 	}
 
@@ -159,7 +160,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	return reconcile.Result{}, nil
 }
 
-
 func newImageStreamFromDocker(namespace string, name string, buildType string) *imagev1.ImageStream {
 	labels := map[string]string{
 		"app": name,
@@ -167,18 +167,18 @@ func newImageStreamFromDocker(namespace string, name string, buildType string) *
 	if _, ok := buildTypeImages[buildType]; !ok {
 		return nil
 	}
-	return &imagev1.ImageStream{ObjectMeta:metav1.ObjectMeta{
-		Name: name+"-runtime",
+	return &imagev1.ImageStream{ObjectMeta: metav1.ObjectMeta{
+		Name:      name + "-runtime",
 		Namespace: namespace,
 		Labels:    labels,
 	}, Spec: imagev1.ImageStreamSpec{
 		LookupPolicy: imagev1.ImageLookupPolicy{
-			Local:false,
+			Local: false,
 		},
-		Tags:[]imagev1.TagReference{
+		Tags: []imagev1.TagReference{
 			{
-				Name:"latest",
-				From:&corev1.ObjectReference{
+				Name: "latest",
+				From: &corev1.ObjectReference{
 					Kind: "DockerImage",
 					Name: buildTypeImages[buildType],
 				},
@@ -190,8 +190,8 @@ func newImageStream(namespace string, name string) *imagev1.ImageStream {
 	labels := map[string]string{
 		"app": name,
 	}
-	return &imagev1.ImageStream{ObjectMeta:metav1.ObjectMeta{
-		Name: name+"-output",
+	return &imagev1.ImageStream{ObjectMeta: metav1.ObjectMeta{
+		Name:      name + "-output",
 		Namespace: namespace,
 		Labels:    labels,
 	}}
@@ -201,7 +201,7 @@ func getMetaObj(name string, imageNamespace string) metav1.ObjectMeta {
 	labels := map[string]string{
 		"app": name,
 	}
-	return metav1.ObjectMeta{Name: name, Namespace:imageNamespace, Labels: labels}
+	return metav1.ObjectMeta{Name: name, Namespace: imageNamespace, Labels: labels}
 }
 
 func generateBuildConfig(namespace string, name string, gitURL string, gitRef string) buildv1.BuildConfig {
@@ -214,7 +214,7 @@ func generateBuildConfig(namespace string, name string, gitURL string, gitRef st
 	}
 	incremental := true
 	return buildv1.BuildConfig{
-		ObjectMeta: getMetaObj(name + "-bc", namespace),
+		ObjectMeta: getMetaObj(name+"-bc", namespace),
 		Spec: buildv1.BuildConfigSpec{
 			CommonSpec: buildv1.CommonSpec{
 				Output: buildv1.BuildOutput{
@@ -235,11 +235,11 @@ func generateBuildConfig(namespace string, name string, gitURL string, gitRef st
 					},
 				},
 			},
-			Triggers:[]buildv1.BuildTriggerPolicy{
+			Triggers: []buildv1.BuildTriggerPolicy{
 				{
 					Type: "ConfigChange",
 				}, {
-					Type: "ImageChange",
+					Type:        "ImageChange",
 					ImageChange: &buildv1.ImageChangeTrigger{},
 				},
 			},

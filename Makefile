@@ -272,7 +272,7 @@ clean: $(CLEAN_TARGETS)
 
 .PHONY: build
 ## Build the operator
-build: prebuild-check deps
+build: prebuild-check deps check-go-format
 	@echo "building $(BINARY_SERVER_BIN)..."
 	operator-sdk generate k8s
 	go build -v -o $(BINARY_SERVER_BIN) cmd/manager/main.go
