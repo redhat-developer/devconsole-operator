@@ -41,9 +41,9 @@ minishift start
 ```
 > NOTE: this setup should be deprecated in favor of [OCP4 install]().
 
-### Deploy the operator
+### Deploy the operator in dev mode
 
-In dev mode, simply run your operator locally:
+* In dev mode, simply run your operator locally:
 ```
 make local
 ```
@@ -51,7 +51,6 @@ make local
 If a specific namespace is provided only that project will watched. 
 As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
 
-### Deploy the CR for testing
 * Make sure minishift is running and use myproject
 ```
 oc project myproject
@@ -79,6 +78,38 @@ component.devopsconsole.openshift.io/myapp   48s
 
 NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
 build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 seconds ago
+```
+
+### Deploy the operator with Deployment yaml
+
+* (optional) minishift internal registry
+Build the operator's controller image and make it available in internal registry
+```
+oc adm policy add-cluster-role-to-user cluster-admin admin
+oc login -u admin 
+<enter password admin>
+oc new-project devopsconsole
+operator-sdk build $(minishift openshift registry)/devopsconsole/devopsconsole-operator
+docker login -u admin -p $(oc whoami -t) $(minishift openshift registry)
+docker push $(minishift openshift registry)/devopsconsole/devopsconsole-operator:latest
+```
+* deploy cr, role and rbac
+```
+oc login -u admin
+oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+oc apply -f deploy/service_account.yaml
+oc apply -f deploy/role.yaml
+oc apply -f deploy/role_binding.yaml
+oc apply -f deploy/cluster_role.yaml
+oc apply -f deploy/cluster_role_binding.yaml
+oc apply -f deploy/operator.yaml
+```
+> NOTE: make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devopsconsole/devopsconsole-operator:latest`
+
+* test in different project
+```
+oc new-project boo
+oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml --namespace boo
 ```
 
 ## Directory layout

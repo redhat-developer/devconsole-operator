@@ -3,6 +3,7 @@ kind: Role
 metadata:
   creationTimestamp: null
   name: devopsconsole-operator
+  namespace: devopsconsole
 rules:
 - apiGroups:
   - ""
@@ -32,16 +33,4 @@ rules:
   verbs:
   - get
   - create
-- apiGroups:
-  - devopsconsole.openshift.io
-  resources:
-  - '*'
-  - components
-  verbs:
-  - '*'
-- apiGroups:
-  - components.devopsconsole.openshift.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
+
