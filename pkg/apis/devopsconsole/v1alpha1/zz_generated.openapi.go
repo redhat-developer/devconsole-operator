@@ -13,9 +13,12 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.Component":       schema_pkg_apis_devopsconsole_v1alpha1_Component(ref),
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentSpec":   schema_pkg_apis_devopsconsole_v1alpha1_ComponentSpec(ref),
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentStatus": schema_pkg_apis_devopsconsole_v1alpha1_ComponentStatus(ref),
+		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.Component":           schema_pkg_apis_devopsconsole_v1alpha1_Component(ref),
+		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentSpec":       schema_pkg_apis_devopsconsole_v1alpha1_ComponentSpec(ref),
+		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentStatus":     schema_pkg_apis_devopsconsole_v1alpha1_ComponentStatus(ref),
+		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.DevopsConsole":       schema_pkg_apis_devopsconsole_v1alpha1_DevopsConsole(ref),
+		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.DevopsConsoleSpec":   schema_pkg_apis_devopsconsole_v1alpha1_DevopsConsoleSpec(ref),
+		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.DevopsConsoleStatus": schema_pkg_apis_devopsconsole_v1alpha1_DevopsConsoleStatus(ref),
 	}
 }
 
@@ -79,14 +82,16 @@ func schema_pkg_apis_devopsconsole_v1alpha1_ComponentSpec(ref common.ReferenceCa
 					},
 					"codebase": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Codebase is the source code of your component. Atm only public remote URL are supported.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
 				Required: []string{"buildType", "codebase"},
 			},
 		},
+		Dependencies: []string{},
 	}
 }
 
@@ -107,5 +112,76 @@ func schema_pkg_apis_devopsconsole_v1alpha1_ComponentStatus(ref common.Reference
 				Required: []string{"RevNumber"},
 			},
 		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_pkg_apis_devopsconsole_v1alpha1_DevopsConsole(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "DevopsConsole is the Schema for the devopsconsoles API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.DevopsConsoleSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.DevopsConsoleStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.DevopsConsoleSpec", "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.DevopsConsoleStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_devopsconsole_v1alpha1_DevopsConsoleSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "DevopsConsoleSpec defines the desired state of DevopsConsole",
+				Type:        []string{"object"},
+				Properties:  map[string]spec.Schema{},
+			},
+		},
+		Dependencies: []string{},
+	}
+}
+
+func schema_pkg_apis_devopsconsole_v1alpha1_DevopsConsoleStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "DevopsConsoleStatus defines the observed state of DevopsConsole",
+				Type:        []string{"object"},
+				Properties:  map[string]spec.Schema{},
+			},
+		},
+		Dependencies: []string{},
 	}
 }

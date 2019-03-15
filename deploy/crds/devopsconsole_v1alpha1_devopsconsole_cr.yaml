@@ -1,0 +1,7 @@
+apiVersion: devopsconsole.openshift.io/v1alpha1
+kind: DevopsConsole
+metadata:
+  name: example-devopsconsole
+spec:
+  # Add fields here
+  size: 3

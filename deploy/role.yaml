@@ -37,6 +37,7 @@ rules:
   resources:
   - '*'
   - components
+  - devopsconsoles
   verbs:
   - '*'
 - apiGroups:
