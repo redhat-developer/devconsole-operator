@@ -10,7 +10,7 @@ spec:
     listKind: ComponentList
     plural: components
     singular: component
-  scope: Cluster
+  scope: Namespaced
   subresources:
     status: {}
   validation:
