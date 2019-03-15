@@ -8,7 +8,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"strconv"
 	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,6 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strconv"
 
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -62,7 +62,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 var (
 	_                  reconcile.Reconciler = &ReconcileComponent{}
-	buildTypeImages                        = map[string]string{"nodejs": "nodeshift/centos7-s2i-nodejs:10.x"}
+	buildTypeImages                         = map[string]string{"nodejs": "nodeshift/centos7-s2i-nodejs:10.x"}
 	openshiftNamespace                      = "openshift"
 )
 
@@ -152,7 +152,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 
 type builderImage struct {
 	namespace string
-	name string
+	name      string
 }
 
 func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Component) (*builderImage, error) {
@@ -189,7 +189,7 @@ func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Compon
 		builderName = newImageForBuilder.Name
 		builderNamespace = newImageForBuilder.Namespace
 	}
-	return &builderImage{namespace: builderNamespace, name: builderName }, nil
+	return &builderImage{namespace: builderNamespace, name: builderName}, nil
 }
 
 func newImageStreamFromDocker(namespace string, name string, buildType string) *imagev1.ImageStream {

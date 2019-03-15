@@ -16,10 +16,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"testing"
 )
+
 const (
-	Name = "MyComp"
+	Name      = "MyComp"
 	Namespace = "test-project"
 )
+
 // TestComponentController runs Component.Reconcile() against a
 // fake client that tracks a Component object.
 func TestComponentController(t *testing.T) {
@@ -29,12 +31,12 @@ func TestComponentController(t *testing.T) {
 	// A Component resource with metadata and spec.
 	cp := &compv1alpha1.Component{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: Name,
+			Name:      Name,
 			Namespace: Namespace,
-	    },
+		},
 		Spec: compv1alpha1.ComponentSpec{
 			BuildType: "nodejs",
-			Codebase: "https://somegit.con/myrepo",
+			Codebase:  "https://somegit.con/myrepo",
 		},
 	}
 
@@ -88,7 +90,7 @@ func TestComponentController(t *testing.T) {
 		isBuilder := &imagev1.ImageStream{}
 		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-builder"}, isBuilder)
 		require.NoError(t, errGetBuilderImage, "builder imagestream is not created")
-		require.Equal(t, isBuilder.ObjectMeta.Name, Name + "-builder", "imagestream builder shoulbe name with pattern CR's name append with -builder")
+		require.Equal(t, isBuilder.ObjectMeta.Name, Name+"-builder", "imagestream builder shoulbe name with pattern CR's name append with -builder")
 		require.Equal(t, isBuilder.ObjectMeta.Namespace, Namespace, "")
 		require.Equal(t, len(isBuilder.Labels), 1, "imagestream builder should contain one label")
 		require.Equal(t, isBuilder.Labels["app"], Name, "imagestream builder should have one label with name of CR.")
@@ -98,24 +100,24 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, isBuilder.Spec.Tags[0].From.Name, "nodeshift/centos7-s2i-nodejs:10.x", "imagestream builder should be taken from nodeshift/centos7-s2i-nodejs:10.x")
 
 		bc := &buildv1.BuildConfig{}
-		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
 		require.NoError(t, errGetBC, "build config is not created")
 		require.Equal(t, "https://somegit.con/myrepo", bc.Spec.Source.Git.URI, "build config should not have any source attached")
 		require.Equal(t, 2, len(bc.Spec.Triggers), "build config contains 2 triggers")
 		require.Equal(t, buildv1.ConfigChangeBuildTriggerType, bc.Spec.Triggers[0].Type, "build config should be triggered on config change")
 		require.Equal(t, buildv1.ImageChangeBuildTriggerType, bc.Spec.Triggers[1].Type, "build config should be triggered on image change")
 		require.Equal(t, 1, len(bc.Labels), "bc should contain one label")
-		require.Equal(t, Name + "-bc", bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
+		require.Equal(t, Name+"-bc", bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
 	})
 
 	t.Run("with ReconcileComponent CR containing all required field and buildtype matches openshift namespace imagestream", func(t *testing.T) {
 		//given
 		isNodejs := &imagev1.ImageStream{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "nodejs",
+				Name:      "nodejs",
 				Namespace: "openshift",
 			},
-			Spec:imagev1.ImageStreamSpec{},
+			Spec: imagev1.ImageStreamSpec{},
 		}
 		// Objects to track in the fake client.
 		objs := []runtime.Object{
@@ -154,7 +156,7 @@ func TestComponentController(t *testing.T) {
 		require.Error(t, errGetBuilderImage, "builder imagestream should not be created")
 
 		bc := &buildv1.BuildConfig{}
-		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
 		require.NoError(t, errGetBC, "build config is not created")
 		require.Equal(t, "https://somegit.con/myrepo", bc.Spec.Source.Git.URI, "build config should not have any source attached")
 		require.Equal(t, 2, len(bc.Spec.Triggers), "build config contains 2 triggers")
@@ -163,7 +165,7 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "openshift", bc.Spec.CommonSpec.Strategy.SourceStrategy.From.Namespace, "builder image used in build config should be taken from openshift namespace")
 		require.Equal(t, "nodejs:latest", bc.Spec.CommonSpec.Strategy.SourceStrategy.From.Name, "builder image used in build config should be taken from openshift's nodejs image")
 		require.Equal(t, 1, len(bc.Labels), "bc should contain one label")
-		require.Equal(t, Name + "-bc", bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
+		require.Equal(t, Name+"-bc", bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
 	})
 
 	t.Run("with ReconcileComponent CR without buildtype", func(t *testing.T) {
@@ -175,7 +177,6 @@ func TestComponentController(t *testing.T) {
 		cp.Spec.Codebase = "https://somegit.con/myrepo"
 		// Create a fake client to mock API calls.
 		cl := fake.NewFakeClient(objs...)
-
 
 		// Create a ReconcileComponent object with the scheme and fake client.
 		r := &ReconcileComponent{client: cl, scheme: s}
@@ -207,7 +208,7 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, errors.ReasonForError(errGetBuilderImage), metav1.StatusReasonNotFound, "bc could not found associated imagestream ")
 
 		bc := &buildv1.BuildConfig{}
-		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
 		require.Error(t, errGetBC, "build config should not not created with missing CR's buildtype")
 		require.Equal(t, errors.ReasonForError(errGetBC), metav1.StatusReasonNotFound, "bc could not found associated imagestream ")
 	})
@@ -221,7 +222,6 @@ func TestComponentController(t *testing.T) {
 		cp.Spec.Codebase = ""
 		// Create a fake client to mock API calls.
 		cl := fake.NewFakeClient(objs...)
-
 
 		// Create a ReconcileComponent object with the scheme and fake client.
 		r := &ReconcileComponent{client: cl, scheme: s}
@@ -252,7 +252,7 @@ func TestComponentController(t *testing.T) {
 		require.NoError(t, errGetBuilderImage, "builder imagestream is not created")
 
 		bc := &buildv1.BuildConfig{}
-		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
 		require.NoError(t, errGetBC, "buildconfig is not created")
 		require.Equal(t, "", bc.Spec.Source.Git.URI, "build config should not have any source attached")
 	})
