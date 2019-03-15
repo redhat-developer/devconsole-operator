@@ -89,6 +89,7 @@ oc adm policy add-cluster-role-to-user cluster-admin admin
 oc login -u admin 
 <enter password admin>
 oc new-project devopsconsole
+eval $(minishift docker-env)
 operator-sdk build $(minishift openshift registry)/devopsconsole/devopsconsole-operator
 docker login -u admin -p $(oc whoami -t) $(minishift openshift registry)
 docker push $(minishift openshift registry)/devopsconsole/devopsconsole-operator:latest
@@ -100,18 +101,35 @@ oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
 oc apply -f deploy/service_account.yaml
 oc apply -f deploy/role.yaml
 oc apply -f deploy/role_binding.yaml
-oc apply -f deploy/cluster_role.yaml
-oc apply -f deploy/cluster_role_binding.yaml
 oc apply -f deploy/operator.yaml
 ```
 > NOTE: make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devopsconsole/devopsconsole-operator:latest`
 
-* test in different project
+* watch the operator's pod
 ```
-oc new-project boo
-oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml --namespace boo
+oc logs pod/devopsconsole-operator-5b4bbc7d-89crs -f
 ```
 
+* in a different shell, test CR in different project
+```
+oc new-project tina
+oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml --namespace tina
+```
+* check if the resources are created
+```
+oc get all,is,component,bc,build,deployment,pod
+NAME                   READY     STATUS    RESTARTS   AGE
+pod/myapp-bc-1-build   1/1       Running   0          23s
+
+NAME                                      TYPE      FROM         LATEST
+buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
+
+NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
+build.build.openshift.io/myapp-bc-1   Source    Git@afc0f38   Running   23 seconds ago
+
+NAME                                          DOCKER REPO                         TAGS      UPDATED
+imagestream.image.openshift.io/myapp-output   172.30.1.1:5000/tina/myapp-output
+```
 ## Directory layout
 
 Please consult [the documentation](https://github.com/operator-framework/operator-sdk/blob/master/doc/project_layout.md) in order to learn about this project's structure: 

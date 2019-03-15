@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: devopsconsole-operator
-  namespace: devopsconsole
 spec:
   replicas: 1
   selector:
@@ -18,25 +17,12 @@ spec:
         - name: devopsconsole-operator
           # Replace this with the built image name
           image: 172.30.1.1:5000/devopsconsole/devopsconsole-operator:latest
-          ports:
-          - containerPort: 60000
-            name: metrics
           command:
           - devopsconsole-operator
           imagePullPolicy: Always
-          readinessProbe:
-            exec:
-              command:
-                - stat
-                - /tmp/operator-sdk-ready
-            initialDelaySeconds: 4
-            periodSeconds: 10
-            failureThreshold: 1
           env:
             - name: WATCH_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
+              value: ""
             - name: POD_NAME
               valueFrom:
                 fieldRef:
