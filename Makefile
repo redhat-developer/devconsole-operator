@@ -301,7 +301,7 @@ deploy-rbac:
 ## Deploy CRD
 deploy-crd:
 	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
-	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_envdeployment_crd.yaml
+	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
 
 .PHONY: deploy-operator
 ## Deploy Operator

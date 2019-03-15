@@ -250,7 +250,7 @@ gocov-unit-annotate: prebuild-check $(GOCOV_BIN) $(COV_PATH_UNIT)
 #
 # Parameters:
 #  1. Test name (e.g. "unit" or "integration")
-#  2. package name "github.com/fabric8-services/fabric8-auth/model"
+#  2. package name "github.com/redhat-developer/devopsconsole-operator/pgk/controller/component"
 #  3. File in which to combine the output
 #  4. Path to file in which to store names of packages that failed testing
 #  5. Environment variable (in the form VAR=VALUE) to be specified for running
