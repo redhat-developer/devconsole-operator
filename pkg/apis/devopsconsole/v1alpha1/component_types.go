@@ -8,9 +8,9 @@ import (
 // +k8s:openapi-gen=true
 type ComponentSpec struct {
 	// Container image use to build (nodejs, golang etc..)
-	BuildType	string	`json:"buildType"`
+	BuildType string `json:"buildType"`
 	// Codebase is the source code of your component. Atm only public remote URL are supported.
-	Codebase   	string `json:"codebase"`
+	Codebase string `json:"codebase"`
 }
 
 // ComponentStatus defines the observed state of Component

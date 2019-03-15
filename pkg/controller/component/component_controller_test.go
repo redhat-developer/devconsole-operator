@@ -1,0 +1,185 @@
+package component
+
+import (
+	"context"
+	buildv1 "github.com/openshift/api/build/v1"
+	imagev1 "github.com/openshift/api/image/v1"
+	compv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"testing"
+)
+const (
+	Name = "MyComp"
+	Namespace = "test-project"
+)
+// TestComponentController runs Component.Reconcile() against a
+// fake client that tracks a Component object.
+func TestComponentController(t *testing.T) {
+	reqLogger := log.WithValues("Test", t.Name())
+	reqLogger.Info("TestComponentController")
+
+	// A Component resource with metadata and spec.
+	cp := &compv1alpha1.Component{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: Name,
+			Namespace: Namespace,
+	    },
+		Spec: compv1alpha1.ComponentSpec{
+			BuildType: "nodejs",
+			Codebase: "https://somegit.con/myrepo",
+		},
+	}
+
+	// Register operator types with the runtime scheme.
+	s := scheme.Scheme
+	s.AddKnownTypes(compv1alpha1.SchemeGroupVersion, cp)
+
+	// register openshift resource specific schema
+	if err := imagev1.AddToScheme(s); err != nil {
+		log.Error(err, "")
+		assert.Nil(t, err, "adding imagestream schema is failing")
+	}
+	if err := buildv1.AddToScheme(s); err != nil {
+		log.Error(err, "")
+		assert.Nil(t, err, "adding buildconfig schema is failing")
+	}
+
+	t.Run("with ReconcileComponent CR containing all required field creates openshift resources", func(t *testing.T) {
+		//given
+		// Objects to track in the fake client.
+		objs := []runtime.Object{
+			cp,
+		}
+		// Create a fake client to mock API calls.
+		cl := fake.NewFakeClient(objs...)
+
+		// Create a ReconcileComponent object with the scheme and fake client.
+		r := &ReconcileComponent{client: cl, scheme: s}
+
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+		}
+
+		//when
+		_, err := r.Reconcile(req)
+
+		//then
+		require.NoError(t, err, "reconcile is failing")
+
+		instance := &compv1alpha1.Component{}
+		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
+		require.NoError(t, errGet, "component is not created")
+
+		is := &imagev1.ImageStream{}
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
+		require.NoError(t, errGetImage, "output imagestream is not created")
+
+		isRuntime := &imagev1.ImageStream{}
+		errGetRuntimeImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isRuntime)
+		require.NoError(t, errGetRuntimeImage, "runtime imagestream is not created")
+
+		bc := &buildv1.BuildConfig{}
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
+		require.NoError(t, errGetBC, "build config is not created")
+		require.Equal(t, "https://somegit.con/myrepo", bc.Spec.Source.Git.URI, "build config should not have any source attached")
+	})
+
+	t.Run("with ReconcileComponent CR without buildtype", func(t *testing.T) {
+		//given
+		objs := []runtime.Object{
+			cp,
+		}
+		cp.Spec.BuildType = ""
+		cp.Spec.Codebase = "https://somegit.con/myrepo"
+		// Create a fake client to mock API calls.
+		cl := fake.NewFakeClient(objs...)
+
+
+		// Create a ReconcileComponent object with the scheme and fake client.
+		r := &ReconcileComponent{client: cl, scheme: s}
+
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+		}
+
+		//when
+		_, err := r.Reconcile(req)
+
+		//then
+		require.Error(t, err, "reconcile is failing")
+
+		instance := &compv1alpha1.Component{}
+		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
+		require.NoError(t, errGet, "component is not created")
+
+		is := &imagev1.ImageStream{}
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
+		require.NoError(t, errGetImage, "output imagestream is not created")
+
+		isRuntime := &imagev1.ImageStream{}
+		errGetRuntimeImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isRuntime)
+		require.Error(t, errGetRuntimeImage, "runtime imagestream should not be created with missing CR's buildtype")
+
+		bc := &buildv1.BuildConfig{}
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
+		require.Error(t, errGetBC, "build config should not not created with missing CR's buildtype")
+	})
+
+	t.Run("with ReconcileComponent CR without codebases", func(t *testing.T) {
+		//given
+		objs := []runtime.Object{
+			cp,
+		}
+		cp.Spec.BuildType = "nodejs"
+		cp.Spec.Codebase = ""
+		// Create a fake client to mock API calls.
+		cl := fake.NewFakeClient(objs...)
+
+
+		// Create a ReconcileComponent object with the scheme and fake client.
+		r := &ReconcileComponent{client: cl, scheme: s}
+
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+		}
+
+		//when
+		_, err := r.Reconcile(req)
+
+		//then
+		require.NoError(t, err, "reconcile is failing")
+
+		instance := &compv1alpha1.Component{}
+		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
+		require.NoError(t, errGet, "component is not created")
+
+		is := &imagev1.ImageStream{}
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
+		require.NoError(t, errGetImage, "output imagestream is not created")
+
+		isRuntime := &imagev1.ImageStream{}
+		errGetRuntimeImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-runtime"}, isRuntime)
+		require.NoError(t, errGetRuntimeImage, "runtime imagestream is not created")
+
+		bc := &buildv1.BuildConfig{}
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace:Namespace, Name: Name  + "-bc"}, bc)
+		require.NoError(t, errGetBC, "buildconfig is not created")
+		require.Equal(t, "", bc.Spec.Source.Git.URI, "build config should not have any source attached")
+	})
+}
