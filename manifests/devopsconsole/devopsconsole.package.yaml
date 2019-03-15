@@ -1,5 +1,5 @@
 packageName: devopsconsole
 channels:
 - name: alpha
-  currentCSV: devopsconsole.v0.1.0
+  currentCSV: devopsconsole-operator.v0.1.0
 
