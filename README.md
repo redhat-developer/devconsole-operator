@@ -29,6 +29,7 @@ minishift profile set devopsconsole
 minishift addon enable admin-user
 ```
 * optionally, configure the VM 
+
 ```
 minishift config set cpus 4
 minishift config set memory 8GB
@@ -94,6 +95,7 @@ Please consult [the documentation](https://github.com/operator-framework/operato
 | Gopkg.toml Gopkg.lock | The [dep](https://github.com/golang/dep) manifests that describe the external dependencies of this operator.|
 | vendor | The golang [Vendor](https://golang.org/cmd/go/#hdr-Vendor_Directories) folder that contains the local copies of the external dependencies that satisfy the imports of this project. [dep](https://github.com/golang/dep) manages the vendor directly.|
 
+
 ## Enabling the DevOps perspective in OpenShift
 
 The frontend can check for the presence of the DevOpsConsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devopsconsole.openshift.io`.  If it exists, it will enable the DevOps perspective in the Openshift Console.
@@ -137,3 +139,4 @@ spec:
 [go_tool]:https://golang.org/dl/
 [docker_tool]:https://docs.docker.com/install/
 [kubectl_tool]:https://kubernetes.io/docs/tasks/tools/install-kubectl/
+

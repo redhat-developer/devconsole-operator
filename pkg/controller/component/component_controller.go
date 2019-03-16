@@ -3,12 +3,12 @@ package component
 import (
 	"context"
 	"fmt"
-	"strconv"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,11 +19,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strconv"
 
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var log = logf.Log.WithName("controller_component")
@@ -57,12 +57,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileComponent{}
-var buildTypeImages = map[string]string{"nodejs": "nodeshift/centos7-s2i-nodejs:10.x"}
+var (
+	_                  reconcile.Reconciler = &ReconcileComponent{}
+	buildTypeImages                         = map[string]string{"nodejs": "nodeshift/centos7-s2i-nodejs:10.x"}
+	openshiftNamespace                      = "openshift"
+)
 
 // ReconcileComponent reconciles a Component object
 type ReconcileComponent struct {
@@ -116,7 +118,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	// We only call the pipeline when the component has been created
 	// and if the Status Revision Number is the same
 	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
-		// Create an empty image name "nodejs-output"
+		// Create an empty image name "myapp-output"
 		newImageForOutput := newImageStream(instance.Namespace, instance.Name)
 		err = r.client.Create(context.TODO(), newImageForOutput)
 		if err != nil {
@@ -128,27 +130,15 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			log.Error(err, "** Setting owner reference fails **")
 			return reconcile.Result{}, err
 		}
-
-		// Create an empty image name "nodejs-runtime"
-		// todo(corinne): check if we can reuse openshift's image stream
-		newImageForRuntime := newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
-		err = r.client.Create(context.TODO(), newImageForRuntime)
+		// Create a build image named either "myapp-builder" or reuse openshift's builder image
+		ir, err := r.getBuilderImage(instance)
 		if err != nil {
-			log.Error(err, "** Creating new RUNTIME image fails **")
-			return reconcile.Result{}, err
-		}
-		if newImageForRuntime == nil {
-			log.Error(err, "** Creating new RUNTIME image fails **")
-			return reconcile.Result{}, errors.NewNotFound(schema.GroupResource{"", "ImageStream"}, "runtime image for build not found")
-		}
-		log.Info("** Image stream for RUNTIME created **")
-		if err := controllerutil.SetControllerReference(instance, newImageForRuntime, r.scheme); err != nil {
-			log.Error(err, "** Setting owner reference fails **")
+			log.Error(err, "** ImageStream builder creation fails **")
 			return reconcile.Result{}, err
 		}
 
 		// Create build config with s2i
-		bc := generateBuildConfig(instance.Namespace, instance.Name, instance.Spec.Codebase, "master")
+		bc := generateBuildConfig(instance.Namespace, instance.Name, ir, instance.Spec.Codebase, "master")
 		err = r.client.Create(context.TODO(), &bc)
 		if err != nil {
 			log.Error(err, "** BuildConfig creation fails **")
@@ -160,15 +150,59 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	return reconcile.Result{}, nil
 }
 
+type builderImage struct {
+	namespace string
+	name      string
+}
+
+func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Component) (*builderImage, error) {
+	var newImageForBuilder *imagev1.ImageStream
+	var builderName string
+	var builderNamespace string
+	// Check if builder image exist in openshift namespace
+	found := &imagev1.ImageStream{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.BuildType, Namespace: openshiftNamespace}, found)
+	if err != nil {
+		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, instance.Spec.BuildType))
+		// Create an empty image name "<BuildType>-builder"
+		newImageForBuilder = newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
+		if newImageForBuilder == nil {
+			log.Error(err, "** Creating new BUILDER image fails **")
+			return nil, errors.NewNotFound(schema.GroupResource{Resource: "ImageStream"}, "builder image for build not found")
+		}
+		err = r.client.Create(context.TODO(), newImageForBuilder)
+		if err != nil {
+			log.Error(err, "** Creating new BUILDER image fails **")
+			return nil, err
+		}
+
+		log.Info("** Image stream for BUILDER created **")
+		if err := controllerutil.SetControllerReference(instance, newImageForBuilder, r.scheme); err != nil {
+			log.Error(err, "** Setting owner reference fails **")
+			return nil, err
+		}
+		builderName = instance.Name + "-builder"
+		builderNamespace = instance.Namespace
+	} else {
+		log.Info("** Found openshift's imagestream to use as builder **")
+		newImageForBuilder = found
+		builderName = newImageForBuilder.Name
+		builderNamespace = newImageForBuilder.Namespace
+	}
+	return &builderImage{namespace: builderNamespace, name: builderName}, nil
+}
+
 func newImageStreamFromDocker(namespace string, name string, buildType string) *imagev1.ImageStream {
 	labels := map[string]string{
 		"app": name,
 	}
+
 	if _, ok := buildTypeImages[buildType]; !ok {
+
 		return nil
 	}
 	return &imagev1.ImageStream{ObjectMeta: metav1.ObjectMeta{
-		Name:      name + "-runtime",
+		Name:      name + "-builder",
 		Namespace: namespace,
 		Labels:    labels,
 	}, Spec: imagev1.ImageStreamSpec{
@@ -186,6 +220,7 @@ func newImageStreamFromDocker(namespace string, name string, buildType string) *
 		},
 	}}
 }
+
 func newImageStream(namespace string, name string) *imagev1.ImageStream {
 	labels := map[string]string{
 		"app": name,
@@ -204,7 +239,7 @@ func getMetaObj(name string, imageNamespace string) metav1.ObjectMeta {
 	return metav1.ObjectMeta{Name: name, Namespace: imageNamespace, Labels: labels}
 }
 
-func generateBuildConfig(namespace string, name string, gitURL string, gitRef string) buildv1.BuildConfig {
+func generateBuildConfig(namespace string, name string, builder *builderImage, gitURL string, gitRef string) buildv1.BuildConfig {
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{
 			URI: gitURL,
@@ -213,6 +248,7 @@ func generateBuildConfig(namespace string, name string, gitURL string, gitRef st
 		Type: buildv1.BuildSourceGit,
 	}
 	incremental := true
+
 	return buildv1.BuildConfig{
 		ObjectMeta: getMetaObj(name+"-bc", namespace),
 		Spec: buildv1.BuildConfigSpec{
@@ -228,8 +264,8 @@ func generateBuildConfig(namespace string, name string, gitURL string, gitRef st
 					SourceStrategy: &buildv1.SourceBuildStrategy{
 						From: corev1.ObjectReference{
 							Kind:      "ImageStreamTag",
-							Name:      name + "-runtime:latest",
-							Namespace: namespace,
+							Name:      builder.name + ":latest",
+							Namespace: builder.namespace,
 						},
 						Incremental: &incremental,
 					},
