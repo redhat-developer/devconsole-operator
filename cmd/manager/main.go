@@ -4,13 +4,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"os"
 	"runtime"
+
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	"github.com/operator-framework/operator-sdk/pkg/ready"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
@@ -98,6 +100,10 @@ func main() {
 		os.Exit(1)
 	}
 	if err := appsv1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+	if err := routev1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}

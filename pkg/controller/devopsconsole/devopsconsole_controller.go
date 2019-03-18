@@ -7,6 +7,7 @@ import (
 
 	devopsconsolev1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 
+	routev1 "github.com/openshift/api/route/v1"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -66,6 +67,22 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &devopsconsolev1alpha1.DevopsConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &devopsconsolev1alpha1.DevopsConsole{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -116,8 +133,8 @@ func (r *ReconcileDevopsConsole) Reconcile(request reconcile.Request) (reconcile
 	}
 
 	// Check if this deployment already exists
-	found := &appv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, found)
+	foundDeployment := &appv1.Deployment{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		err = r.client.Create(context.TODO(), deployment)
@@ -130,8 +147,50 @@ func (r *ReconcileDevopsConsole) Reconcile(request reconcile.Request) (reconcile
 		return reconcile.Result{}, err
 	}
 
+	// Check if this deployment already exists
+	newService := newService(instance)
+	// Set DevopsConsole instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, newService, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	foundService := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newService.Name, Namespace: newService.Namespace}, foundService)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Service", "Service.Namespace", newService.Namespace, "Service.Name", newService.Name)
+		err = r.client.Create(context.TODO(), newService)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		// Deployment created successfully - don't requeue
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	newRoute := newRoute(instance, newService)
+	// Set DevopsConsole instance as the owner and controller
+	if err := controllerutil.SetControllerReference(instance, newRoute, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	foundRoute := &routev1.Route{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newRoute.Name, Namespace: newRoute.Namespace}, foundRoute)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Route", "Route.Namespace", newRoute.Namespace, "Route.Name", newRoute.Name)
+		err = r.client.Create(context.TODO(), newRoute)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		// Deployment created successfully - don't requeue
+		return reconcile.Result{}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Deployment already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+	reqLogger.Info("Done reconcile: Deployment, Service and Route exists")
+
 	return reconcile.Result{}, nil
 }
 
@@ -169,6 +228,58 @@ func newDeploymentForCR(cr *devopsconsolev1alpha1.DevopsConsole, imageName strin
 			},
 		},
 	}
+}
+
+func newService(cr *devopsconsolev1alpha1.DevopsConsole) *corev1.Service {
+	labels := map[string]string{
+		"app": cr.Name,
+	}
+	svc := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "devopsconsoleservice",
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: labels,
+			Ports: []corev1.ServicePort{
+				{
+					Name:     "main",
+					Protocol: corev1.ProtocolTCP,
+					Port:     8080,
+				},
+			},
+		},
+	}
+	return svc
+}
+
+func newRoute(cr *devopsconsolev1alpha1.DevopsConsole, svc *corev1.Service) *routev1.Route {
+	labels := map[string]string{
+		"app": cr.Name,
+	}
+	route := &routev1.Route{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Route",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "devopsconsoleroute",
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Spec: routev1.RouteSpec{
+			To: routev1.RouteTargetReference{
+				Kind: "Service",
+				Name: svc.Name,
+			},
+		},
+	}
+	return route
 }
 
 // GetEnvValue returns the value of env from the environment. Returns error if
