@@ -220,9 +220,8 @@ func newDeploymentForCR(cr *devopsconsolev1alpha1.DevopsConsole, imageName strin
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Image:   imageName,
-						Name:    "app-service",
-						Command: []string{"/bin/sh", "-c", "tail -f /dev/null"},
+						Image: imageName,
+						Name:  "app-service",
 					}},
 				},
 			},
