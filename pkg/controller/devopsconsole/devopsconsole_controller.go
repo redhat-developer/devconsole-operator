@@ -141,13 +141,10 @@ func (r *ReconcileDevopsConsole) Reconcile(request reconcile.Request) (reconcile
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		// Deployment created successfully - don't requeue
-		return reconcile.Result{}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Check if this deployment already exists
 	newService := newService(instance)
 	// Set DevopsConsole instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, newService, r.scheme); err != nil {
@@ -162,8 +159,6 @@ func (r *ReconcileDevopsConsole) Reconcile(request reconcile.Request) (reconcile
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		// Deployment created successfully - don't requeue
-		return reconcile.Result{}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -180,10 +175,9 @@ func (r *ReconcileDevopsConsole) Reconcile(request reconcile.Request) (reconcile
 		reqLogger.Info("Creating a new Route", "Route.Namespace", newRoute.Namespace, "Route.Name", newRoute.Name)
 		err = r.client.Create(context.TODO(), newRoute)
 		if err != nil {
+			reqLogger.Error(err, "Failed to create new route.")
 			return reconcile.Result{}, err
 		}
-		// Deployment created successfully - don't requeue
-		return reconcile.Result{}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -191,6 +185,25 @@ func (r *ReconcileDevopsConsole) Reconcile(request reconcile.Request) (reconcile
 	// Deployment already exists - don't requeue
 	reqLogger.Info("Done reconcile: Deployment, Service and Route exists")
 
+	// Fetch the latest route and update the status
+	foundRoute = &routev1.Route{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newRoute.Name, Namespace: newRoute.Namespace}, foundRoute)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	reqLogger.Info("Found route 1", "route", foundRoute.Spec.Host)
+	if foundRoute.Spec.Host != instance.Status.AppServiceURL {
+		reqLogger.Info("Update CR status", "route", foundRoute.Spec.Host, "route1", instance.Status.AppServiceURL)
+		instance.Status.AppServiceURL = foundRoute.Spec.Host
+		err = r.client.Status().Update(context.TODO(), instance)
+		if err != nil {
+			reqLogger.Error(err, "Failed to update DevopsConsole status.")
+			return reconcile.Result{}, err
+		}
+		reqLogger.Info("Update successful", "Route", instance.Status.AppServiceURL)
+		r.client.Get(context.TODO(), types.NamespacedName{Name: newRoute.Name, Namespace: newRoute.Namespace}, foundRoute)
+		reqLogger.Info("Found route", "route", foundRoute.Spec.Host)
+	}
 	return reconcile.Result{}, nil
 }
 
