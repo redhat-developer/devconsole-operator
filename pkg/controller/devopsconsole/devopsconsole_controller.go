@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-logr/logr"
+
 	devopsconsolev1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 
 	routev1 "github.com/openshift/api/route/v1"
@@ -92,8 +94,9 @@ var _ reconcile.Reconciler = &ReconcileDevopsConsole{}
 type ReconcileDevopsConsole struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client    client.Client
+	scheme    *runtime.Scheme
+	reqLogger logr.Logger
 }
 
 // Reconcile reads that state of the cluster for a DevopsConsole object and makes changes based on the state read
@@ -102,8 +105,8 @@ type ReconcileDevopsConsole struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileDevopsConsole) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling DevopsConsole")
+	r.reqLogger = log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	r.reqLogger.Info("Reconciling DevopsConsole")
 
 	// Fetch the DevopsConsole instance
 	instance := &devopsconsolev1alpha1.DevopsConsole{}
@@ -119,99 +122,170 @@ func (r *ReconcileDevopsConsole) Reconcile(request reconcile.Request) (reconcile
 		return reconcile.Result{}, err
 	}
 
-	var imageName string
-	if imageName, err = GetEnvValue(appServiceEnvVar); err != nil {
+	if _, err = r.createDeployment(instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Define a new deployment object
-	deployment := newDeploymentForCR(instance, imageName, 1)
-
-	// Set DevopsConsole instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Check if this deployment already exists
-	foundDeployment := &appv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
-		err = r.client.Create(context.TODO(), deployment)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	} else if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	newService := newService(instance)
-	// Set DevopsConsole instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, newService, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	foundService := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newService.Name, Namespace: newService.Namespace}, foundService)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Service", "Service.Namespace", newService.Namespace, "Service.Name", newService.Name)
-		err = r.client.Create(context.TODO(), newService)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	} else if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	newRoute := newRoute(instance, newService)
-	// Set DevopsConsole instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, newRoute, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	foundRoute := &routev1.Route{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newRoute.Name, Namespace: newRoute.Namespace}, foundRoute)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Route", "Route.Namespace", newRoute.Namespace, "Route.Name", newRoute.Name)
-		err = r.client.Create(context.TODO(), newRoute)
-		if err != nil {
-			reqLogger.Error(err, "Failed to create new route.")
-			return reconcile.Result{}, err
-		}
-	} else if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Deployment already exists - don't requeue
-	reqLogger.Info("Done reconcile: Deployment, Service and Route exists")
-
-	// Fetch the latest route and update the status
-	foundRoute = &routev1.Route{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: newRoute.Name, Namespace: newRoute.Namespace}, foundRoute)
+	service, err := r.createService(instance)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	reqLogger.Info("Found route 1", "route", foundRoute.Spec.Host)
-	if foundRoute.Spec.Host != instance.Status.AppServiceURL {
-		reqLogger.Info("Update CR status", "route", foundRoute.Spec.Host, "route1", instance.Status.AppServiceURL)
-		instance.Status.AppServiceURL = foundRoute.Spec.Host
-		err = r.client.Status().Update(context.TODO(), instance)
-		if err != nil {
-			reqLogger.Error(err, "Failed to update DevopsConsole status.")
-			return reconcile.Result{}, err
-		}
-		reqLogger.Info("Update successful", "Route", instance.Status.AppServiceURL)
-		r.client.Get(context.TODO(), types.NamespacedName{Name: newRoute.Name, Namespace: newRoute.Namespace}, foundRoute)
-		reqLogger.Info("Found route", "route", foundRoute.Spec.Host)
+
+	route, err := r.createRoute(instance, service.Name)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
+
+	r.reqLogger.Info("Created Deployment, Service and Route")
+
+	if err := r.updateStatus(instance, route); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	r.reqLogger.Info("Reconciliation completed.")
 	return reconcile.Result{}, nil
 }
 
-// newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
-func newDeploymentForCR(cr *devopsconsolev1alpha1.DevopsConsole, imageName string, replicas int32) *appv1.Deployment {
+// createDeployment creates a new deployment if it doesn't already exists.
+// Returns the old deployment if found, or the new deployment if created.
+func (r *ReconcileDevopsConsole) createDeployment(cr *devopsconsolev1alpha1.DevopsConsole) (*appv1.Deployment, error) {
+	// Define a new deployment object
+	deployment, err := newDeploymentForCR(cr, 1)
+
+	// Set DevopsConsole cr as the owner and controller
+	if err := controllerutil.SetControllerReference(cr, deployment, r.scheme); err != nil {
+		return nil, err
+	}
+
+	foundDeployment := &appv1.Deployment{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
+
+	// A deployment already exists. Don't do anything
+	if err == nil {
+		r.reqLogger.Info("Skip Creating Deployment: Deployment Already exist", "Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
+		return foundDeployment, nil
+	}
+
+	// A deployment doesn't exist. Create a new one
+	if errors.IsNotFound(err) {
+		r.reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+		err = r.client.Create(context.TODO(), deployment)
+		if err != nil {
+			return nil, err
+		}
+		r.reqLogger.Info("Successfully created new deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+		return deployment, nil
+	}
+
+	// Something else went wrong while trying to load the existing deployment
+	return nil, err
+}
+
+// createService creates a new Service if it doesn't already exists.
+// Returns the old Service if found, or the new Service if created.
+func (r *ReconcileDevopsConsole) createService(cr *devopsconsolev1alpha1.DevopsConsole) (*corev1.Service, error) {
+	newService := newServiceForCR(cr)
+	// Set DevopsConsole cr as the owner and controller
+	if err := controllerutil.SetControllerReference(cr, newService, r.scheme); err != nil {
+		return nil, err
+	}
+
+	foundService := &corev1.Service{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: newService.Name, Namespace: newService.Namespace}, foundService)
+
+	// A service already exists. Don't do anything
+	if err == nil {
+		r.reqLogger.Info("Skip Creating Service: Service Already exist", "Service.Namespace", foundService.Namespace, "Service.Name", foundService.Name)
+		return foundService, nil
+	}
+
+	// The service doesn't exist. Create a new one
+	if errors.IsNotFound(err) {
+		r.reqLogger.Info("Creating a new Service", "Service.Namespace", newService.Namespace, "Service.Name", newService.Name)
+		err = r.client.Create(context.TODO(), newService)
+		if err != nil {
+			return nil, err
+		}
+		r.reqLogger.Info("Successfully created new Service", "Service.Namespace", newService.Namespace, "Service.Name", newService.Name)
+		return newService, nil
+	}
+
+	// Something else went wrong. Return the error and try again
+	return nil, err
+
+}
+
+// createRoute creates a new Route if it doesn't already exists.
+// Returns the old Route if found, or the new Route if created.
+func (r *ReconcileDevopsConsole) createRoute(cr *devopsconsolev1alpha1.DevopsConsole, serviceName string) (*routev1.Route, error) {
+	newRoute := newRoute(cr, serviceName)
+	// Set DevopsConsole cr as the owner and controller
+	if err := controllerutil.SetControllerReference(cr, newRoute, r.scheme); err != nil {
+		return nil, err
+	}
+
+	foundRoute := &routev1.Route{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: newRoute.Name, Namespace: newRoute.Namespace}, foundRoute)
+	// Route already exists. Don't do anything
+	if err == nil {
+		r.reqLogger.Info("Skip Creating Route: Route Already exist", "Route.Namespace", foundRoute.Namespace, "Route.Name", foundRoute.Name)
+		return foundRoute, nil
+	}
+
+	// Route doesn't exist. Try to create a new one
+	if errors.IsNotFound(err) {
+		r.reqLogger.Info("Creating a new Route", "Route.Namespace", newRoute.Namespace, "Route.Name", newRoute.Name)
+		err = r.client.Create(context.TODO(), newRoute)
+		if err != nil && errors.IsAlreadyExists(err) {
+			// A route was created by a different event while were reconcilling.
+			// Skip creation.
+			r.reqLogger.Info("Route already exists", "Route.Namespace", newRoute.Namespace, "Route.Name", newRoute.Name)
+			return newRoute, nil
+		}
+		if err != nil {
+			r.reqLogger.Error(err, "Failed to create new route.")
+			return nil, err
+		}
+		r.reqLogger.Info("Successfully created new Route", "Route.Namespace", newRoute.Namespace, "Route.Name", newRoute.Name)
+		return newRoute, nil
+	}
+	return nil, err
+}
+
+// updateStatus adds update the cr.Status.AppServiceURL to reflect the app
+// service url
+func (r *ReconcileDevopsConsole) updateStatus(cr *devopsconsolev1alpha1.DevopsConsole, route *routev1.Route) error {
+	if route.Spec.Host == cr.Status.AppServiceURL {
+		r.reqLogger.Info("Skip CR status Update: CR status already up-to-date", "Route.Name", route.Name, "Route.Status.AppServiceURL", cr.Status.AppServiceURL)
+		return nil
+	}
+
+	// Update the status
+	r.reqLogger.Info("Updating CR Status", "current route", cr.Status.AppServiceURL, "new route", route.Spec.Host)
+	cr.Status.AppServiceURL = route.Spec.Host
+	if err := r.client.Status().Update(context.TODO(), cr); err != nil {
+		r.reqLogger.Error(err, "Failed to update DevopsConsole status.")
+		return err
+	}
+
+	r.reqLogger.Info("Successfully updated CR status", "CR.Namespace", cr.Name, "CR.Status.AppServiceURL", cr.Status.AppServiceURL)
+	return nil
+}
+
+func getLabelsForCR(cr *devopsconsolev1alpha1.DevopsConsole) map[string]string {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
+	return labels
+}
+
+// newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
+func newDeploymentForCR(cr *devopsconsolev1alpha1.DevopsConsole, replicas int32) (*appv1.Deployment, error) {
+	imageName, err := GetEnvValue(appServiceEnvVar)
+	if err != nil {
+		return nil, err
+	}
+	labels := getLabelsForCR(cr)
 	return &appv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -239,13 +313,11 @@ func newDeploymentForCR(cr *devopsconsolev1alpha1.DevopsConsole, imageName strin
 				},
 			},
 		},
-	}
+	}, nil
 }
 
-func newService(cr *devopsconsolev1alpha1.DevopsConsole) *corev1.Service {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
+func newServiceForCR(cr *devopsconsolev1alpha1.DevopsConsole) *corev1.Service {
+	labels := getLabelsForCR(cr)
 	svc := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -270,10 +342,8 @@ func newService(cr *devopsconsolev1alpha1.DevopsConsole) *corev1.Service {
 	return svc
 }
 
-func newRoute(cr *devopsconsolev1alpha1.DevopsConsole, svc *corev1.Service) *routev1.Route {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
+func newRoute(cr *devopsconsolev1alpha1.DevopsConsole, serviceName string) *routev1.Route {
+	labels := getLabelsForCR(cr)
 	route := &routev1.Route{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Route",
@@ -287,7 +357,7 @@ func newRoute(cr *devopsconsolev1alpha1.DevopsConsole, svc *corev1.Service) *rou
 		Spec: routev1.RouteSpec{
 			To: routev1.RouteTargetReference{
 				Kind: "Service",
-				Name: svc.Name,
+				Name: serviceName,
 			},
 		},
 	}
