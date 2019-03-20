@@ -99,8 +99,8 @@ docker push $(minishift openshift registry)/devopsconsole/devopsconsole-operator
 oc login -u admin
 oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
 oc apply -f deploy/service_account.yaml
-oc apply -f deploy/role.yaml
-oc apply -f deploy/role_binding.yaml
+oc apply -f deploy/cluster_role.yaml
+oc apply -f deploy/cluster_role_binding.yaml
 oc apply -f deploy/operator.yaml
 ```
 > NOTE: make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devopsconsole/devopsconsole-operator:latest`
