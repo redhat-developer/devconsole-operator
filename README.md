@@ -85,18 +85,16 @@ build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 secon
 * (optional) minishift internal registry
 Build the operator's controller image and make it available in internal registry
 ```
-oc adm policy add-cluster-role-to-user cluster-admin admin
-oc login -u admin 
-<enter password admin>
 oc new-project devopsconsole
 eval $(minishift docker-env)
 operator-sdk build $(minishift openshift registry)/devopsconsole/devopsconsole-operator
-docker login -u admin -p $(oc whoami -t) $(minishift openshift registry)
-docker push $(minishift openshift registry)/devopsconsole/devopsconsole-operator:latest
 ```
+> NOTE: In `operator.yaml` replace `imagePullPolicy: Always` with `imagePullPolicy: IfNotPresent` 
+for local dev to avoid pulling image and be able to use docker cached image instead.
+ 
 * deploy cr, role and rbac
 ```
-oc login -u admin
+oc login -u system:admin
 oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
 oc apply -f deploy/service_account.yaml
 oc apply -f deploy/cluster_role.yaml
