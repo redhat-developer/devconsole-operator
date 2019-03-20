@@ -24,9 +24,9 @@ create-resources:
 	@echo "Creating Service Account"
 	@oc create -f $(DEPLOY_DIR)/service_account.yaml
 	@echo "Creating Role"
-	@oc create -f $(DEPLOY_DIR)/role.yaml
+	@oc create -f $(DEPLOY_DIR)/cluster_role.yaml
 	@echo "Creating RoleBinding"
-	@oc create -f $(DEPLOY_DIR)/role_binding.yaml
+	@oc create -f $(DEPLOY_DIR)/cluster_role_binding.yaml
 
 .PHONY: create-cr
 create-cr:
@@ -53,18 +53,12 @@ clean-operator:
 .PHONY: clean-resources
 clean-resources:
 	@echo "Deleting sub resources..."
-	@echo "Deleting RoleBinding"
-	@oc delete -f $(DEPLOY_DIR)/role_binding.yaml || true
 	@echo "Deleting ClusterRoleBinding"
 	@oc delete -f $(DEPLOY_DIR)/cluster_role_binding.yaml || true
-	@echo "Deleting Role"
-	@oc delete -f $(DEPLOY_DIR)/role.yaml || true
 	@echo "Deleting ClusterRole"
 	@oc delete -f $(DEPLOY_DIR)/cluster_role.yaml || true
 	@echo "Deleting Service Account"
 	@oc delete -f $(DEPLOY_DIR)/service_account.yaml || true
-	@echo "Deleting Namespace"
-	@oc delete -f $(DEPLOY_DIR)/namespace.yaml || true
 	@echo "Deleting Custom Resource Definitions..."
 	@oc delete -f $(DEPLOY_DIR)/crds/devopsconsole_v1alpha1_gitsource_crd.yaml || true
 

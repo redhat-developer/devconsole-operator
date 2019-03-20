@@ -41,9 +41,9 @@ minishift start
 ```
 > NOTE: this setup should be deprecated in favor of [OCP4 install]().
 
-### Deploy the operator
+### Deploy the operator in dev mode
 
-In dev mode, simply run your operator locally:
+* In dev mode, simply run your operator locally:
 ```
 make local
 ```
@@ -51,7 +51,6 @@ make local
 If a specific namespace is provided only that project will watched. 
 As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
 
-### Deploy the CR for testing
 * Make sure minishift is running and use myproject
 ```
 oc project myproject
@@ -81,6 +80,54 @@ NAME                                  TYPE      FROM          STATUS    STARTED 
 build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 seconds ago
 ```
 
+### Deploy the operator with Deployment yaml
+
+* (optional) minishift internal registry
+Build the operator's controller image and make it available in internal registry
+```
+oc new-project devopsconsole
+eval $(minishift docker-env)
+operator-sdk build $(minishift openshift registry)/devopsconsole/devopsconsole-operator
+```
+> NOTE: In `operator.yaml` replace `imagePullPolicy: Always` with `imagePullPolicy: IfNotPresent` 
+for local dev to avoid pulling image and be able to use docker cached image instead.
+ 
+* deploy cr, role and rbac
+```
+oc login -u system:admin
+oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+oc apply -f deploy/service_account.yaml
+oc apply -f deploy/cluster_role.yaml
+oc apply -f deploy/cluster_role_binding.yaml
+oc apply -f deploy/operator.yaml
+```
+> NOTE: make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devopsconsole/devopsconsole-operator:latest`
+
+* watch the operator's pod
+```
+oc logs pod/devopsconsole-operator-5b4bbc7d-89crs -f
+```
+
+* in a different shell, test CR in different project
+```
+oc new-project tina
+oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml --namespace tina
+```
+* check if the resources are created
+```
+oc get all,is,component,bc,build,deployment,pod
+NAME                   READY     STATUS    RESTARTS   AGE
+pod/myapp-bc-1-build   1/1       Running   0          23s
+
+NAME                                      TYPE      FROM         LATEST
+buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
+
+NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
+build.build.openshift.io/myapp-bc-1   Source    Git@afc0f38   Running   23 seconds ago
+
+NAME                                          DOCKER REPO                         TAGS      UPDATED
+imagestream.image.openshift.io/myapp-output   172.30.1.1:5000/tina/myapp-output
+```
 ## Directory layout
 
 Please consult [the documentation](https://github.com/operator-framework/operator-sdk/blob/master/doc/project_layout.md) in order to learn about this project's structure: 

@@ -16,21 +16,10 @@ spec:
       containers:
         - name: devopsconsole-operator
           # Replace this with the built image name
-          image: REPLACE_IMAGE
-          ports:
-          - containerPort: 60000
-            name: metrics
+          image: 172.30.1.1:5000/devopsconsole/devopsconsole-operator:latest
           command:
           - devopsconsole-operator
-          imagePullPolicy: Always
-          readinessProbe:
-            exec:
-              command:
-                - stat
-                - /tmp/operator-sdk-ready
-            initialDelaySeconds: 4
-            periodSeconds: 10
-            failureThreshold: 1
+          imagePullPolicy: Always # replace with IfNotPresent for local dev to avoid pulling image and use docker cached image
           env:
             - name: WATCH_NAMESPACE
               value: ""

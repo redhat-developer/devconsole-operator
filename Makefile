@@ -294,8 +294,8 @@ local: deploy-rbac build deploy-crd
 deploy-rbac:
 	@-oc login -u system:admin
 	@-oc create -f deploy/service_account.yaml
-	@-oc create -f deploy/role.yaml
-	@-oc create -f deploy/role_binding.yaml
+	@-oc create -f deploy/cluster_role.yaml
+	@-oc create -f deploy/cluster_role_binding.yaml
 
 .PHONY: deploy-crd
 ## Deploy CRD
@@ -311,11 +311,11 @@ deploy-operator: deploy-crd
 .PHONY: deploy-clean
 ## Deploy a CR as test
 deploy-clean:
-	@-oc delete imagestream.image.openshift.io/myapp-runtime
+	@-oc delete component.devopsconsole.openshift.io/myapp
+	@-oc delete imagestream.image.openshift.io/myapp-builder
 	@-oc delete imagestream.image.openshift.io/myapp-output
 	@-oc delete buildconfig.build.openshift.io/myapp-bc
 	@-oc delete deploymentconfig.apps.openshift.io/myapp
-	@-oc delete component.devopsconsole.openshift.io/myapp
 
 .PHONY: deploy-test
 ## Deploy a CR as test
