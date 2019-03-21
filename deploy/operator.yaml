@@ -29,3 +29,5 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "devopsconsole-operator"
+            - name: APP_SERVICE_IMAGE_NAME
+              value: "jarifibrahim/boilerplate-app" # change this to actual image when we have it
