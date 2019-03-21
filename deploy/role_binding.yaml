@@ -10,3 +10,18 @@ roleRef:
   kind: ClusterRole
   name: devopsconsole-operator
   apiGroup: rbac.authorization.k8s.io
+---
+# Allow all authenticated users to read the status of the
+# installer.devopsconsole.openshift.io CRD
+apiVersion: v1
+groupNames:
+- system:authenticated
+kind: ClusterRoleBinding
+metadata:
+  name: devconsole-installer-get-all-user
+roleRef:
+  name: devconsole-installer-get
+subjects:
+- kind: SystemGroup
+  name: system:authenticated
+userNames: null
