@@ -1,0 +1,5 @@
+apiVersion: devopsconsole.openshift.io/v1alpha1
+kind: Installer
+metadata:
+  name: main-installer
+spec: {}

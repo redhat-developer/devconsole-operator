@@ -300,6 +300,7 @@
     "image/docker10",
     "image/dockerpre012",
     "image/v1",
+    "route/v1",
   ]
   pruneopts = "NT"
   revision = "0d921e363e951d89f583292c60d013c318df64dc"
@@ -858,10 +859,12 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/go-logr/logr",
     "github.com/go-openapi/spec",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
     "github.com/openshift/api/image/v1",
+    "github.com/openshift/api/route/v1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/ready",
@@ -869,6 +872,7 @@
     "github.com/operator-framework/operator-sdk/version",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
+    "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
