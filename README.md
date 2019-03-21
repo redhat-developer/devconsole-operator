@@ -17,6 +17,21 @@ This repository was initially bootstrapped using [CoreOS operator](https://githu
 ```
 make build
 ```
+### Test
+* run unit test:
+```
+make test-unit
+```
+* run e2e test:
+For running e2e tests, have minishift started.
+```
+make e2e-local
+```
+> Note: e2e test will deploy operator in project `devconsole-e2e-test`, if your tests timeout and you wan to debug:
+> - oc project devconsole-e2e-test
+> - oc get deployment,pod
+> - oc logs pod/devopsconsole-operator-5b4bbc7d-4p7hr
+
 ## Deployment
 
 ### Set up Minishift (one-off)

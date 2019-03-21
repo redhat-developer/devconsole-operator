@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devopsconsole-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: devopsconsole-operator
+  template:
+    metadata:
+      labels:
+        name: devopsconsole-operator
+    spec:
+      serviceAccountName: devopsconsole-operator
+      containers:
+      - name: devopsconsole-operator
+        # Replace this with the built image name
+        image: 172.30.1.1:5000/devconsole-e2e-test/devopsconsole-operator:latest
+        command:
+        - devopsconsole-operator
+        imagePullPolicy: IfNotPresent # replace with IfNotPresent for local dev to avoid pulling image and use docker cached image
+        env:
+        - name: WATCH_NAMESPACE
+          value: ""
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: "devopsconsole-operator"
