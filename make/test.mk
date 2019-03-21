@@ -127,6 +127,53 @@ e2e-cleanup:
 	oc login -u system:admin
 	oc delete project devconsole-e2e-test || true
 
+.PHONY: test-olm-integration
+## Runs the OLM integration tests without coverage
+test-olm-integration: 
+	$(call log-info,"Running OLM integration test: $@")
+
+	oc login -u system:admin
+	#Baiju's image. Replace it with the actual image
+	$(eval image := "quay.io/baijum/devopsconsole-operator:0.1.0")                                                                                                                                              
+	$(eval namespace := devopsconsole-test)                                                                                                                                                           
+	$(eval package_yaml := $(CUR_DIR)/manifests/devopsconsole/devopsconsole.package.yaml)                                                                                                                       
+	$(eval devopsconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(eval devopsconsole_csv := $(shell cat $(package_yaml) | grep "currentCSV" | cut -d ":" -f2 | tr -d '[:space:]'))
+
+	cp  $(CUR_DIR)/manifests/devopsconsole/$(devopsconsole_version)/$(devopsconsole_csv).clusterserviceversion.yaml $(CUR_DIR)/devopsconsole_tmp.yaml
+
+	sed -e "s,REPLACE_IMAGE,quay.io/baijum/devopsconsole-operator:0.1.0," -i $(CUR_DIR)/manifests/devopsconsole/${devopsconsole_version}/${devopsconsole_csv}.clusterserviceversion.yaml
+	docker build -f $(CUR_DIR)/test/olm/Dockerfile $(CUR_DIR) -t $(DEVOPSCONSOLE_OPERATOR_REGISTRY):$(devopsconsole_version)
+	docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) "quay.io"
+	docker push $(DEVOPSCONSOLE_OPERATOR_REGISTRY):$(devopsconsole_version)
+	# oc new-build --name=operator-registry --dockerfile="$$(<test/olm/Dockerfile)"
+	# oc start-build operator-registry --from-dir=. --wait --follow
+
+	mv $(CUR_DIR)/devopsconsole_tmp.yaml $(CUR_DIR)/manifests/devopsconsole/$(devopsconsole_version)/$(devopsconsole_csv).clusterserviceversion.yaml
+
+	#oc tag 172.30.1.1:5000/$(namespace)/operator-registry:latest $(DEVOPSCONSOLE_OPERATOR_REGISTRY):$(devopsconsole_version)
+	sed -e "s,REPLACE_IMAGE,$(DEVOPSCONSOLE_OPERATOR_REGISTRY):$(devopsconsole_version)," $(CUR_DIR)/test/olm/catalog_source.yaml | oc create -f- 
+	oc create -f $(CUR_DIR)/test/olm/subscription.yaml
+	sleep 1m
+	oc get catalogsources -n olm
+	oc get subscriptions -n operators
+	oc get csvs -n olm
+	oc get crds -n olm
+
+	operator-sdk test local ./test/olm/ --go-test-flags "-v -parallel=1"
+
+	#TODO: the below command should be replaced with the actual test command.
+	#go test ./test/olm/... -root=$(PWD) -kubeconfig=$(HOME)/.kube/config -globalMan deploy/test/global-manifests.yaml -namespacedMan deploy/test/namespace-manifests.yaml -v -parallel=1 -singleNamespace
+
+# .PHONY: olm-integration-setup
+# olm-integration-setup:  e2e-cleanup
+# 	oc new-project devconsole-e2e-test || true
+
+# .PHONY: olm-integration-cleanup
+# olm-integration-cleanup:
+# 	oc login -u system:admin
+# 	oc delete project devconsole-e2e-test || true
+
 #-------------------------------------------------------------------------------
 # Inspect coverage of unit tests, integration tests in either pure
 # console mode or in a browser (*-html).

@@ -1,0 +1,11 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: my-devopsconsole
+  namespace: operators
+spec:
+  channel: alpha
+  name: devopsconsole
+  source: my-catalog
+  sourceNamespace: olm
+
