@@ -5,7 +5,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: devopsconsole-operator
-  namespace: devconsole-e2e-test
+  namespace: REPLACE_NAMESPACE
 roleRef:
   kind: ClusterRole
   name: devopsconsole-operator

@@ -87,7 +87,10 @@ ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 # This pattern excludes some folders from the go code analysis
 GOANALYSIS_PKGS_EXCLUDE_PATTERN="vendor|app|client|tool/cli"
 GOANALYSIS_DIRS=$(shell go list -f {{.Dir}} ./... | grep -v -E $(GOANALYSIS_PKGS_EXCLUDE_PATTERN))
+RANDOM := $(shell bash -c 'echo $$RANDOM')
 
+export TEST_NAMESPACE='devconsole-e2e-test-$(RANDOM)'
+export TEST_NAMESPACE_TEMP := ''
 #-------------------------------------------------------------------------------
 # Normal test targets
 #
@@ -117,15 +120,23 @@ test-unit: prebuild-check $(SOURCES)
 test-e2e: build build-image e2e-setup
 	$(call log-info,"Running E2E test: $@")
 	go test ./test/e2e/... -root=$(PWD) -kubeconfig=$(HOME)/.kube/config -globalMan deploy/test/global-manifests.yaml -namespacedMan deploy/test/namespace-manifests.yaml -v -parallel=1 -singleNamespace
-
 .PHONY: e2e-setup
-e2e-setup:  e2e-cleanup
-	@-oc new-project devconsole-e2e-test
+e2e-setup: e2e-cleanup
+	@-oc new-project $(TEST_NAMESPACE)
 
 .PHONY: e2e-cleanup
 e2e-cleanup:
+	@if [ "$(TEST_NAMESPACE_TEMP)" == '' ]; then \
+		TEST_NAMESPACE_TEMP:=$(TEST_NAMESPACE_TEMP); \
+	fi
 	@-oc login -u system:admin
-	@-oc delete project devconsole-e2e-test
+	@-oc delete namespace $(TEST_NAMESPACE_TEMP)
+	@-oc delete -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	@-oc delete -f deploy/service_account.yaml --namespace $(TEST_NAMESPACE_TEMP)
+	@-oc delete -f deploy/role.yaml --namespace $(TEST_NAMESPACE_TEMP)
+	@-oc delete -f deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE_TEMP)
+	@-oc delete -f deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE_TEMP)
+	TEST_NAMESPACE_TEMP=$(TEST_NAMESPACE)
 
 #-------------------------------------------------------------------------------
 # Inspect coverage of unit tests, integration tests in either pure
@@ -352,14 +363,19 @@ clean-coverage-unit:
 
 .PHONY: build-image-local
 build-image-local: e2e-setup
-	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/devconsole-e2e-test/devopsconsole-operator
+	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/$(TEST_NAMESPACE)/devopsconsole-operator
 
 .PHONY: e2e-local
 e2e-local: build-image-local
-	@-oc project devconsole-e2e-test
-	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
-	@-oc apply -f deploy/service_account.yaml --namespace devconsole-e2e-test
-	@-oc apply -f deploy/role.yaml --namespace devconsole-e2e-test
-	@-oc apply -f deploy/test/role_binding_test.yaml --namespace devconsole-e2e-test
-	@eval $$(minishift docker-env) && oc apply -f deploy/test/operator_test.yaml --namespace devconsole-e2e-test
-	@eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace devconsole-e2e-test --no-setup
+	@-oc login -u system:admin
+	@-oc project $(TEST_NAMESPACE)
+	@-oc create -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	@-oc create -f deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
+	@-oc create -f deploy/role.yaml --namespace $(TEST_NAMESPACE)
+	@sed -i 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' deploy/test/role_binding_test.yaml
+	@-oc create -f deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
+	@sed -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' deploy/test/operator_test.yaml
+	@eval $$(minishift docker-env) && oc create -f deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
+	@sed -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' deploy/test/role_binding_test.yaml
+	@sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' deploy/test/operator_test.yaml
+	@eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup

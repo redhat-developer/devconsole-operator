@@ -28,7 +28,7 @@ func TestComponent(t *testing.T) {
 	// Register types with framework scheme
 	componentList := &componentsv1alpha1.ComponentList{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "Component",
+			Kind:       "Component",
 			APIVersion: "devopsconsole.openshift.io/v1alpha1",
 		},
 	}
@@ -36,8 +36,7 @@ func TestComponent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}
-	//// Setup the test context and resources
-	os.Setenv("TEST_NAMESPACE", "devconsole-e2e-test")
+
 	defer os.Unsetenv("TEST_NAMESPACE")
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
@@ -60,16 +59,16 @@ func TestComponent(t *testing.T) {
 	// create a Component custom resource
 	cr := &componentsv1alpha1.Component{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "Component",
+			Kind:       "Component",
 			APIVersion: "devopsconsole.openshift.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: 		"mycomp",
-			Namespace:	namespace,
+			Name:      "mycomp",
+			Namespace: namespace,
 		},
 		Spec: componentsv1alpha1.ComponentSpec{
 			BuildType: "nodejs",
-			Codebase: "https://github.com/nodeshift-starters/nodejs-rest-http-crud",
+			Codebase:  "https://github.com/nodeshift-starters/nodejs-rest-http-crud",
 		},
 	}
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object

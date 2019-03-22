@@ -16,7 +16,7 @@ spec:
       containers:
       - name: devopsconsole-operator
         # Replace this with the built image name
-        image: 172.30.1.1:5000/devconsole-e2e-test/devopsconsole-operator:latest
+        image: REPLACE_IMAGE
         command:
         - devopsconsole-operator
         imagePullPolicy: IfNotPresent # replace with IfNotPresent for local dev to avoid pulling image and use docker cached image
