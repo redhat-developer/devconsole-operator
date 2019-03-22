@@ -1,5 +1,7 @@
 # DevOpsConsole
 
+[![Build Status](https://ci.centos.org/buildStatus/icon?job=devtools-devopsconsole-operator)](https://ci.centos.org/job/devtools-devopsconsole-operator/)
+
 This repository was initially bootstrapped using [CoreOS operator](https://github.com/operator-framework/operator-sdk). 
 
 ## Build
