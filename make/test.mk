@@ -133,6 +133,7 @@ test-olm-integration:
 	$(call log-info,"Running OLM integration test: $@")
 
 	oc login -u system:admin
+	oc create -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
 	#Baiju's image. Replace it with the actual image
 	$(eval image := "quay.io/baijum/devopsconsole-operator:0.1.0")                                                                                                                                              
 	$(eval namespace := devopsconsole-test)                                                                                                                                                           
@@ -152,7 +153,7 @@ test-olm-integration:
 	mv $(CUR_DIR)/devopsconsole_tmp.yaml $(CUR_DIR)/manifests/devopsconsole/$(devopsconsole_version)/$(devopsconsole_csv).clusterserviceversion.yaml
 
 	#oc tag 172.30.1.1:5000/$(namespace)/operator-registry:latest $(DEVOPSCONSOLE_OPERATOR_REGISTRY):$(devopsconsole_version)
-	sed -e "s,REPLACE_IMAGE,$(DEVOPSCONSOLE_OPERATOR_REGISTRY):$(devopsconsole_version)," $(CUR_DIR)/test/olm/catalog_source.yaml | oc create -f- 
+	sed -e "s,REPLACE_IMAGE,$(DEVOPSCONSOLE_OPERATOR_REGISTRY):$(devopsconsole_version)," $(CUR_DIR)/test/olm/catalog_source.yaml | oc create -f - 
 	oc create -f $(CUR_DIR)/test/olm/subscription.yaml
 	sleep 1m
 	oc get catalogsources -n olm
