@@ -5,6 +5,7 @@ ifneq ($(GITUNTRACKEDCHANGES),)
 SHORT_COMMIT := $(SHORT_COMMIT)-dirty
 endif
 
+DEVOPSCONSOLE_IMAGE?=quay.io/redhat-developers/devopsconsole-operator
 TIMESTAMP:=$(shell date +%s)
 TAG?=$(SHORT_COMMIT)-$(TIMESTAMP)
 
@@ -33,9 +34,9 @@ create-cr:
 	@echo "Creating Custom Resource..."
 
 .PHONY: build-image
+## Build and create container image
 build-image:
-	docker build -t $(DOCKER_REPO)/$(IMAGE_NAME):$(TAG) -f Dockerfile.dev .
-	docker tag $(DOCKER_REPO)/$(IMAGE_NAME):$(TAG) $(DOCKER_REPO)/$(IMAGE_NAME):test
+	operator-sdk build $(DEVOPSCONSOLE_IMAGE)
 
 .PHONY: deploy-operator-only
 deploy-operator-only:
