@@ -4,6 +4,7 @@ import (
 	"context"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
+	appsv1 "github.com/openshift/api/apps/v1"
 	compv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -52,6 +53,10 @@ func TestComponentController(t *testing.T) {
 	if err := buildv1.AddToScheme(s); err != nil {
 		log.Error(err, "")
 		assert.Nil(t, err, "adding buildconfig schema is failing")
+	}
+	if err := appsv1.AddToScheme(s); err != nil {
+		log.Error(err, "")
+		assert.Nil(t, err, "adding deploymentconfig, apps schema is failing")
 	}
 
 	t.Run("with ReconcileComponent CR containing all required field creates openshift resources", func(t *testing.T) {
@@ -107,7 +112,17 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, buildv1.ConfigChangeBuildTriggerType, bc.Spec.Triggers[0].Type, "build config should be triggered on config change")
 		require.Equal(t, buildv1.ImageChangeBuildTriggerType, bc.Spec.Triggers[1].Type, "build config should be triggered on image change")
 		require.Equal(t, 1, len(bc.Labels), "bc should contain one label")
-		require.Equal(t, Name+"-bc", bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
+		require.Equal(t, Name, bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
+
+		dc := &appsv1.DeploymentConfig{}
+		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-dc"}, dc)
+		require.NoError(t, errGetDC, "deployment config is not created")
+		require.Equal(t, 2, len(dc.Spec.Triggers), "deployment config contains 2 triggers")
+		require.Equal(t, appsv1.DeploymentTriggerOnConfigChange, dc.Spec.Triggers[0].Type, "deployment config should be triggered by DeploymentTriggerOnConfigChange")
+		require.Equal(t, appsv1.DeploymentTriggerOnImageChange, dc.Spec.Triggers[1].Type, "deployment config should be triggered by DeploymentTriggerOnImageChange")
+		require.Equal(t, Name + "-output:latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
+		require.Equal(t, 1, len(dc.Labels), "dc should contain one label")
+		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have one label with name of CR.")
 	})
 
 	t.Run("with ReconcileComponent CR containing all required field and buildtype matches openshift namespace imagestream", func(t *testing.T) {
@@ -165,7 +180,17 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "openshift", bc.Spec.CommonSpec.Strategy.SourceStrategy.From.Namespace, "builder image used in build config should be taken from openshift namespace")
 		require.Equal(t, "nodejs:latest", bc.Spec.CommonSpec.Strategy.SourceStrategy.From.Name, "builder image used in build config should be taken from openshift's nodejs image")
 		require.Equal(t, 1, len(bc.Labels), "bc should contain one label")
-		require.Equal(t, Name+"-bc", bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
+		require.Equal(t, Name, bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
+
+		dc := &appsv1.DeploymentConfig{}
+		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-dc"}, dc)
+		require.NoError(t, errGetDC, "deployment config is not created")
+		require.Equal(t, 2, len(dc.Spec.Triggers), "deployment config contains 2 triggers")
+		require.Equal(t, appsv1.DeploymentTriggerOnConfigChange, dc.Spec.Triggers[0].Type, "deployment config should be triggered by DeploymentTriggerOnConfigChange")
+		require.Equal(t, appsv1.DeploymentTriggerOnImageChange, dc.Spec.Triggers[1].Type, "deployment config should be triggered by DeploymentTriggerOnImageChange")
+		require.Equal(t, Name + "-output:latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
+		require.Equal(t, 1, len(dc.Labels), "dc should contain one label")
+		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have one label with name of CR.")
 	})
 
 	t.Run("with ReconcileComponent CR without buildtype", func(t *testing.T) {
@@ -211,6 +236,10 @@ func TestComponentController(t *testing.T) {
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
 		require.Error(t, errGetBC, "build config should not not created with missing CR's buildtype")
 		require.Equal(t, errors.ReasonForError(errGetBC), metav1.StatusReasonNotFound, "bc could not found associated imagestream ")
+
+		dc := &appsv1.DeploymentConfig{}
+		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-dc"}, dc)
+		require.Error(t, errGetDC, "deployment config should not be created")
 	})
 
 	t.Run("with ReconcileComponent CR without codebases", func(t *testing.T) {

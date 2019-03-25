@@ -3,6 +3,7 @@ package component
 import (
 	"context"
 	"fmt"
+	"github.com/openshift/api/apps/v1"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -119,32 +120,51 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	// and if the Status Revision Number is the same
 	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
 		// Create an empty image name "myapp-output"
-		newImageForOutput := newImageStream(instance.Namespace, instance.Name)
-		err = r.client.Create(context.TODO(), newImageForOutput)
+		outputIS := generateOutputImageStream(instance.Namespace, instance.Name)
+		err = r.client.Create(context.TODO(), outputIS)
 		if err != nil {
 			log.Error(err, "** Creating new OUTPUT image fails **")
 			return reconcile.Result{}, err
 		}
 		log.Info("** Image stream for OUTPUT created **")
-		if err := controllerutil.SetControllerReference(instance, newImageForOutput, r.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(instance, outputIS, r.scheme); err != nil {
 			log.Error(err, "** Setting owner reference fails **")
 			return reconcile.Result{}, err
 		}
+
 		// Create a build image named either "myapp-builder" or reuse openshift's builder image
-		ir, err := r.getBuilderImage(instance)
+		builderIS, err := r.getBuilderImage(instance)
 		if err != nil {
 			log.Error(err, "** ImageStream builder creation fails **")
 			return reconcile.Result{}, err
 		}
 
 		// Create build config with s2i
-		bc := generateBuildConfig(instance.Namespace, instance.Name, ir, instance.Spec.Codebase, "master")
+		bc := generateBuildConfig(instance.Namespace, instance.Name, builderIS, instance.Spec.Codebase, "master")
 		err = r.client.Create(context.TODO(), &bc)
 		if err != nil {
 			log.Error(err, "** BuildConfig creation fails **")
 			return reconcile.Result{}, err
 		}
 		log.Info("** BuildConfig created **")
+		if err := controllerutil.SetControllerReference(instance, &bc, r.scheme); err != nil {
+			log.Error(err, "** Setting owner reference fails **")
+			return reconcile.Result{}, err
+		}
+
+		// Create DeploymentConfig
+		dc := generateDeploymentConfig(instance.Namespace, instance.Name)
+		err = r.client.Create(context.TODO(), dc)
+		if err != nil {
+			log.Error(err, "** DeploymentConfig creation fails **")
+			return reconcile.Result{}, err
+		}
+		log.Info("** DeploymentConfig created **")
+		if err = controllerutil.SetControllerReference(instance, dc, r.scheme); err != nil {
+			log.Error(err, "** Setting owner reference fails **")
+			return reconcile.Result{}, err
+		}
+
 	}
 
 	return reconcile.Result{}, nil
@@ -221,7 +241,7 @@ func newImageStreamFromDocker(namespace string, name string, buildType string) *
 	}}
 }
 
-func newImageStream(namespace string, name string) *imagev1.ImageStream {
+func generateOutputImageStream(namespace string, name string) *imagev1.ImageStream {
 	labels := map[string]string{
 		"app": name,
 	}
@@ -232,14 +252,11 @@ func newImageStream(namespace string, name string) *imagev1.ImageStream {
 	}}
 }
 
-func getMetaObj(name string, imageNamespace string) metav1.ObjectMeta {
+func generateBuildConfig(namespace string, name string, builder *builderImage, gitURL string, gitRef string) buildv1.BuildConfig {
+
 	labels := map[string]string{
 		"app": name,
 	}
-	return metav1.ObjectMeta{Name: name, Namespace: imageNamespace, Labels: labels}
-}
-
-func generateBuildConfig(namespace string, name string, builder *builderImage, gitURL string, gitRef string) buildv1.BuildConfig {
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{
 			URI: gitURL,
@@ -250,7 +267,7 @@ func generateBuildConfig(namespace string, name string, builder *builderImage, g
 	incremental := true
 
 	return buildv1.BuildConfig{
-		ObjectMeta: getMetaObj(name+"-bc", namespace),
+		ObjectMeta: metav1.ObjectMeta{Name: name + "-bc", Namespace: namespace, Labels: labels},
 		Spec: buildv1.BuildConfigSpec{
 			CommonSpec: buildv1.CommonSpec{
 				Output: buildv1.BuildOutput{
@@ -277,6 +294,59 @@ func generateBuildConfig(namespace string, name string, builder *builderImage, g
 				}, {
 					Type:        "ImageChange",
 					ImageChange: &buildv1.ImageChangeTrigger{},
+				},
+			},
+		},
+	}
+}
+
+func generateDeploymentConfig(namespace string, name string) *v1.DeploymentConfig {
+	labels := map[string]string{
+		"app": name,
+	}
+	return &v1.DeploymentConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name + "-dc",
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: v1.DeploymentConfigSpec{
+			Strategy: v1.DeploymentStrategy{
+				Type: v1.DeploymentStrategyTypeRolling,
+			},
+			Replicas: 1,
+			Template: &corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: namespace,
+					Labels:    labels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+							Name:  name,
+							Image: name + "-output:latest",
+							Ports: []corev1.ContainerPort{{ // do we plan to have several ports exposed?
+									ContainerPort: 8080,
+									Protocol:      corev1.ProtocolTCP,
+								},
+							},
+						},
+					},
+				},
+			},
+			Triggers: []v1.DeploymentTriggerPolicy{{
+					Type: v1.DeploymentTriggerOnConfigChange,
+				}, {
+					Type: v1.DeploymentTriggerOnImageChange,
+					ImageChangeParams: &v1.DeploymentTriggerImageChangeParams{
+						ContainerNames: []string{
+							name,
+						},
+						From: corev1.ObjectReference{
+							Kind: "ImageStreamTag",
+							Name: name + "-output:latest",
+						},
+					},
 				},
 			},
 		},
