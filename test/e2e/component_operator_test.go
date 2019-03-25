@@ -3,16 +3,20 @@ package e2e
 import (
 	"context"
 	"fmt"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
-	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
-	"github.com/redhat-developer/devopsconsole-operator/pkg/apis"
-	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"os"
 	"testing"
 	"time"
+
+	framework "github.com/operator-framework/operator-sdk/pkg/test"
+	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
+
+	"github.com/redhat-developer/devopsconsole-operator/pkg/apis"
+	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
+
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -37,9 +41,7 @@ func (suite *ComponentTestSuite) SetupSuite() {
 	suite.framework = framework.Global
 
 	coreclient, err := corev1client.NewForConfig(framework.Global.KubeConfig)
-	if err != nil {
-		panic("failed to create new client")
-	}
+	require.NoError(suite.T(), err, "failed to create new client")
 	suite.client = coreclient
 
 	suite.ctx = framework.NewTestCtx(suite.T())
@@ -106,9 +108,7 @@ func (suite *ComponentTestSuite) TestComponent() {
 
 func (suite *ComponentTestSuite) TearDownSuite() {
 	err := suite.client.Namespaces().Delete(suite.namespace, &metav1.DeleteOptions{})
-	if err != nil {
-		panic("failed to delete test namespace")
-	}
+	require.NoError(suite.T(), err, "failed to delete namespace")
 
 	os.Unsetenv("TEST_NAMESPACE")
 	suite.ctx.Cleanup()
