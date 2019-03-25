@@ -41,7 +41,7 @@ build-operator-image:
 .PHONY: push-operator-image
 ## Push the operator container image to a container registry
 push-operator-image: build-operator-image
-	docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
+	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
 	docker push $(DEVOPSCONSOLE_OPERATOR_IMAGE)
 
 .PHONY: deploy-operator-only
