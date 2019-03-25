@@ -130,7 +130,6 @@ e2e-cleanup:
 		TEST_NAMESPACE_TEMP:=$(TEST_NAMESPACE_TEMP); \
 	fi
 	@-oc login -u system:admin
-	@-oc delete namespace $(TEST_NAMESPACE_TEMP)
 	@-oc delete -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
 	@-oc delete -f deploy/service_account.yaml --namespace $(TEST_NAMESPACE_TEMP)
 	@-oc delete -f deploy/role.yaml --namespace $(TEST_NAMESPACE_TEMP)
