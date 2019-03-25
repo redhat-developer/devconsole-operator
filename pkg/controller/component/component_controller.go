@@ -323,31 +323,31 @@ func generateDeploymentConfig(namespace string, name string) *v1.DeploymentConfi
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-							Name:  name,
-							Image: name + "-output:latest",
-							Ports: []corev1.ContainerPort{{ // do we plan to have several ports exposed?
-									ContainerPort: 8080,
-									Protocol:      corev1.ProtocolTCP,
-								},
-							},
+						Name:  name,
+						Image: name + "-output:latest",
+						Ports: []corev1.ContainerPort{{ // do we plan to have several ports exposed?
+							ContainerPort: 8080,
+							Protocol:      corev1.ProtocolTCP,
 						},
+						},
+					},
 					},
 				},
 			},
 			Triggers: []v1.DeploymentTriggerPolicy{{
-					Type: v1.DeploymentTriggerOnConfigChange,
-				}, {
-					Type: v1.DeploymentTriggerOnImageChange,
-					ImageChangeParams: &v1.DeploymentTriggerImageChangeParams{
-						ContainerNames: []string{
-							name,
-						},
-						From: corev1.ObjectReference{
-							Kind: "ImageStreamTag",
-							Name: name + "-output:latest",
-						},
+				Type: v1.DeploymentTriggerOnConfigChange,
+			}, {
+				Type: v1.DeploymentTriggerOnImageChange,
+				ImageChangeParams: &v1.DeploymentTriggerImageChangeParams{
+					ContainerNames: []string{
+						name,
+					},
+					From: corev1.ObjectReference{
+						Kind: "ImageStreamTag",
+						Name: name + "-output:latest",
 					},
 				},
+			},
 			},
 		},
 	}
