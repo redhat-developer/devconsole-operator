@@ -371,10 +371,23 @@ e2e-local: build-image-local
 	@-oc create -f $(CUR_DIR)/deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
 	@-oc create -f $(CUR_DIR)/deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	@-oc create -f $(CUR_DIR)/deploy/role.yaml --namespace $(TEST_NAMESPACE)
+ifeq ($(UNAME_S),Darwin)
+	@sed -i "" 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' $(CUR_DIR)/deploy/test/role_binding_test.yaml
+else
 	@sed -i 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' $(CUR_DIR)/deploy/test/role_binding_test.yaml
+endif
 	@-oc create -f $(CUR_DIR)/deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
+ifeq ($(UNAME_S),Darwin)
+	@sed -i "" 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+else
 	@sed -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+endif
 	@eval $$(minishift docker-env) && oc create -f $(CUR_DIR)/deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
+ifeq ($(UNAME_S),Darwin)
+	@sed -i "" 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' $(CUR_DIR)/deploy/test/role_binding_test.yaml
+	@sed -i "" 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+else
 	@sed -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' $(CUR_DIR)/deploy/test/role_binding_test.yaml
 	@sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+endif
 	@eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup
