@@ -119,7 +119,7 @@ test-unit: prebuild-check $(SOURCES)
 ## Runs the e2e tests without coverage
 test-e2e: build build-image e2e-setup
 	$(call log-info,"Running E2E test: $@")
-	go test ./test/e2e/... -root=$(PWD) -kubeconfig=$(HOME)/.kube/config -globalMan deploy/test/global-manifests.yaml -namespacedMan deploy/test/namespace-manifests.yaml -v -parallel=1 -singleNamespace
+	go test ./test/e2e/... -root=$(PWD) -kubeconfig=$(HOME)/.kube/config -globalMan $(CUR_DIR)/deploy/test/global-manifests.yaml -namespacedMan $(CUR_DIR)/deploy/test/namespace-manifests.yaml -v -parallel=1 -singleNamespace
 .PHONY: e2e-setup
 e2e-setup: e2e-cleanup
 	@-oc new-project $(TEST_NAMESPACE)
@@ -130,11 +130,11 @@ e2e-cleanup:
 		TEST_NAMESPACE_TEMP:=$(TEST_NAMESPACE_TEMP); \
 	fi
 	@-oc login -u system:admin
-	@-oc delete -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
-	@-oc delete -f deploy/service_account.yaml --namespace $(TEST_NAMESPACE_TEMP)
-	@-oc delete -f deploy/role.yaml --namespace $(TEST_NAMESPACE_TEMP)
-	@-oc delete -f deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE_TEMP)
-	@-oc delete -f deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE_TEMP)
+	@-oc delete -f $(CUR_DIR)/deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	@-oc delete -f $(CUR_DIR)/deploy/service_account.yaml --namespace $(TEST_NAMESPACE_TEMP)
+	@-oc delete -f $(CUR_DIR)/deploy/role.yaml --namespace $(TEST_NAMESPACE_TEMP)
+	@-oc delete -f $(CUR_DIR)/deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE_TEMP)
+	@-oc delete -f $(CUR_DIR)/deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE_TEMP)
 	TEST_NAMESPACE_TEMP=$(TEST_NAMESPACE)
 
 #-------------------------------------------------------------------------------
@@ -368,13 +368,13 @@ build-image-local: e2e-setup
 e2e-local: build-image-local
 	@-oc login -u system:admin
 	@-oc project $(TEST_NAMESPACE)
-	@-oc create -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
-	@-oc create -f deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
-	@-oc create -f deploy/role.yaml --namespace $(TEST_NAMESPACE)
-	@sed -i 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' deploy/test/role_binding_test.yaml
-	@-oc create -f deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
-	@sed -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' deploy/test/operator_test.yaml
-	@eval $$(minishift docker-env) && oc create -f deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
-	@sed -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' deploy/test/role_binding_test.yaml
-	@sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' deploy/test/operator_test.yaml
+	@-oc create -f $(CUR_DIR)/deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	@-oc create -f $(CUR_DIR)/deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
+	@-oc create -f $(CUR_DIR)/deploy/role.yaml --namespace $(TEST_NAMESPACE)
+	@sed -i 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' $(CUR_DIR)/deploy/test/role_binding_test.yaml
+	@-oc create -f $(CUR_DIR)/deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
+	@sed -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+	@eval $$(minishift docker-env) && oc create -f $(CUR_DIR)/deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
+	@sed -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' $(CUR_DIR)/deploy/test/role_binding_test.yaml
+	@sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' $(CUR_DIR)/deploy/test/operator_test.yaml
 	@eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup
