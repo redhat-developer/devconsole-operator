@@ -71,7 +71,7 @@ spec:
                   periodSeconds: 10
                 resources: {}
               serviceAccountName: devopsconsole-operator
-      permissions:
+      clusterPermissions:
       - rules:
         - apiGroups:
           - ""
@@ -85,6 +85,12 @@ spec:
           - secrets
           verbs:
           - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          verbs:
+          - get
         - apiGroups:
           - apps
           resources:
@@ -105,15 +111,24 @@ spec:
           - devopsconsole.openshift.io
           resources:
           - '*'
-          - components
           verbs:
           - '*'
         - apiGroups:
-          - components.devopsconsole.openshift.io
+          - image.openshift.io
           resources:
-          - '*'
+          - imagestreams
           verbs:
-          - '*'
+          - create
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - build.openshift.io
+          resources:
+          - buildconfigs
+          verbs:
+          - create
+          - get
         - apiGroups:
             - route.openshift.io
           resources:
