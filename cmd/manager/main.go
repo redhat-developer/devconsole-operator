@@ -135,7 +135,6 @@ func main() {
 	installer := &devopsconsolev1alpha1.Installer{}
 	installer.ObjectMeta.Name = "main-installer"
 	installer.ObjectMeta.Namespace = namespace
-	fmt.Println("aaaa", installer.ObjectMeta.Namespace)
 	err = c.Create(context.TODO(), installer)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		log.Error(err, "failed to create installer resource")
