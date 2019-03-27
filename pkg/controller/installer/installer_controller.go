@@ -278,7 +278,7 @@ func getLabelsForCR(cr *devopsconsolev1alpha1.Installer) map[string]string {
 	return labels
 }
 
-// newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
+// newDeploymentForCR returns a deployment with the same name/namespace as the cr
 func newDeploymentForCR(cr *devopsconsolev1alpha1.Installer, replicas int32) (*appv1.Deployment, error) {
 	imageName, err := GetEnvValue(appServiceEnvVar)
 	if err != nil {
