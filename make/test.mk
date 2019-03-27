@@ -130,7 +130,7 @@ e2e-cleanup:
 		TEST_NAMESPACE_TEMP:=$(TEST_NAMESPACE_TEMP); \
 	fi
 	@-oc login -u system:admin
-	@-oc delete -f $(CUR_DIR)/deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	@-oc delete -f $(CUR_DIR)/deploy/crds/devconsole_v1alpha1_component_crd.yaml
 	@-oc delete -f $(CUR_DIR)/deploy/service_account.yaml --namespace $(TEST_NAMESPACE_TEMP)
 	@-oc delete -f $(CUR_DIR)/deploy/role.yaml --namespace $(TEST_NAMESPACE_TEMP)
 	@-oc delete -f $(CUR_DIR)/deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE_TEMP)
@@ -260,7 +260,7 @@ gocov-unit-annotate: prebuild-check $(GOCOV_BIN) $(COV_PATH_UNIT)
 #
 # Parameters:
 #  1. Test name (e.g. "unit" or "integration")
-#  2. package name "github.com/redhat-developer/devopsconsole-operator/pgk/controller/component"
+#  2. package name "github.com/redhat-developer/devconsole-operator/pgk/controller/component"
 #  3. File in which to combine the output
 #  4. Path to file in which to store names of packages that failed testing
 #  5. Environment variable (in the form VAR=VALUE) to be specified for running
@@ -362,13 +362,13 @@ clean-coverage-unit:
 
 .PHONY: build-image-local
 build-image-local: e2e-setup
-	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/$(TEST_NAMESPACE)/devopsconsole-operator
+	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/$(TEST_NAMESPACE)/devconsole-operator
 
 .PHONY: e2e-local
 e2e-local: build-image-local
 	@-oc login -u system:admin
 	@-oc project $(TEST_NAMESPACE)
-	@-oc create -f $(CUR_DIR)/deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	@-oc create -f $(CUR_DIR)/deploy/crds/devconsole_v1alpha1_component_crd.yaml
 	@-oc create -f $(CUR_DIR)/deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	@-oc create -f $(CUR_DIR)/deploy/role.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
@@ -378,16 +378,16 @@ else
 endif
 	@-oc create -f $(CUR_DIR)/deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
-	@sed -i "" 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+	@sed -i "" 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|g' $(CUR_DIR)/deploy/test/operator_test.yaml
 else
-	@sed -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+	@sed -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|g' $(CUR_DIR)/deploy/test/operator_test.yaml
 endif
 	@eval $$(minishift docker-env) && oc create -f $(CUR_DIR)/deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
 	@sed -i "" 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' $(CUR_DIR)/deploy/test/role_binding_test.yaml
-	@sed -i "" 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+	@sed -i "" 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' $(CUR_DIR)/deploy/test/operator_test.yaml
 else
 	@sed -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' $(CUR_DIR)/deploy/test/role_binding_test.yaml
-	@sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' $(CUR_DIR)/deploy/test/operator_test.yaml
+	@sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' $(CUR_DIR)/deploy/test/operator_test.yaml
 endif
 	@eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup

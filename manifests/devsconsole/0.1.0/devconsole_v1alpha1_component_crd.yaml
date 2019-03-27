@@ -2,9 +2,9 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  name: components.devopsconsole.openshift.io
+  name: components.devconsole.openshift.io
 spec:
-  group: devopsconsole.openshift.io
+  group: devconsole.openshift.io
   names:
     kind: Component
     listKind: ComponentList

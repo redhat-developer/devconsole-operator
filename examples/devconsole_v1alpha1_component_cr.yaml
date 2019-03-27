@@ -1,4 +1,4 @@
-apiVersion: devopsconsole.openshift.io/v1alpha1
+apiVersion: devconsole.openshift.io/v1alpha1
 kind: Component
 metadata:
   name: myapp

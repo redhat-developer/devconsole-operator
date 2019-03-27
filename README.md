@@ -1,6 +1,6 @@
-# DevOpsConsole
+# devconsole
 
-[![Build Status](https://ci.centos.org/buildStatus/icon?job=devtools-devopsconsole-operator)](https://ci.centos.org/job/devtools-devopsconsole-operator/)
+[![Build Status](https://ci.centos.org/buildStatus/icon?job=devtools-devconsole-operator)](https://ci.centos.org/job/devtools-devconsole-operator/)
 
 This repository was initially bootstrapped using [CoreOS operator](https://github.com/operator-framework/operator-sdk). 
 
@@ -32,14 +32,14 @@ make e2e-local
 > Note: e2e test will deploy operator in project `devconsole-e2e-test`, if your tests timeout and you wan to debug:
 > - oc project devconsole-e2e-test
 > - oc get deployment,pod
-> - oc logs pod/devopsconsole-operator-5b4bbc7d-4p7hr
+> - oc logs pod/devconsole-operator-5b4bbc7d-4p7hr
 
 ## Deployment
 
 ### Set up Minishift (one-off)
 * create a new profile to test the operator
 ```
-minishift profile set devopsconsole
+minishift profile set devconsole
 ```
 * enable the admin-user add-on
 ```
@@ -82,7 +82,7 @@ make deploy-test
 ```
 * See the newly created resources
 ```
-oc get is,bc,svc,component.devopsconsole,build
+oc get is,bc,svc,component.devconsole,build
 NAME                                           DOCKER REPO                               TAGS      UPDATED
 imagestream.image.openshift.io/myapp-output    172.30.1.1:5000/myproject/myapp-output
 imagestream.image.openshift.io/myapp-runtime   172.30.1.1:5000/myproject/myapp-runtime   latest    46 seconds ago
@@ -91,7 +91,7 @@ NAME                                      TYPE      FROM         LATEST
 buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
 
 NAME                                         AGE
-component.devopsconsole.openshift.io/myapp   48s
+component.devconsole.openshift.io/myapp   48s
 
 NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
 build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 seconds ago
@@ -102,9 +102,9 @@ build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 secon
 * (optional) minishift internal registry
 Build the operator's controller image and make it available in internal registry
 ```
-oc new-project devopsconsole
+oc new-project devconsole
 eval $(minishift docker-env)
-operator-sdk build $(minishift openshift registry)/devopsconsole/devopsconsole-operator
+operator-sdk build $(minishift openshift registry)/devconsole/devconsole-operator
 ```
 > NOTE: In `operator.yaml` replace `imagePullPolicy: Always` with `imagePullPolicy: IfNotPresent` 
 for local dev to avoid pulling image and be able to use docker cached image instead.
@@ -112,23 +112,23 @@ for local dev to avoid pulling image and be able to use docker cached image inst
 * deploy cr, role and rbac
 ```
 oc login -u system:admin
-oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+oc apply -f deploy/crds/devconsole_v1alpha1_component_crd.yaml
 oc apply -f deploy/service_account.yaml
 oc apply -f deploy/role.yaml
 oc apply -f deploy/role_binding.yaml
 oc apply -f deploy/operator.yaml
 ```
-> NOTE: make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devopsconsole/devopsconsole-operator:latest`
+> NOTE: make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devconsole/devconsole-operator:latest`
 
 * watch the operator's pod
 ```
-oc logs pod/devopsconsole-operator-5b4bbc7d-89crs -f
+oc logs pod/devconsole-operator-5b4bbc7d-89crs -f
 ```
 
 * in a different shell, test CR in different project
 ```
 oc new-project tina
-oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml --namespace tina
+oc create -f examples/devconsole_v1alpha1_component_cr.yaml --namespace tina
 ```
 * check if the resources are created
 ```
@@ -162,14 +162,14 @@ Please consult [the documentation](https://github.com/operator-framework/operato
 
 ## Enabling the DevOps perspective in OpenShift
 
-The frontend can check for the presence of the DevOpsConsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devopsconsole.openshift.io`.  If it exists, it will enable the DevOps perspective in the Openshift Console.
+The frontend can check for the presence of the devconsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devconsole.openshift.io`.  If it exists, it will enable the DevOps perspective in the Openshift Console.
 
 To install the DevOps Console operator and run it using OLM
 
 ```
 kubectl create -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
 
-kubectl create -f http://operator-hub-shbose-preview1-stage.b542.starter-us-east-2a.openshiftapps.com/install/devopsconsole.v0.1.0.yaml
+kubectl create -f http://operator-hub-shbose-preview1-stage.b542.starter-us-east-2a.openshiftapps.com/install/devconsole.v0.1.0.yaml
 ```
 
 A `CatalogSource` followed by a new `Subscription` is created when the above commands are executed.
@@ -189,11 +189,11 @@ spec:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: my-devopsconsole
+  name: my-devconsole
   namespace: operators
 spec:
   channel: alpha
-  name: devopsconsole
+  name: devconsole
   source: rhd-operatorhub-catalog
   sourceNamespace: olm
 ```

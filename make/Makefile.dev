@@ -5,7 +5,7 @@ ifneq ($(GITUNTRACKEDCHANGES),)
 SHORT_COMMIT := $(SHORT_COMMIT)-dirty
 endif
 
-DEVOPSCONSOLE_OPERATOR_IMAGE?=quay.io/redhat-developers/devopsconsole-operator
+DEVCONSOLE_OPERATOR_IMAGE?=quay.io/redhat-developers/devconsole-operator
 TIMESTAMP:=$(shell date +%s)
 TAG?=$(SHORT_COMMIT)-$(TIMESTAMP)
 
@@ -17,7 +17,7 @@ create-resources:
 	@oc login -u system:admin
 	@echo "Creating sub resources..."
 	@echo "Creating CRDs..."
-	@oc create -f $(DEPLOY_DIR)/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
+	@oc create -f $(DEPLOY_DIR)/crds/devconsole_v1alpha1_gitsource_crd.yaml
 	@echo "Creating Namespace"
 	@oc create -f $(DEPLOY_DIR)/namespace.yaml
 	@echo "oc project codeready-devconsole"
@@ -36,13 +36,13 @@ create-cr:
 .PHONY: build-operator-image
 ## Build and create the operator container image
 build-operator-image:
-	operator-sdk build $(DEVOPSCONSOLE_OPERATOR_IMAGE)
+	operator-sdk build $(DEVCONSOLE_OPERATOR_IMAGE)
 
 .PHONY: push-operator-image
 ## Push the operator container image to a container registry
 push-operator-image: build-operator-image
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
-	docker push $(DEVOPSCONSOLE_OPERATOR_IMAGE)
+	docker push $(DEVCONSOLE_OPERATOR_IMAGE)
 
 .PHONY: deploy-operator-only
 deploy-operator-only:
@@ -67,7 +67,7 @@ clean-resources:
 	@echo "Deleting Service Account"
 	@oc delete -f $(DEPLOY_DIR)/service_account.yaml || true
 	@echo "Deleting Custom Resource Definitions..."
-	@oc delete -f $(DEPLOY_DIR)/crds/devopsconsole_v1alpha1_gitsource_crd.yaml || true
+	@oc delete -f $(DEPLOY_DIR)/crds/devconsole_v1alpha1_gitsource_crd.yaml || true
 
 .PHONY: deploy-operator
 deploy-operator: build build-image deploy-operator-only

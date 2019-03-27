@@ -14,13 +14,13 @@ Make sure that you have minishift running. you can check it using `minishift sta
 
 After successfully starting minishift, configure your shell to use docker daemon from minishift using `eval $(minishift docker-env)`.
 
-Now it's time to run E2E tests for `devopsconsole-operator` which will create it's required resources from `deploy/test/` on OpenShift use following command:
+Now it's time to run E2E tests for `devconsole-operator` which will create it's required resources from `deploy/test/` on OpenShift use following command:
 
 ```
 make test-e2e
 ```
 
-This make target is building new docker image `$(DOCKER_REPO)/$(IMAGE_NAME):test`(e.g. `quay.io/openshiftio/devopsconsole-operator:test`) which is used in the operator's deployment manifests in e2e tests.
+This make target is building new docker image `$(DOCKER_REPO)/$(IMAGE_NAME):test`(e.g. `quay.io/openshiftio/devconsole-operator:test`) which is used in the operator's deployment manifests in e2e tests.
 
 Also remember that it uses the `system:admin` account for creating all required resources from `deploy/test` directory.
 
@@ -40,14 +40,14 @@ oc create -f https://raw.githubusercontent.com/operator-framework/operator-lifec
 
 Note: Instead of a public registry, the registry provided by OpenShift might work.
 
-Checkout the `master` branch of [devopsconsole-operator](https://github.com/redhat-developer/devopsconsole-operator)
+Checkout the `master` branch of [devconsole-operator](https://github.com/redhat-developer/devconsole-operator)
 
 Then run these commands:
 
 ```
-$ operator-sdk build quay.io/<username>/devopsconsole-operator
+$ operator-sdk build quay.io/<username>/devconsole-operator
 $ docker login -u <username> -p <password>  quay.io
-$ docker push quay.io/<username>/devopsconsole-operator
+$ docker push quay.io/<username>/devconsole-operator
 ```
 > NOTE: make your repo public
 When running the above command, substitute the `username` and `password` entries appropriately.
@@ -55,7 +55,7 @@ When running the above command, substitute the `username` and `password` entries
 ### 3. Update the CSV with the operator image location
 
 Open this file
-`manifests/devopsconsole/0.1.0/devopsconsole-operator.v0.1.0.clusterserviceversion.yaml` and change the image to point to the location pushed in the previous step.
+`manifests/devconsole/0.1.0/devconsole-operator.v0.1.0.clusterserviceversion.yaml` and change the image to point to the location pushed in the previous step.
 
 Inside the file look for `image: REPLACE_IMAGE` and specify the image location.
 
@@ -89,11 +89,11 @@ spec:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: my-devopsconsole
+  name: my-devconsole
   namespace: operators
 spec:
   channel: alpha
-  name: devopsconsole
+  name: devconsole
   source: my-catalog
   sourceNamespace: olm
 ```
@@ -108,7 +108,7 @@ oc apply -f cat-sub.yaml
 
 ### 6. Verify gitsources CRD presence
 
-Check for the existence of a Custom Resource Definitions with the name as `gitsources.devopsconsole.openshift.io`
+Check for the existence of a Custom Resource Definitions with the name as `gitsources.devconsole.openshift.io`
 
 Run this command to list CRDs:
 

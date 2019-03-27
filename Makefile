@@ -1,4 +1,4 @@
-PROJECT_NAME=devopsconsole-operator
+PROJECT_NAME=devconsole-operator
 PACKAGE_NAME:=github.com/redhat-developer/$(PROJECT_NAME)
 CUR_DIR=$(shell pwd)
 TMP_PATH=$(CUR_DIR)/tmp
@@ -300,8 +300,8 @@ deploy-rbac:
 .PHONY: deploy-crd
 ## Deploy CRD
 deploy-crd:
-	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
-	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
+	@-oc apply -f deploy/crds/devconsole_v1alpha1_component_crd.yaml
+	@-oc apply -f deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
 
 .PHONY: deploy-operator
 ## Deploy Operator
@@ -311,7 +311,7 @@ deploy-operator: deploy-crd
 .PHONY: deploy-clean
 ## Deploy a CR as test
 deploy-clean:
-	@-oc delete component.devopsconsole.openshift.io/myapp
+	@-oc delete component.devconsole.openshift.io/myapp
 	@-oc delete imagestream.image.openshift.io/myapp-builder
 	@-oc delete imagestream.image.openshift.io/myapp-output
 	@-oc delete buildconfig.build.openshift.io/myapp-bc
@@ -320,4 +320,4 @@ deploy-clean:
 .PHONY: deploy-test
 ## Deploy a CR as test
 deploy-test:
-	oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml
+	oc create -f examples/devconsole_v1alpha1_component_cr.yaml

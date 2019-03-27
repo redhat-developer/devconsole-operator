@@ -67,7 +67,7 @@ function tag_push() {
   local tag
 
   tag=$1
-  docker tag devopsconsole-operator-deploy $tag
+  docker tag devconsole-operator-deploy $tag
   docker push $tag
 }
 
@@ -81,18 +81,18 @@ function deploy() {
     echo "Could not login, missing credentials for the registry"
   fi
 
-  # Build devopsconsole-operator-deploy
+  # Build devconsole-operator-deploy
   make docker-image-deploy
 
   TAG=$(echo $GIT_COMMIT | cut -c1-${DEVSHIFT_TAG_LEN})
 
 
   if [[ "$TARGET" = "rhel" ]]; then
-    tag_push ${REGISTRY}/openshiftio/rhel-devopsconsole-operator:$TAG
-    tag_push ${REGISTRY}/openshiftio/rhel-devopsconsole-operator:latest
+    tag_push ${REGISTRY}/openshiftio/rhel-devconsole-operator:$TAG
+    tag_push ${REGISTRY}/openshiftio/rhel-devconsole-operator:latest
   else
-    tag_push ${REGISTRY}/openshiftio/devopsconsole-operator:$TAG
-    tag_push ${REGISTRY}/openshiftio/devopsconsole-operator:latest
+    tag_push ${REGISTRY}/openshiftio/devconsole-operator:$TAG
+    tag_push ${REGISTRY}/openshiftio/devconsole-operator:latest
   fi
 
   echo 'CICO: Image pushed, ready to update deployed app'
