@@ -89,5 +89,6 @@ func TestComponent(t *testing.T) {
 		require.Equal(t, namespace, cr2.ObjectMeta.Namespace)
 		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", cr2.Spec.Codebase)
 		require.Equal(t, "nodejs", cr2.Spec.BuildType)
+		require.Equal(t, "", cr2.Status.RevNumber)
 	})
 }
