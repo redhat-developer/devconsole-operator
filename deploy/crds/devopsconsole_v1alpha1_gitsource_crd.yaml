@@ -10,7 +10,7 @@ spec:
     plural: gitsources
     singular: gitsource
     shortNames:
-    - gitsrc
+      - gitsrc
   scope: Namespaced
   validation:
     # openAPIV3Schema is the schema for validating custom objects.
