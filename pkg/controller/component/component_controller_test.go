@@ -89,23 +89,23 @@ func TestComponentController(t *testing.T) {
 		require.NoError(t, errGet, "component is not created")
 
 		is := &imagev1.ImageStream{}
-		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, is)
 		require.NoError(t, errGetImage, "output imagestream is not created")
 
 		isBuilder := &imagev1.ImageStream{}
-		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-builder"}, isBuilder)
+		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: cp.Spec.BuildType}, isBuilder)
 		require.NoError(t, errGetBuilderImage, "builder imagestream is not created")
-		require.Equal(t, isBuilder.ObjectMeta.Name, Name+"-builder", "imagestream builder shoulbe name with pattern CR's name append with -builder")
-		require.Equal(t, isBuilder.ObjectMeta.Namespace, Namespace, "")
-		require.Equal(t, len(isBuilder.Labels), 1, "imagestream builder should contain one label")
-		require.Equal(t, isBuilder.Labels["app"], Name, "imagestream builder should have one label with name of CR.")
-		require.Equal(t, len(isBuilder.Spec.Tags), 1, "imagestream builder should have a tag specified when")
-		require.Equal(t, isBuilder.Spec.Tags[0].Name, "latest", "imagestream builder should take latest version")
-		require.Equal(t, isBuilder.Spec.Tags[0].From.Kind, "DockerImage", "imagestream builder should be taken from docker when not found in cluster")
-		require.Equal(t, isBuilder.Spec.Tags[0].From.Name, "nodeshift/centos7-s2i-nodejs:10.x", "imagestream builder should be taken from nodeshift/centos7-s2i-nodejs:10.x")
+		require.Equal(t, cp.Spec.BuildType, isBuilder.ObjectMeta.Name, "imagestream builder shoul be named after component's buildtype")
+		require.Equal(t, Namespace, isBuilder.ObjectMeta.Namespace, "")
+		require.Equal(t, 1, len(isBuilder.Labels), "imagestream builder should contain one label")
+		require.Equal(t, Name, isBuilder.Labels["app"], "imagestream builder should have one label with name of CR.")
+		require.Equal(t, 1, len(isBuilder.Spec.Tags), "imagestream builder should have a tag specified when")
+		require.Equal(t, "latest", isBuilder.Spec.Tags[0].Name, "imagestream builder should take latest version")
+		require.Equal(t, "DockerImage", isBuilder.Spec.Tags[0].From.Kind, "imagestream builder should be taken from docker when not found in cluster")
+		require.Equal(t, "nodeshift/centos7-s2i-nodejs:10.x", isBuilder.Spec.Tags[0].From.Name, "imagestream builder should be taken from nodeshift/centos7-s2i-nodejs:10.x")
 
 		bc := &buildv1.BuildConfig{}
-		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
 		require.NoError(t, errGetBC, "build config is not created")
 		require.Equal(t, "https://somegit.con/myrepo", bc.Spec.Source.Git.URI, "build config should not have any source attached")
 		require.Equal(t, 2, len(bc.Spec.Triggers), "build config contains 2 triggers")
@@ -115,12 +115,12 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, Name, bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
 
 		dc := &appsv1.DeploymentConfig{}
-		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-dc"}, dc)
+		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
 		require.NoError(t, errGetDC, "deployment config is not created")
 		require.Equal(t, 2, len(dc.Spec.Triggers), "deployment config contains 2 triggers")
 		require.Equal(t, appsv1.DeploymentTriggerOnConfigChange, dc.Spec.Triggers[0].Type, "deployment config should be triggered by DeploymentTriggerOnConfigChange")
 		require.Equal(t, appsv1.DeploymentTriggerOnImageChange, dc.Spec.Triggers[1].Type, "deployment config should be triggered by DeploymentTriggerOnImageChange")
-		require.Equal(t, Name+"-output:latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
+		require.Equal(t, Name+":latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
 		require.Equal(t, 1, len(dc.Labels), "dc should contain one label")
 		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have one label with name of CR.")
 	})
@@ -163,15 +163,15 @@ func TestComponentController(t *testing.T) {
 		require.NoError(t, errGet, "component is not created")
 
 		is := &imagev1.ImageStream{}
-		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, is)
 		require.NoError(t, errGetImage, "output imagestream is not created")
 
 		isBuilder := &imagev1.ImageStream{}
-		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-builder"}, isBuilder)
+		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: cp.Spec.BuildType}, isBuilder)
 		require.Error(t, errGetBuilderImage, "builder imagestream should not be created")
 
 		bc := &buildv1.BuildConfig{}
-		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
 		require.NoError(t, errGetBC, "build config is not created")
 		require.Equal(t, "https://somegit.con/myrepo", bc.Spec.Source.Git.URI, "build config should not have any source attached")
 		require.Equal(t, 2, len(bc.Spec.Triggers), "build config contains 2 triggers")
@@ -183,12 +183,12 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, Name, bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
 
 		dc := &appsv1.DeploymentConfig{}
-		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-dc"}, dc)
+		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
 		require.NoError(t, errGetDC, "deployment config is not created")
 		require.Equal(t, 2, len(dc.Spec.Triggers), "deployment config contains 2 triggers")
 		require.Equal(t, appsv1.DeploymentTriggerOnConfigChange, dc.Spec.Triggers[0].Type, "deployment config should be triggered by DeploymentTriggerOnConfigChange")
 		require.Equal(t, appsv1.DeploymentTriggerOnImageChange, dc.Spec.Triggers[1].Type, "deployment config should be triggered by DeploymentTriggerOnImageChange")
-		require.Equal(t, Name+"-output:latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
+		require.Equal(t, Name+":latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
 		require.Equal(t, 1, len(dc.Labels), "dc should contain one label")
 		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have one label with name of CR.")
 	})
@@ -224,21 +224,16 @@ func TestComponentController(t *testing.T) {
 		require.NoError(t, errGet, "component is not created")
 
 		is := &imagev1.ImageStream{}
-		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, is)
 		require.NoError(t, errGetImage, "output imagestream is not created")
 
-		isBuilder := &imagev1.ImageStream{}
-		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-builder"}, isBuilder)
-		require.Error(t, errGetBuilderImage, "builder imagestream should not be created with missing CR's buildtype")
-		require.Equal(t, errors.ReasonForError(errGetBuilderImage), metav1.StatusReasonNotFound, "bc could not found associated imagestream ")
-
 		bc := &buildv1.BuildConfig{}
-		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
 		require.Error(t, errGetBC, "build config should not not created with missing CR's buildtype")
-		require.Equal(t, errors.ReasonForError(errGetBC), metav1.StatusReasonNotFound, "bc could not found associated imagestream ")
+		require.Equal(t, errors.ReasonForError(errGetBC), metav1.StatusReasonNotFound, "bc could not found associated imagestream")
 
 		dc := &appsv1.DeploymentConfig{}
-		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-dc"}, dc)
+		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
 		require.Error(t, errGetDC, "deployment config should not be created")
 	})
 
@@ -273,15 +268,15 @@ func TestComponentController(t *testing.T) {
 		require.NoError(t, errGet, "component is not created")
 
 		is := &imagev1.ImageStream{}
-		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-output"}, is)
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, is)
 		require.NoError(t, errGetImage, "output imagestream is not created")
 
 		isBuilder := &imagev1.ImageStream{}
-		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-builder"}, isBuilder)
+		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, isBuilder)
 		require.NoError(t, errGetBuilderImage, "builder imagestream is not created")
 
 		bc := &buildv1.BuildConfig{}
-		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name + "-bc"}, bc)
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
 		require.NoError(t, errGetBC, "buildconfig is not created")
 		require.Equal(t, "", bc.Spec.Source.Git.URI, "build config should not have any source attached")
 	})
