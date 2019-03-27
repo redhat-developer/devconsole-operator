@@ -100,9 +100,10 @@ func newDeploymentConfig(cr *componentsv1alpha1.Component, output *imagev1.Image
 		},
 		Spec: v1.DeploymentConfigSpec{
 			Strategy: v1.DeploymentStrategy{
-				Type: v1.DeploymentStrategyTypeRolling,
+				Type: v1.DeploymentStrategyTypeRecreate,
 			},
 			Replicas: 1,
+			Selector: labels,
 			Template: &corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cr.Name,
