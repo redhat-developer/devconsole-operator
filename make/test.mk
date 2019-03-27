@@ -87,7 +87,7 @@ ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 # This pattern excludes some folders from the go code analysis
 GOANALYSIS_PKGS_EXCLUDE_PATTERN="vendor|app|client|tool/cli"
 GOANALYSIS_DIRS=$(shell go list -f {{.Dir}} ./... | grep -v -E $(GOANALYSIS_PKGS_EXCLUDE_PATTERN))
-RANDOM := $(shell bash -c 'echo $$RANDOM')
+RANDOM := $(shell uuidgen | tr '[:upper:]' '[:lower:]')
 
 export TEST_NAMESPACE='devconsole-e2e-test-$(RANDOM)'
 export TEST_NAMESPACE_TEMP := ''
