@@ -128,6 +128,7 @@ func newDeploymentConfig(cr *componentsv1alpha1.Component, output *imagev1.Image
 			}, {
 				Type: v1.DeploymentTriggerOnImageChange,
 				ImageChangeParams: &v1.DeploymentTriggerImageChangeParams{
+					Automatic: true,
 					ContainerNames: []string{
 						output.Name,
 					},
