@@ -12,21 +12,21 @@ DEPLOY_DIR:=deploy
 
 .PHONY: create-resources
 create-resources:
-	@echo "Logging using system:admin..."
-	@oc login -u system:admin
-	@echo "Creating sub resources..."
-	@echo "Creating CRDs..."
-	@oc create -f $(DEPLOY_DIR)/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
-	@echo "Creating Namespace"
-	@oc create -f $(DEPLOY_DIR)/namespace.yaml
-	@echo "oc project codeready-devconsole"
-	@oc project codeready-devconsole
-	@echo "Creating Service Account"
-	@oc create -f $(DEPLOY_DIR)/service_account.yaml
-	@echo "Creating Role"
-	@oc create -f $(DEPLOY_DIR)/role.yaml
-	@echo "Creating RoleBinding"
-	@oc create -f $(DEPLOY_DIR)/role_binding.yaml
+	$(Q)echo "Logging using system:admin..."
+	$(Q)oc login -u system:admin
+	$(Q)echo "Creating sub resources..."
+	$(Q)echo "Creating CRDs..."
+	$(Q)oc create -f $(DEPLOY_DIR)/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
+	$(Q)echo "Creating Namespace"
+	$(Q)oc create -f $(DEPLOY_DIR)/namespace.yaml
+	$(Q)echo "oc project codeready-devconsole"
+	$(Q)oc project codeready-devconsole
+	$(Q)echo "Creating Service Account"
+	$(Q)oc create -f $(DEPLOY_DIR)/service_account.yaml
+	$(Q)echo "Creating Role"
+	$(Q)oc create -f $(DEPLOY_DIR)/role.yaml
+	$(Q)echo "Creating RoleBinding"
+	$(Q)oc create -f $(DEPLOY_DIR)/role_binding.yaml
 
 .PHONY: create-cr
 create-cr:
