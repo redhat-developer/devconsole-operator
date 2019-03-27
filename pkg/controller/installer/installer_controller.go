@@ -148,7 +148,9 @@ func (r *ReconcileInstaller) Reconcile(request reconcile.Request) (reconcile.Res
 func (r *ReconcileInstaller) createDeployment(cr *devopsconsolev1alpha1.Installer) (*appv1.Deployment, error) {
 	// Define a new deployment object
 	deployment, err := newDeploymentForCR(cr, 1)
-
+	if err != nil {
+		return nil, err
+	}
 	// Set Installer cr as the owner and controller
 	if err := controllerutil.SetControllerReference(cr, deployment, r.scheme); err != nil {
 		return nil, err
@@ -167,7 +169,7 @@ func (r *ReconcileInstaller) createDeployment(cr *devopsconsolev1alpha1.Installe
 	if errors.IsNotFound(err) {
 		r.reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		err = r.client.Create(context.TODO(), deployment)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			return nil, err
 		}
 		r.reqLogger.Info("Successfully created new deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
@@ -200,7 +202,7 @@ func (r *ReconcileInstaller) createService(cr *devopsconsolev1alpha1.Installer) 
 	if errors.IsNotFound(err) {
 		r.reqLogger.Info("Creating a new Service", "Service.Namespace", newService.Namespace, "Service.Name", newService.Name)
 		err = r.client.Create(context.TODO(), newService)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			return nil, err
 		}
 		r.reqLogger.Info("Successfully created new Service", "Service.Namespace", newService.Namespace, "Service.Name", newService.Name)

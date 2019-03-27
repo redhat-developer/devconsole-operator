@@ -21,6 +21,11 @@ spec:
       version: v1alpha1
       displayName: Git Source
       description: Describes a Git repository to be used as a codebase.
+    - kind: Installer
+      name: installers.devopsconsole.openshift.io
+      version: v1alpha1
+      description: Installer represents an installation. Once an instance of Installer is present all the services required for the console are deployed
+      displayName: Installer
   description: The operator that enables the DevOps perspective in OpenShift 4.x
   displayName: OpenShift DevOps Console
   install:
@@ -109,6 +114,25 @@ spec:
           - '*'
           verbs:
           - '*'
+        - apiGroups:
+            - route.openshift.io
+          resources:
+            - routes
+          verbs:
+            - '*'
+        - apiGroups:
+            - apps
+          resources:
+            - deployments
+          verbs:
+            - '*'
+        - apiGroups:
+            - rbac.authorization.k8s.io
+          resources:
+            - clusterroles
+            - clusterrolebindings
+          verbs:
+            - '*'
         serviceAccountName: devopsconsole-operator
     strategy: deployment
   installModes:
