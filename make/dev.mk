@@ -5,6 +5,7 @@ ifneq ($(GITUNTRACKEDCHANGES),)
 SHORT_COMMIT := $(SHORT_COMMIT)-dirty
 endif
 
+DEVOPSCONSOLE_OPERATOR_IMAGE?=quay.io/redhat-developers/devopsconsole-operator
 TIMESTAMP:=$(shell date +%s)
 TAG?=$(SHORT_COMMIT)-$(TIMESTAMP)
 
@@ -32,10 +33,16 @@ create-resources:
 create-cr:
 	@echo "Creating Custom Resource..."
 
-.PHONY: build-image
-build-image:
-	docker build -t $(DOCKER_REPO)/$(IMAGE_NAME):$(TAG) -f Dockerfile.dev .
-	docker tag $(DOCKER_REPO)/$(IMAGE_NAME):$(TAG) $(DOCKER_REPO)/$(IMAGE_NAME):test
+.PHONY: build-operator-image
+## Build and create the operator container image
+build-operator-image:
+	operator-sdk build $(DEVOPSCONSOLE_OPERATOR_IMAGE)
+
+.PHONY: push-operator-image
+## Push the operator container image to a container registry
+push-operator-image: build-operator-image
+	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
+	docker push $(DEVOPSCONSOLE_OPERATOR_IMAGE)
 
 .PHONY: deploy-operator-only
 deploy-operator-only:

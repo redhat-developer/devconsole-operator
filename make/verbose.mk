@@ -6,6 +6,7 @@
 # mode using -s...
 Q = @
 Q_FLAG = -q
+QUIET_FLAG = --quiet
 V_FLAG =
 S_FLAG = -s
 X_FLAG =
@@ -15,6 +16,7 @@ endif
 ifeq ($(VERBOSE),2)
        Q =
        Q_FLAG =
+       QUIET_FLAG =
        S_FLAG =
        V_FLAG = -v
        X_FLAG = -x
