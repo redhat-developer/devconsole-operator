@@ -28,6 +28,7 @@ const (
 // ComponentTest does e2e test as per operator-sdk documentation
 // https://github.com/operator-framework/operator-sdk/blob/cc7b175/doc/test-framework/writing-e2e-tests.md
 func TestComponent(t *testing.T) {
+	var err error
 	// Register types with framework scheme
 	componentList := &componentsv1alpha1.ComponentList{
 		TypeMeta: metav1.TypeMeta{
@@ -35,12 +36,11 @@ func TestComponent(t *testing.T) {
 			APIVersion: "devopsconsole.openshift.io/v1alpha1",
 		},
 	}
-	err := framework.AddToFrameworkScheme(apis.AddToScheme, componentList)
+	err = framework.AddToFrameworkScheme(apis.AddToScheme, componentList)
 	if err != nil {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}
 
-	//defer os.Unsetenv("TEST_NAMESPACE")
 	ctx := framework.NewTestCtx(t)
 	defer ctx.Cleanup()
 	err = ctx.InitializeClusterResources(&framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
@@ -54,7 +54,7 @@ func TestComponent(t *testing.T) {
 	f := framework.Global
 	t.Log(fmt.Sprintf("namespace: %s", namespace))
 	// wait for component-operator to be ready
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, "operators", "devopsconsole-operator", 1, retryInterval, timeout)
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, "operators", "devopsconsole-operator", 1, retryInterval, timeout*2)
 	require.NoError(t, err, "failed while waiting for operator deployment")
 
 	t.Log("component-operator is ready and running state")
@@ -79,9 +79,15 @@ func TestComponent(t *testing.T) {
 	require.NoError(t, err, "failed to create custom resource of kind `Component`")
 
 	t.Run("retrieve component and verify related resources are created", func(t *testing.T) {
-		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "mycomp", Namespace: namespace}, cr)
+		cr2 := &componentsv1alpha1.Component{}
+		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "mycomp", Namespace: namespace}, cr2)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `Component`")
-		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", cr.Spec.Codebase)
-		require.Equal(t, "nodejs", cr.Spec.BuildType)
+		// FIXME: These assertions not working
+		//require.Equal(t, "Component", cr2.TypeMeta.Kind)
+		//require.Equal(t, "devopsconsole.openshift.io/v1alpha1", cr2.TypeMeta.APIVersion)
+		require.Equal(t, "mycomp", cr2.ObjectMeta.Name)
+		require.Equal(t, namespace, cr2.ObjectMeta.Namespace)
+		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", cr2.Spec.Codebase)
+		require.Equal(t, "nodejs", cr2.Spec.BuildType)
 	})
 }
