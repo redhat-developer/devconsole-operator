@@ -125,7 +125,8 @@ func main() {
 	// This is necessary because we want all users to have read access to the
 	// installer CR.
 	// Currently, adding clusterroles to groups/users is not supported by CSV.
-	// That's why the clusterRole and binding are created over here manually
+	// That's why the clusterRole and binding are created over here manually.
+	// See https://github.com/operator-framework/operator-lifecycle-manager/issues/786
 	if err := createClusterRoleAndBinding(mgr.GetClient()); err != nil {
 		log.Error(err, "failed to create clusterRole and rolebinding.")
 		os.Exit(1)
