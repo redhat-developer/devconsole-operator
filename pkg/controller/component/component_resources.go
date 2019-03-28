@@ -1,13 +1,20 @@
 package component
 
 import (
-	"github.com/openshift/api/apps/v1"
+	"context"
+	"fmt"
+
+	v1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
-	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
-	"github.com/redhat-developer/devconsole-operator/pkg/resource"
+	gitsourcev1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1"
+	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
+	"github.com/redhat-developer/devopsconsole-operator/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func newImageStreamFromDocker(cr *componentsv1alpha1.Component) *imagev1.ImageStream {
@@ -45,16 +52,40 @@ func newOutputImageStream(cr *componentsv1alpha1.Component) *imagev1.ImageStream
 	}}
 }
 
-func newBuildConfig(cr *componentsv1alpha1.Component, builder *imagev1.ImageStream) *buildv1.BuildConfig {
+func (r *ReconcileComponent) newBuildConfig(cr *componentsv1alpha1.Component, builder *imagev1.ImageStream, gitSource *gitsourcev1alpha1.GitSource) *buildv1.BuildConfig {
 	labels := resource.GetLabelsForCR(cr)
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{
-			URI: cr.Spec.Codebase,
-			Ref: "master",
+			URI: gitSource.Spec.URL,
+			Ref: gitSource.Spec.Ref,
 		},
 		Type: buildv1.BuildSourceGit,
 	}
 	incremental := true
+
+	// Check if secrets provided exist or not
+	if gitSource.Spec.SecretRef != nil && gitSource.Spec.SecretRef.Name != "" {
+		u := unstructured.Unstructured{}
+		u.SetGroupVersionKind(schema.GroupVersionKind{
+			Kind:    "Secret",
+			Version: "v1",
+			Group:   "",
+		})
+
+		err := r.client.Get(context.TODO(), client.ObjectKey{
+			Namespace: cr.Namespace,
+			Name:      gitSource.Spec.SecretRef.Name,
+		}, &u)
+		if err != nil {
+			// TODO(Akash) - Need to discuss if we need to create buildConfig if secret isn't present.
+			log.Error(err, fmt.Sprintf("Failed to get provided secret please check if secrets %s present or not", gitSource.Spec.SecretRef.Name))
+		} else {
+			// Since error is nil, moving ahead to add secret reference in buildConfig
+			buildSource.SourceSecret = &corev1.LocalObjectReference{
+				Name: gitSource.Spec.SecretRef.Name,
+			}
+		}
+	}
 
 	return &buildv1.BuildConfig{
 		ObjectMeta: metav1.ObjectMeta{Name: cr.Name, Namespace: cr.Namespace, Labels: labels},
