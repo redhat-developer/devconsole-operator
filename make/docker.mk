@@ -13,6 +13,7 @@ docker-image-deploy: Dockerfile
 		--target deploy \
 		. \
 		-t ${GO_PACKAGE_ORG_NAME}/${GO_PACKAGE_REPO_NAME}:${GIT_COMMIT_ID}
+	$(Q)docker tag ${GO_PACKAGE_ORG_NAME}/${GO_PACKAGE_REPO_NAME}:${GIT_COMMIT_ID} devopsconsole-operator-deploy
 
 DOCKER_BUILD_TOOLS_CONTAINER := build-tools
 
@@ -64,10 +65,12 @@ ifeq ($(strip $(shell docker ps -qa --filter "name=$(DOCKER_BUILD_TOOLS_CONTAINE
 	$(error No container name "$(DOCKER_BUILD_TOOLS_CONTAINER_NAME)" exists. Consider running "make docker-start" first.)
 endif
 
-# This is a wildcard target to let you call any make target from the normal makefile
-# but it will run inside the docker container. This target will only get executed if
-# there's no specialized form available. For example if you call "make docker-start"
-# not this target gets executed but the "docker-start" target.
+.PHONY: docker-%
+## This is a wildcard target to let you call any make target from the normal
+## makefile but it will run inside the docker build tools container that you've
+## started with docker-start. This target will only get executed if there's no
+## specialized form available. For example if you call "make docker-start" not
+## this target gets executed but the "docker-start" target.
 docker-%: check-build-tools-container-is-running
 	$(eval makecommand:=$(subst docker-,,$@))
 	$(Q)docker exec \
