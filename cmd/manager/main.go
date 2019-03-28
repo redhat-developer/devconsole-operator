@@ -154,18 +154,18 @@ func main() {
 // This cluster role allows all authenticated users to read the status of
 // `installer` CR
 func createClusterRoleAndBinding(c client.Client) error {
-	clusterRole := getClusterRole()
-	if err := c.Update(context.TODO(), clusterRole); err != nil {
+	clusterRole := newClusterRole()
+	if err := c.Create(context.TODO(), clusterRole); err != nil && !errors.IsAlreadyExists(err) {
 		return err
 	}
-	clusterRoleBinding := getClusterRoleBinding()
-	if err := c.Update(context.TODO(), clusterRoleBinding); err != nil {
+	clusterRoleBinding := newClusterRoleBinding()
+	if err := c.Create(context.TODO(), clusterRoleBinding); err != nil && !errors.IsAlreadyExists(err) {
 		return err
 	}
 	return nil
 }
 
-func getClusterRoleBinding() *rbacv1.ClusterRoleBinding {
+func newClusterRoleBinding() *rbacv1.ClusterRoleBinding {
 	return &rbacv1.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -187,7 +187,7 @@ func getClusterRoleBinding() *rbacv1.ClusterRoleBinding {
 	}
 }
 
-func getClusterRole() *rbacv1.ClusterRole {
+func newClusterRole() *rbacv1.ClusterRole {
 	return &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",

@@ -134,20 +134,22 @@ spec:
           resources:
             - routes
           verbs:
-            - '*'
+            - get
+            - create
         - apiGroups:
             - apps
           resources:
             - deployments
           verbs:
-            - '*'
+            - get
+            - create
         - apiGroups:
             - rbac.authorization.k8s.io
           resources:
             - clusterroles
             - clusterrolebindings
           verbs:
-            - '*'
+            - create
         serviceAccountName: devopsconsole-operator
     strategy: deployment
   installModes:
