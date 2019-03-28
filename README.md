@@ -64,9 +64,8 @@ minishift start
 ```
 make local
 ```
-> NOTE: To watch all namespaces, `APP_NAMESPACE` is set to empty string. 
-If a specific namespace is provided only that project will watched. 
-As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
+> NOTE: the operator starts by boostrapping [app-service](https://github.com/redhat-developer/app-service)
+if you want to override the image `APP_SERVICE_IMAGE_NAME="redhat-developer/app-service" make local`
 
 * Make sure minishift is running and use myproject
 ```
@@ -83,18 +82,6 @@ make deploy-test
 * See the newly created resources
 ```
 oc get is,bc,svc,component.devopsconsole,build
-NAME                                           DOCKER REPO                               TAGS      UPDATED
-imagestream.image.openshift.io/myapp-output    172.30.1.1:5000/myproject/myapp-output
-imagestream.image.openshift.io/myapp-runtime   172.30.1.1:5000/myproject/myapp-runtime   latest    46 seconds ago
-
-NAME                                      TYPE      FROM         LATEST
-buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
-
-NAME                                         AGE
-component.devopsconsole.openshift.io/myapp   48s
-
-NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
-build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 seconds ago
 ```
 
 ### Deploy the operator with Deployment yaml
@@ -133,17 +120,6 @@ oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml --namespace tina
 * check if the resources are created
 ```
 oc get all,is,component,bc,build,deployment,pod
-NAME                   READY     STATUS    RESTARTS   AGE
-pod/myapp-bc-1-build   1/1       Running   0          23s
-
-NAME                                      TYPE      FROM         LATEST
-buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
-
-NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
-build.build.openshift.io/myapp-bc-1   Source    Git@afc0f38   Running   23 seconds ago
-
-NAME                                          DOCKER REPO                         TAGS      UPDATED
-imagestream.image.openshift.io/myapp-output   172.30.1.1:5000/tina/myapp-output
 ```
 ## Directory layout
 
