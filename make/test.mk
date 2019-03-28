@@ -20,7 +20,7 @@ get-test-namespace: ./out/test-namespace
 	$(eval TEST_NAMESPACE := $(shell cat ./out/test-namespace))
 
 ./out/test-namespace:
-	@echo -n "test-namespace-$(shell uuidgen)" > ./out/test-namespace
+	@echo -n "test-namespace-$(shell uuidgen | tr '[:upper:]' '[:lower:]')" > ./out/test-namespace
 
 .PHONY: test-e2e
 ## Runs the e2e tests without coverage

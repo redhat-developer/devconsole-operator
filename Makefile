@@ -49,16 +49,9 @@ BUILD_TIME = `date -u '+%Y-%m-%dT%H:%M:%SZ'`
 		-o ./out/operator \
 		cmd/manager/main.go
 
-.PHONY: docker-image
-docker-image: Dockerfile
-	$(Q)docker build ${Q_FLAG} \
-		--build-arg GO_PACKAGE_PATH=${GO_PACKAGE_PATH} \
-		--build-arg VERBOSE=${VERBOSE} \
-		. \
-		-t ${GO_PACKAGE_ORG_NAME}/${GO_PACKAGE_REPO_NAME}:${GIT_COMMIT_ID}
-
 include ./make/dev.mk
 include ./make/format.mk
 include ./make/lint.mk
 include ./make/deploy.mk
 include ./make/test.mk
+include ./make/docker.mk

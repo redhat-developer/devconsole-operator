@@ -1,10 +1,9 @@
-FROM centos:7 as builder
+FROM centos:7 as build-tools
 LABEL maintainer "Devtools <devtools@redhat.com>"
 LABEL author "Konrad Kleine <kkleine@redhat.com>"
 ENV LANG=en_US.utf8
 ENV GOPATH /tmp/go
 ARG GO_PACKAGE_PATH=github.com/redhat-developer/devopsconsole-operator
-ARG VERBOSE=2
 
 RUN yum install epel-release -y \
     && yum install --enablerepo=centosplus install -y --quiet \
@@ -50,16 +49,23 @@ RUN mkdir -p $GOPATH/src/github.com/operator-framework \
     && make dep \
     && make install
 
-COPY . ${GOPATH}/src/${GO_PACKAGE_PATH}/
+RUN mkdir -p ${GOPATH}/src/${GO_PACKAGE_PATH}/
 
 WORKDIR ${GOPATH}/src/${GO_PACKAGE_PATH}
 
+ENTRYPOINT [ "/bin/bash" ]
+
+#--------------------------------------------------------------------
+
+FROM build-tools as builder
+ARG VERBOSE=2
+COPY . .
 RUN make VERBOSE=${VERBOSE} build
 RUN make VERBOSE=${VERBOSE} test
 
 #--------------------------------------------------------------------
 
-FROM centos:7
+FROM centos:7 as deploy
 LABEL maintainer "Devtools <devtools@redhat.com>"
 LABEL author "Konrad Kleine <kkleine@redhat.com>"
 ENV LANG=en_US.utf8

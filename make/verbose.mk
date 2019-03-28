@@ -4,6 +4,7 @@
 # toggle on/off verbosity using -v. Use Q_FLAG in places where you can toggle
 # on/off quiet mode using -q. Use S_FLAG where you want to toggle on/off silence
 # mode using -s...
+VERBOSE ?= 0
 Q = @
 Q_FLAG = -q
 QUIET_FLAG = --quiet

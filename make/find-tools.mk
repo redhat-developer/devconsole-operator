@@ -1,11 +1,12 @@
 # Check all required tools are accessible
 REQUIRED_EXECUTABLES = go gofmt dep git operator-sdk oc sed
-ifeq ($(MAKECMDGOALS),docker-image)
+# If we're running e.g. "make docker-build", nothing but docker is required
+# because all the above build tools are supposed to be included in the docker
+# image.
+ifneq (,$(findstring docker-,$(MAKECMDGOALS)))
     REQUIRED_EXECUTABLES = docker
 endif
-ifeq ($(MAKECMDGOALS),docker-run)
-    REQUIRED_EXECUTABLES = docker
-endif
+# Don't check for any tool if "make help" is run or "make" without a target.
 ifneq ($(MAKECMDGOALS),help)
 ifneq ($(MAKECMDGOALS),)
 ifeq ($(VERBOSE),1)
