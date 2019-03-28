@@ -21,10 +21,6 @@ GO_PACKAGE_ORG_NAME ?= $(shell basename $$(dirname $$PWD))
 GO_PACKAGE_REPO_NAME ?= $(shell basename $$PWD)
 GO_PACKAGE_PATH ?= github.com/${GO_PACKAGE_ORG_NAME}/${GO_PACKAGE_REPO_NAME}
 
-.PHONY: all
-## Builds the operator and runs tests
-all: build test
-
 .PHONY: build
 ## Build the operator
 build: ./out/operator
@@ -42,7 +38,7 @@ endif
 BUILD_TIME = `date -u '+%Y-%m-%dT%H:%M:%SZ'`
 
 ./out/operator: ./vendor $(shell find . -path ./vendor -prune -o -name '*.go' -print)
-	$(Q)operator-sdk generate k8s
+	#$(Q)operator-sdk generate k8s
 	$(Q)CGO_ENABLED=0 GOARCH=amd64 GOOS=linux \
 		go build ${V_FLAG} \
 		-ldflags "-X ${GO_PACKAGE_PATH}/cmd/manager.Commit=${GIT_COMMIT_ID} -X ${GO_PACKAGE_PATH}/cmd/manager.BuildTime=${BUILD_TIME}" \
