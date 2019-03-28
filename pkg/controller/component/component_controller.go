@@ -9,6 +9,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	"strconv"
+
+	gitsourcev1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1"
 	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -19,7 +22,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strconv"
 
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -87,7 +89,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
+		// Error reading the object - requeue the request/*  */.
 		return reconcile.Result{}, err
 	}
 
@@ -120,7 +122,19 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		_, err = r.CreateBuildConfig(instance, builderIS)
+
+		// Get gitsource referenced in component
+		gitSource := &gitsourcev1alpha1.GitSource{}
+		err = r.client.Get(context.TODO(), client.ObjectKey{
+			Namespace: instance.Namespace,
+			Name:      instance.Spec.Codebase,
+		}, gitSource)
+		if err != nil {
+			log.Error(err, "Error occured while getting gitsource")
+			return reconcile.Result{}, nil
+		}
+
+		_, err = r.CreateBuildConfig(instance, builderIS, gitSource)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -160,8 +174,8 @@ func (r *ReconcileComponent) CreateDeploymentConfig(cr *componentsv1alpha1.Compo
 }
 
 // CreateBuildConfig creates a BuildConfig OpenShift resource used in S2I.
-func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component, builderIS *imagev1.ImageStream) (*buildv1.BuildConfig, error) {
-	bc := newBuildConfig(cr, builderIS)
+func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component, builderIS *imagev1.ImageStream, gitSource *gitsourcev1alpha1.GitSource) (*buildv1.BuildConfig, error) {
+	bc := r.newBuildConfig(cr, builderIS, gitSource)
 	if err := controllerutil.SetControllerReference(cr, bc, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
 		return nil, err

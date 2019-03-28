@@ -33,7 +33,7 @@ type GitSourceSpec struct {
 	NoProxy string `json:"noProxy,omitempty"`
 
 	// SecretRef refers to the secret that contains credentials to access the git repo. Optional.
-	SecretRef SecretRef `json:"secretRef,omitempty"`
+	SecretRef *SecretRef `json:"secretRef,omitempty"`
 
 	// Flavor of the git provider like github, gitlab, bitbucket, generic, etc. Optional.
 	Flavor string `json:"flavor,omitempty"`
