@@ -127,9 +127,11 @@ func main() {
 	// Currently, adding clusterroles to groups/users is not supported by CSV.
 	// That's why the clusterRole and binding are created over here manually
 	if err := createClusterRoleAndBinding(mgr.GetClient()); err != nil {
-		log.Error(err, "")
+		log.Error(err, "failed to create clusterRole and rolebinding.")
 		os.Exit(1)
 	}
+	log.Info("Successfully created ClusterRole and ClusterRoleBinding.")
+
 	// Create a new "installer". This will trigger the deployment and create route
 	c := mgr.GetClient()
 	installer := &devopsconsolev1alpha1.Installer{}
@@ -140,6 +142,7 @@ func main() {
 		log.Error(err, "failed to create installer resource")
 		os.Exit(1)
 	}
+	log.Info("Successfully create installer CR.")
 
 	log.Info("Starting the Cmd.")
 
