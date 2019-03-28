@@ -1,3 +1,9 @@
+ifndef TEST_MK
+TEST_MK:=# Prevent repeated "-include".
+
+include ./make/verbose.mk
+include ./make/out.mk
+
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
 test: ./vendor
@@ -85,3 +91,5 @@ else
 	$(Q)sed ${QUIET_FLAG} -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
 endif
 	$(Q)eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup
+
+endif

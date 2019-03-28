@@ -17,6 +17,7 @@ RUN yum install epel-release -y \
     which \
     bc \
     kubectl \
+    yamllint \
     && yum clean all
 
 # install dep

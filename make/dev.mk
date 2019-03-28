@@ -1,37 +1,37 @@
+ifndef DEV_MK
+DEV_MK:=# Prevent repeated "-include".
+
+include ./make/verbose.mk
+include ./make/git.mk
+
 DOCKER_REPO?=quay.io/openshiftio
 IMAGE_NAME?=devconsole-operator
-SHORT_COMMIT=$(shell git rev-parse --short HEAD)
-ifneq ($(GITUNTRACKEDCHANGES),)
-SHORT_COMMIT := $(SHORT_COMMIT)-dirty
-endif
 
 DEVOPSCONSOLE_OPERATOR_IMAGE?=quay.io/redhat-developers/devopsconsole-operator
 TIMESTAMP:=$(shell date +%s)
-TAG?=$(SHORT_COMMIT)-$(TIMESTAMP)
-
-DEPLOY_DIR:=deploy
+TAG?=$(GIT_COMMIT_ID_SHORT)-$(TIMESTAMP)
 
 .PHONY: create-resources
 create-resources:
-	$(Q)echo "Logging using system:admin..."
+	$(info Logging using system:admin...)
 	$(Q)oc login -u system:admin
-	$(Q)echo "Creating sub resources..."
-	$(Q)echo "Creating CRDs..."
-	$(Q)oc create -f $(DEPLOY_DIR)/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
-	$(Q)echo "Creating Namespace"
-	$(Q)oc create -f $(DEPLOY_DIR)/namespace.yaml
-	$(Q)echo "oc project codeready-devconsole"
+	$(info Creating sub resources...)
+	$(info Creating CRDs...)
+	$(Q)oc create -f ./deploy/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
+	$(info Creating Namespace)
+	$(Q)oc create -f ./deploy/namespace.yaml
+	$(info oc project codeready-devconsole)
 	$(Q)oc project codeready-devconsole
-	$(Q)echo "Creating Service Account"
-	$(Q)oc create -f $(DEPLOY_DIR)/service_account.yaml
-	$(Q)echo "Creating Role"
-	$(Q)oc create -f $(DEPLOY_DIR)/role.yaml
-	$(Q)echo "Creating RoleBinding"
-	$(Q)oc create -f $(DEPLOY_DIR)/role_binding.yaml
+	$(info Creating Service Account)
+	$(Q)oc create -f ./deploy/service_account.yaml
+	$(info Creating Role)
+	$(Q)oc create -f ./deploy/role.yaml
+	$(info Creating RoleBinding)
+	$(Q)oc create -f ./deploy/role_binding.yaml
 
 .PHONY: create-cr
 create-cr:
-	@echo "Creating Custom Resource..."
+	$(info Creating Custom Resource...)
 
 .PHONY: build-operator-image
 ## Build and create the operator container image
@@ -61,13 +61,13 @@ clean-operator:
 clean-resources:
 	@echo "Deleting sub resources..."
 	@echo "Deleting ClusterRoleBinding"
-	@oc delete -f $(DEPLOY_DIR)/role_binding.yaml || true
+	@oc delete -f ./deploy/role_binding.yaml || true
 	@echo "Deleting ClusterRole"
-	@oc delete -f $(DEPLOY_DIR)/role.yaml || true
+	@oc delete -f ./deploy/role.yaml || true
 	@echo "Deleting Service Account"
-	@oc delete -f $(DEPLOY_DIR)/service_account.yaml || true
+	@oc delete -f ./deploy/service_account.yaml || true
 	@echo "Deleting Custom Resource Definitions..."
-	@oc delete -f $(DEPLOY_DIR)/crds/devopsconsole_v1alpha1_gitsource_crd.yaml || true
+	@oc delete -f ./deploy/crds/devopsconsole_v1alpha1_gitsource_crd.yaml || true
 
 .PHONY: deploy-operator
 deploy-operator: build build-image deploy-operator-only
@@ -79,3 +79,5 @@ minishift-start:
 
 .PHONY: deploy-all
 deploy-all: clean-resources create-resources deps prebuild-check deploy-operator create-cr
+
+endif

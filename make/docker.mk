@@ -1,3 +1,6 @@
+ifndef DOCKER_MK
+DOCKER_MK:=# Prevent repeated "-include".
+
 # If running in Jenkins we don't allow for interactively running the container
 DOCKER_RUN_INTERACTIVE_SWITCH = -i
 ifneq ($(BUILD_TAG),)
@@ -47,7 +50,7 @@ docker-start: docker-image-build-tools docker-rm
 		-v $(shell pwd):/tmp/go/src/${GO_PACKAGE_PATH}:Z \
 		-u $(shell id -u ${USER}):$(shell id -g ${USER}) \
 		${GO_PACKAGE_ORG_NAME}/${GO_PACKAGE_REPO_NAME}-build-tools:${GIT_COMMIT_ID}
-	$(info Docker container "$(DOCKER_BUILD_TOOLS_CONTAINER_NAME)" created. Continue with "make docker-build".)
+	$(info Docker container "$(DOCKER_BUILD_TOOLS_CONTAINER_NAME)" created. Continue with "make docker-build")
 
 .PHONY: docker-rm
 ## Removes the docker build container, if any (see "make docker-start").
@@ -62,7 +65,7 @@ docker-rm:
 check-build-tools-container-is-running: 
 	$(eval makecommand:=$(subst docker-,,$@))
 ifeq ($(strip $(shell docker ps -qa --filter "name=$(DOCKER_BUILD_TOOLS_CONTAINER_NAME)" 2>/dev/null)),)
-	$(error No container name "$(DOCKER_BUILD_TOOLS_CONTAINER_NAME)" exists. Consider running "make docker-start" first.)
+	$(error No container name "$(DOCKER_BUILD_TOOLS_CONTAINER_NAME)" exists. Consider running "make docker-start" first)
 endif
 
 .PHONY: docker-%
@@ -78,3 +81,5 @@ docker-%: check-build-tools-container-is-running
 		$(DOCKER_RUN_INTERACTIVE_SWITCH) \
 		"$(DOCKER_BUILD_TOOLS_CONTAINER_NAME)" \
 		bash -ec 'make VERBOSE=${VERBOSE} $(makecommand)'
+
+endif

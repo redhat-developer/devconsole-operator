@@ -1,6 +1,7 @@
-# -------------------------------------------------------------------
-# deploy
-# -------------------------------------------------------------------
+ifndef DEPLOY_MK
+DEPLOY_MK:=# Prevent repeated "-include".
+
+include ./make/verbose.mk
 
 # to watch all namespaces, keep namespace empty
 APP_NAMESPACE ?= ""
@@ -42,3 +43,5 @@ deploy-clean:
 ## Deploy a CR as test
 deploy-test:
 	$(Q)oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml
+
+endif
