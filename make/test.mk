@@ -150,14 +150,10 @@ test-olm-integration: push-operator-image olm-integration-setup
 	$(eval devopsconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
 	$(eval devopsconsole_csv := $(shell cat $(package_yaml) | grep "currentCSV" | cut -d ":" -f2 | tr -d '[:space:]'))
 
-	cp  $(CUR_DIR)/manifests/devopsconsole/$(devopsconsole_version)/$(devopsconsole_csv).clusterserviceversion.yaml $(CUR_DIR)/devopsconsole_tmp.yaml
-
-	sed -e "s,REPLACE_IMAGE,$(DEVOPSCONSOLE_OPERATOR_IMAGE)," -i $(CUR_DIR)/manifests/devopsconsole/${devopsconsole_version}/${devopsconsole_csv}.clusterserviceversion.yaml
-	docker build -f $(CUR_DIR)/test/olm/Dockerfile.registry $(CUR_DIR) -t $(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version)
+	docker build -f $(CUR_DIR)/test/olm/Dockerfile.registry $(CUR_DIR) -t $(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version) \
+		--build-arg image=$(DEVOPSCONSOLE_OPERATOR_IMAGE) --build-arg version=$(devopsconsole_version)
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
 	docker push $(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version)
-
-	mv $(CUR_DIR)/devopsconsole_tmp.yaml $(CUR_DIR)/manifests/devopsconsole/$(devopsconsole_version)/$(devopsconsole_csv).clusterserviceversion.yaml
 
 	sed -e "s,REPLACE_IMAGE,$(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version)," $(CUR_DIR)/test/olm/catalog_source.yaml | oc apply -f -
 	oc apply -f $(CUR_DIR)/test/olm/subscription.yaml
