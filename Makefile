@@ -2,15 +2,9 @@
 SHELL := /bin/bash
 
 include ./make/verbose.mk
-
 .DEFAULT_GOAL := help
 include ./make/help.mk
-
-# Create output directory for artifacts and test results. ./out is supposed to
-# be a safe place for all targets to write to while knowing that all content
-# inside of ./out is wiped once "make clean" is run.
-$(shell mkdir -p ./out);
-
+include ./make/out.mk
 include ./make/find-tools.mk
 include ./make/go.mk
 include ./make/git.mk
