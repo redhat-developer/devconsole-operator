@@ -15,7 +15,7 @@ test-coverage-html: ./vendor ./out/cover.out
 ./out/cover.out: ./vendor
 	$(Q)go test ${V_FLAG} -race $(shell go list ./... | grep -v /test/e2e) -failfast -coverprofile=cover.out -covermode=atomic -outputdir=./out
 
-.PHONY: _get-test-namespace
+.PHONY: get-test-namespace
 get-test-namespace: ./out/test-namespace
 	$(eval TEST_NAMESPACE := $(shell cat ./out/test-namespace))
 
