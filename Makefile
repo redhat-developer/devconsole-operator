@@ -283,10 +283,10 @@ build: prebuild-check deps check-go-format
 
 # to watch all namespaces, keep namespace empty
 APP_NAMESPACE ?= ""
+LOCAL_TEST_NAMESPACE ?= "local-test"
 .PHONY: local
 ## Run Operator locally
 local: deploy-rbac build deploy-crd
-	@-oc new-project $(APP_NAMESPACE)
 	operator-sdk up local --namespace=$(APP_NAMESPACE)
 
 .PHONY: deploy-rbac
@@ -311,13 +311,10 @@ deploy-operator: deploy-crd
 .PHONY: deploy-clean
 ## Deploy a CR as test
 deploy-clean:
-	@-oc delete component.devopsconsole.openshift.io/myapp
-	@-oc delete imagestream.image.openshift.io/myapp-builder
-	@-oc delete imagestream.image.openshift.io/myapp-output
-	@-oc delete buildconfig.build.openshift.io/myapp-bc
-	@-oc delete deploymentconfig.apps.openshift.io/myapp
+	@-oc delete project $(LOCAL_TEST_NAMESPACE)
 
 .PHONY: deploy-test
 ## Deploy a CR as test
 deploy-test:
-	oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml
+	@-oc new-project $(LOCAL_TEST_NAMESPACE)
+	@-oc apply -f examples/devopsconsole_v1alpha1_component_cr.yaml

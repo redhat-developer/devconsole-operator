@@ -27,8 +27,13 @@ type Component struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ComponentSpec   `json:"spec,omitempty"`
+	Spec ComponentSpec `json:"spec,omitempty"`
+
 	Status ComponentStatus `json:"status,omitempty"`
+}
+
+func (c *Component) GetName() string {
+	return c.Name
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
