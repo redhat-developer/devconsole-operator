@@ -150,6 +150,13 @@ spec:
             - clusterrolebindings
           verbs:
             - create
+        - apiGroups:
+          - apps.openshift.io
+          resources:
+          - deploymentconfigs
+          verbs:
+          - create
+          - get
         serviceAccountName: devopsconsole-operator
     strategy: deployment
   installModes:
