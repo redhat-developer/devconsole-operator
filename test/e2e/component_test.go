@@ -1,4 +1,4 @@
-package olm
+package e2e
 
 import (
 	"context"

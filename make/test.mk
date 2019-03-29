@@ -150,15 +150,15 @@ test-olm-integration: push-operator-image olm-integration-setup
 	$(eval devopsconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
 	$(eval devopsconsole_csv := $(shell cat $(package_yaml) | grep "currentCSV" | cut -d ":" -f2 | tr -d '[:space:]'))
 
-	docker build -f $(CUR_DIR)/test/olm/Dockerfile.registry $(CUR_DIR) -t $(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version) \
+	docker build -f $(CUR_DIR)/test/e2e/Dockerfile.registry $(CUR_DIR) -t $(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version) \
 		--build-arg image=$(DEVOPSCONSOLE_OPERATOR_IMAGE) --build-arg version=$(devopsconsole_version)
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
 	docker push $(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version)
 
-	sed -e "s,REPLACE_IMAGE,$(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version)," $(CUR_DIR)/test/olm/catalog_source.yaml | oc apply -f -
-	oc apply -f $(CUR_DIR)/test/olm/subscription.yaml
+	sed -e "s,REPLACE_IMAGE,$(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version)," $(CUR_DIR)/test/e2e/catalog_source.yaml | oc apply -f -
+	oc apply -f $(CUR_DIR)/test/e2e/subscription.yaml
 
-	operator-sdk test local ./test/olm/ --go-test-flags "-v -parallel=1"
+	operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1"
 
 .PHONY: olm-integration-setup
 olm-integration-setup: olm-integration-cleanup
