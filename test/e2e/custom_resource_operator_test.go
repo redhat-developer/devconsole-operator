@@ -58,7 +58,20 @@ func (suite *ComponentTestSuite) SetupSuite() {
 			APIVersion: "devopsconsole.openshift.io/v1alpha1",
 		},
 	}
+
+	gitSourceList := &componentsv1alpha1.GitSourceList{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GitSource",
+			APIVersion: "devopsconsole.openshift.io/v1alpha1",
+		},
+	}
+
 	err = framework.AddToFrameworkScheme(apis.AddToScheme, componentList)
+	if err != nil {
+		suite.T().Fatalf("failed to add custom resource scheme to framework: %v", err)
+	}
+
+	err = framework.AddToFrameworkScheme(apis.AddToScheme, gitSourceList)
 	if err != nil {
 		suite.T().Fatalf("failed to add custom resource scheme to framework: %v", err)
 	}
@@ -103,6 +116,35 @@ func (suite *ComponentTestSuite) TestComponent() {
 		require.NoError(t, err, "failed to retrieve custom resource of kind `Component`")
 		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", cr.Spec.Codebase)
 		require.Equal(t, "nodejs", cr.Spec.BuildType)
+	})
+}
+
+func (suite *ComponentTestSuite) TestGitSource() {
+	suite.T().Log(fmt.Sprintf("namespace: %s", suite.namespace))
+	// create a Component custom resource
+	cr := &componentsv1alpha1.GitSource{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GitSource",
+			APIVersion: "devopsconsole.openshift.io/v1alpha1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "mygitsource",
+			Namespace: suite.namespace,
+		},
+		Spec: componentsv1alpha1.GitSourceSpec{
+			URL: "https://github.com/nodeshift-starters/nodejs-rest-http-crud",
+			Ref: "master",
+		},
+	}
+	// use TestCtx's create helper to create the object and add a cleanup function for the new object
+	err := suite.framework.Client.Create(context.TODO(), cr, &framework.CleanupOptions{TestContext: suite.ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	require.NoError(suite.T(), err, "failed to create custom resource of kind `GitSource`")
+
+	suite.T().Run("retrieve gitsource and verify related resources are created", func(t *testing.T) {
+		err = suite.framework.Client.Get(context.TODO(), types.NamespacedName{Name: "mygitsource", Namespace: suite.namespace}, cr)
+		require.NoError(t, err, "failed to retrieve custom resource of kind `GitSource`")
+		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", cr.Spec.URL)
+		require.Equal(t, "master", cr.Spec.Ref)
 	})
 }
 
