@@ -12,7 +12,7 @@ YAML_FILES := $(shell find . -type f -regex ".*y[a]ml" | grep -v vendor)
 .PHONY: lint-yaml
 ## runs yamllint on all yaml files
 lint-yaml: ${YAML_FILES}
-	$(@)yamllint $^
+	$(Q)yamllint -c .yamllint $^
 
 .PHONY: lint-go-code
 ## Checks the code with golangci-lint
