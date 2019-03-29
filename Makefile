@@ -282,9 +282,11 @@ build: prebuild-check deps check-go-format
 # -------------------------------------------------------------------
 
 LOCAL_TEST_NAMESPACE ?= "local-test"
+APP_SERVICE_IMAGE_NAME?="redhat-developer/app-service"
 .PHONY: local
 ## Run Operator locally
 local: deploy-rbac build deploy-crd
+	@-oc new-project $(LOCAL_TEST_NAMESPACE)
 	operator-sdk up local --namespace=$(LOCAL_TEST_NAMESPACE)
 
 .PHONY: deploy-rbac
