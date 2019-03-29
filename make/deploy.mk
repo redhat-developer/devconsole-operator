@@ -5,6 +5,8 @@ include ./make/verbose.mk
 
 # to watch all namespaces, keep namespace empty
 APP_NAMESPACE ?= ""
+LOCAL_TEST_NAMESPACE ?= "local-test"
+
 .PHONY: local
 ## Run Operator locally
 local: deploy-rbac build deploy-crd
@@ -33,15 +35,13 @@ deploy-operator: deploy-crd
 .PHONY: deploy-clean
 ## Deploy a CR as test
 deploy-clean:
-	$(Q)-oc delete component.devopsconsole.openshift.io/myapp
-	$(Q)-oc delete imagestream.image.openshift.io/myapp-builder
-	$(Q)-oc delete imagestream.image.openshift.io/myapp-output
-	$(Q)-oc delete buildconfig.build.openshift.io/myapp-bc
-	$(Q)-oc delete deploymentconfig.apps.openshift.io/myapp
+	$(Q)-oc delete project $(LOCAL_TEST_NAMESPACE)
 
 .PHONY: deploy-test
 ## Deploy a CR as test
 deploy-test:
-	$(Q)oc create -f examples/devopsconsole_v1alpha1_component_cr.yaml
+deploy-test:
+	$(Q)-oc new-project $(LOCAL_TEST_NAMESPACE)
+	$(Q)-oc apply -f examples/devopsconsole_v1alpha1_component_cr.yaml
 
 endif
