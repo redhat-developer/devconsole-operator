@@ -100,6 +100,7 @@ for local dev to avoid pulling image and be able to use docker cached image inst
 ```
 oc login -u system:admin
 oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+oc apply -f deploy/crds/devopsconsole_v1alpha1_installer_crd.yaml
 oc apply -f deploy/service_account.yaml
 oc apply -f deploy/role.yaml
 oc apply -f deploy/role_binding.yaml

@@ -51,6 +51,8 @@ rules:
   verbs:
   - get
   - create
+  - list
+  - watch
 - apiGroups:
   - apps
   resources:
@@ -58,6 +60,8 @@ rules:
   verbs:
   - get
   - create
+  - list
+  - watch
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
