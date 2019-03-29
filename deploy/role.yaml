@@ -44,3 +44,10 @@ rules:
   verbs:
   - create
   - get
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - create
+  - get
