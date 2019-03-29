@@ -61,10 +61,11 @@ Inside the file look for `image: REPLACE_IMAGE` and specify the image location.
 
 ### 4. Build the operator registry image
 
-Now you are going to build the operator image using `test/olm/Dockerfile.`
+Now you are going to build the operator image using `test/olm/Dockerfile.registry`
 
 ```
-docker build -f test/olm/Dockerfile . -t quay.io/<username>/operator-registry:0.1.0
+docker build -f test/olm/Dockerfile.registry . -t quay.io/<username>/operator-registry:0.1.0 \
+	--build-arg image=quay.io/<username>/devopsconsole-operator --build-arg version=0.1.0
 docker push quay.io/<username>/operator-registry:0.1.0
 ```
 
