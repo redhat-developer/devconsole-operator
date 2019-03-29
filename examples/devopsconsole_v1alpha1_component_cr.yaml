@@ -4,4 +4,5 @@ metadata:
   name: myapp
 spec:
   buildType: "nodejs"
-  codebase: "https://github.com/nodeshift-starters/nodejs-rest-http-crud"
+  codebase: "https://github.com/sclorg/nodejs-ex" #"https://github.com/nodeshift-starters/nodejs-rest-http-crud"
+
