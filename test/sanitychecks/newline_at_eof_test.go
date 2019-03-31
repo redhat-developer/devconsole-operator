@@ -76,6 +76,9 @@ func TestNewlineAtEOF(t *testing.T) {
 
 				buf := make([]byte, 1)
 				stat, err := os.Stat(path)
+				if err != nil {
+					t.Error("cannot stat file:", path)
+				}
 				start := stat.Size() - 1
 				_, err = file.ReadAt(buf, start)
 				if err != nil {

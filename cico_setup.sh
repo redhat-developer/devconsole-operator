@@ -38,28 +38,18 @@ function prepare() {
   # Let's test
   make docker-start
   make -d docker-check-go-format
-  make -d docker-deps
-  make -d docker-check-go-code
   make -d docker-build
   echo 'CICO: Preparation complete'
 }
 
 function run_tests_without_coverage() {
-  make docker-test-unit
+  make docker-test
   echo "CICO: ran tests without coverage"
 }
 
 function run_tests_with_coverage() {
   # Run the unit tests that generate coverage information
-  make docker-test-unit-with-coverage
-
-  # Output coverage
-  make docker-coverage-all
-
-  # Upload coverage to codecov.io
-  cp tmp/coverage.mode* coverage.txt
-  bash <(curl -s https://codecov.io/bash) -X search -f coverage.txt -t 3df1c77b-5c96-4072-831f-9eabdaf2cb12
-
+  make docker-test-coverage
   echo "CICO: ran tests and uploaded coverage"
 }
 
