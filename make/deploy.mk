@@ -45,3 +45,4 @@ deploy-test:
 	$(Q)-oc apply -f examples/devopsconsole_v1alpha1_component_cr.yaml
 
 endif
+

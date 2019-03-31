@@ -21,3 +21,4 @@ lint-go-code:
 	$(Q)${GOPATH}/bin/golangci-lint ${V_FLAG} run
 
 endif
+
