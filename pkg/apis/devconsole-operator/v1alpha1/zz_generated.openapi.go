@@ -13,13 +13,13 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.GitSource":       schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSource(ref),
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.GitSourceSpec":   schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSourceSpec(ref),
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.GitSourceStatus": schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSourceStatus(ref),
+		"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.GitSource":       schema_pkg_apis_devconsole_operator_v1alpha1_GitSource(ref),
+		"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.GitSourceSpec":   schema_pkg_apis_devconsole_operator_v1alpha1_GitSourceSpec(ref),
+		"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.GitSourceStatus": schema_pkg_apis_devconsole_operator_v1alpha1_GitSourceStatus(ref),
 	}
 }
 
-func schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSource(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_devconsole_operator_v1alpha1_GitSource(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -47,23 +47,23 @@ func schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSource(ref common.Refere
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.GitSourceSpec"),
+							Ref: ref("github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.GitSourceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.GitSourceStatus"),
+							Ref: ref("github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.GitSourceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.GitSourceSpec", "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.GitSourceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.GitSourceSpec", "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.GitSourceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSourceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_devconsole_operator_v1alpha1_GitSourceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -115,7 +115,7 @@ func schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSourceSpec(ref common.Re
 					"secretRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "SecretRef refers to the secret that contains credentials to access the git repo. Optional.",
-							Ref:         ref("github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.SecretRef"),
+							Ref:         ref("github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.SecretRef"),
 						},
 					},
 					"flavor": {
@@ -130,11 +130,11 @@ func schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSourceSpec(ref common.Re
 			},
 		},
 		Dependencies: []string{
-			"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1.SecretRef"},
+			"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1.SecretRef"},
 	}
 }
 
-func schema_pkg_apis_devopsconsole_operator_v1alpha1_GitSourceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_devconsole_operator_v1alpha1_GitSourceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{

@@ -1,4 +1,0 @@
-packageName: devopsconsole
-channels:
-- name: alpha
-  currentCSV: devopsconsole-operator.v0.1.0

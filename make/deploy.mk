@@ -24,8 +24,8 @@ deploy-rbac:
 .PHONY: deploy-crd
 ## Deploy CRD
 deploy-crd:
-	$(Q)-oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
-	$(Q)-oc apply -f deploy/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
+	$(Q)-oc apply -f deploy/crds/devconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc apply -f deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
 
 .PHONY: deploy-operator
 ## Deploy Operator
@@ -42,7 +42,7 @@ deploy-clean:
 deploy-test:
 deploy-test:
 	$(Q)-oc new-project $(LOCAL_TEST_NAMESPACE)
-	$(Q)-oc apply -f examples/devopsconsole_v1alpha1_component_cr.yaml
+	$(Q)-oc apply -f examples/devconsole_v1alpha1_component_cr.yaml
 
 endif
 

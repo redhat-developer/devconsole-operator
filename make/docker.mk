@@ -16,7 +16,7 @@ docker-image-deploy: Dockerfile
 		--target deploy \
 		. \
 		-t ${GO_PACKAGE_ORG_NAME}/${GO_PACKAGE_REPO_NAME}:${GIT_COMMIT_ID}
-	$(Q)docker tag ${GO_PACKAGE_ORG_NAME}/${GO_PACKAGE_REPO_NAME}:${GIT_COMMIT_ID} devopsconsole-operator-deploy
+	$(Q)docker tag ${GO_PACKAGE_ORG_NAME}/${GO_PACKAGE_REPO_NAME}:${GIT_COMMIT_ID} devconsole-operator-deploy
 
 DOCKER_BUILD_TOOLS_CONTAINER := build-tools
 

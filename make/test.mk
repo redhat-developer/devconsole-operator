@@ -50,7 +50,7 @@ e2e-setup: e2e-cleanup
 ## TODO: TBD
 e2e-cleanup: get-test-namespace
 	$(Q)-oc login -u system:admin
-	$(Q)-oc delete -f ./deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
 	$(Q)-oc delete -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
@@ -62,13 +62,13 @@ e2e-cleanup: get-test-namespace
 
 .PHONY: build-image-local
 build-image-local: e2e-setup
-	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/$(TEST_NAMESPACE)/devopsconsole-operator
+	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/$(TEST_NAMESPACE)/devconsole-operator
 
 .PHONY: e2e-local
 e2e-local: build-image-local
 	$(Q)-oc login -u system:admin
 	$(Q)-oc project $(TEST_NAMESPACE)
-	$(Q)-oc create -f ./deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
 	$(Q)-oc create -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
@@ -78,17 +78,17 @@ else
 endif
 	$(Q)-oc create -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
-	$(Q)sed ${QUIET_FLAG} -i "" 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' ./deploy/test/operator_test.yaml
+	$(Q)sed ${QUIET_FLAG} -i "" 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|g' ./deploy/test/operator_test.yaml
 else
-	$(Q)sed ${QUIET_FLAG} -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|g' ./deploy/test/operator_test.yaml
+	$(Q)sed ${QUIET_FLAG} -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|g' ./deploy/test/operator_test.yaml
 endif
 	@eval $$(minishift docker-env) && oc create -f ./deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
 	$(Q)sed ${QUIET_FLAG} -i "" 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' ./deploy/test/role_binding_test.yaml
-	$(Q)sed ${QUIET_FLAG} -i "" 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
+	$(Q)sed ${QUIET_FLAG} -i "" 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
 else
 	$(Q)sed ${QUIET_FLAG} -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' ./deploy/test/role_binding_test.yaml
-	$(Q)sed ${QUIET_FLAG} -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devopsconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
+	$(Q)sed ${QUIET_FLAG} -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
 endif
 	$(Q)eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup
 

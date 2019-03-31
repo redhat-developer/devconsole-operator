@@ -10,8 +10,8 @@ import (
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 
-	"github.com/redhat-developer/devopsconsole-operator/pkg/apis"
-	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
+	"github.com/redhat-developer/devconsole-operator/pkg/apis"
+	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -55,7 +55,7 @@ func (suite *ComponentTestSuite) SetupSuite() {
 	componentList := &componentsv1alpha1.ComponentList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
-			APIVersion: "devopsconsole.openshift.io/v1alpha1",
+			APIVersion: "devconsole.openshift.io/v1alpha1",
 		},
 	}
 	err = framework.AddToFrameworkScheme(apis.AddToScheme, componentList)
@@ -68,7 +68,7 @@ func (suite *ComponentTestSuite) SetupSuite() {
 	suite.T().Log("Initialized cluster resources")
 
 	// wait for component-operator to be ready
-	err = e2eutil.WaitForDeployment(suite.T(), suite.framework.KubeClient, suite.namespace, "devopsconsole-operator", 1, retryInterval, timeout)
+	err = e2eutil.WaitForDeployment(suite.T(), suite.framework.KubeClient, suite.namespace, "devconsole-operator", 1, retryInterval, timeout)
 	require.NoError(suite.T(), err, "failed while waiting for operator deployment")
 
 	suite.T().Log("component-operator is ready and running state")
@@ -83,7 +83,7 @@ func (suite *ComponentTestSuite) TestComponent() {
 	cr := &componentsv1alpha1.Component{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
-			APIVersion: "devopsconsole.openshift.io/v1alpha1",
+			APIVersion: "devconsole.openshift.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mycomp",
