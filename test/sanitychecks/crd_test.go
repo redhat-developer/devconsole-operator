@@ -28,8 +28,8 @@ func TestLatestCRDFiles(t *testing.T) {
 	crds, err := filepath.Glob(fmt.Sprintf("%s/deploy/crds/*_crd.yaml", rootdir))
 	require.NoErrorf(t, err, "Cannot locate CRD files inside: %s", rootdir+"/deploy/crds")
 
-	content, err := ioutil.ReadFile(filepath.Join(rootdir, "manifests", "devopsconsole", "devopsconsole.package.yaml"))
-	require.NoErrorf(t, err, "Cannot read the devopsconsole.package.yaml")
+	content, err := ioutil.ReadFile(filepath.Join(rootdir, "manifests", "devconsole", "devconsole.package.yaml"))
+	require.NoErrorf(t, err, "Cannot read the devconsole.package.yaml")
 
 	pkg := &pkgYAML{}
 
@@ -42,7 +42,7 @@ func TestLatestCRDFiles(t *testing.T) {
 		deployCRD, err := ioutil.ReadFile(path)
 		require.NoError(t, err)
 		filename := filepath.Base(path)
-		manifestPath := filepath.Join(rootdir, "manifests", "devopsconsole", latestVersion, filename)
+		manifestPath := filepath.Join(rootdir, "manifests", "devconsole", latestVersion, filename)
 		manifestCRD, err := ioutil.ReadFile(manifestPath)
 		require.NoError(t, err)
 		if bytes.Equal(deployCRD, manifestCRD) == false {

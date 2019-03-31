@@ -3,7 +3,7 @@ LABEL maintainer "Devtools <devtools@redhat.com>"
 LABEL author "Konrad Kleine <kkleine@redhat.com>"
 ENV LANG=en_US.utf8
 ENV GOPATH /tmp/go
-ARG GO_PACKAGE_PATH=github.com/redhat-developer/devopsconsole-operator
+ARG GO_PACKAGE_PATH=github.com/redhat-developer/devconsole-operator
 
 RUN yum install epel-release -y \
     && yum install --enablerepo=centosplus install -y --quiet \
@@ -72,15 +72,15 @@ LABEL author "Konrad Kleine <kkleine@redhat.com>"
 ENV LANG=en_US.utf8
 
 ENV GOPATH=/tmp/go
-ARG GO_PACKAGE_PATH=github.com/redhat-developer/devopsconsole-operator
+ARG GO_PACKAGE_PATH=github.com/redhat-developer/devconsole-operator
 
-# Create a non-root user and a group with the same name: "devopsconsole-operator"
-ENV OPERATOR_USER_NAME=devopsconsole-operator
+# Create a non-root user and a group with the same name: "devconsole-operator"
+ENV OPERATOR_USER_NAME=devconsole-operator
 RUN useradd --no-create-home -s /bin/bash ${OPERATOR_USER_NAME}
 
-COPY --from=builder ${GOPATH}/src/${GO_PACKAGE_PATH}/out/operator /usr/local/bin/devopsconsole-operator
+COPY --from=builder ${GOPATH}/src/${GO_PACKAGE_PATH}/out/operator /usr/local/bin/devconsole-operator
 
 # From here onwards, any RUN, CMD, or ENTRYPOINT will be run under the following user
 USER ${OPERATOR_USER_NAME}
 
-ENTRYPOINT [ "/usr/local/bin/devopsconsole-operator" ]
+ENTRYPOINT [ "/usr/local/bin/devconsole-operator" ]
