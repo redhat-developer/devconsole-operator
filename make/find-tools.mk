@@ -2,7 +2,7 @@ ifndef FIND_TOOLS_MK
 FIND_TOOLS_MK:=# Prevent repeated "-include".
 
 # Check all required tools are accessible
-REQUIRED_EXECUTABLES = go gofmt dep git operator-sdk oc sed yamllint find grep
+REQUIRED_EXECUTABLES = go gofmt dep git oc sed yamllint find grep
 # If we're running e.g. "make docker-build", nothing but docker is required
 # because all the above build tools are supposed to be included in the docker
 # image.
