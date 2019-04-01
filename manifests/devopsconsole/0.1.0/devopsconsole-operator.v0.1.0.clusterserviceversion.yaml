@@ -130,19 +130,23 @@ spec:
           - create
           - get
         - apiGroups:
-            - route.openshift.io
+          - route.openshift.io
           resources:
-            - routes
+          - routes
           verbs:
-            - get
-            - create
+          - get
+          - create
+          - list
+          - watch
         - apiGroups:
-            - apps
+          - apps
           resources:
-            - deployments
+          - deployments
           verbs:
-            - get
-            - create
+          - get
+          - create
+          - list
+          - watch
         - apiGroups:
             - rbac.authorization.k8s.io
           resources:

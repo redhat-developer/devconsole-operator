@@ -281,13 +281,13 @@ build: prebuild-check deps check-go-format
 # deploy
 # -------------------------------------------------------------------
 
-# to watch all namespaces, keep namespace empty
-APP_NAMESPACE ?= ""
 LOCAL_TEST_NAMESPACE ?= "local-test"
+APP_SERVICE_IMAGE_NAME?="redhat-developer/app-service"
 .PHONY: local
 ## Run Operator locally
 local: deploy-rbac build deploy-crd
-	operator-sdk up local --namespace=$(APP_NAMESPACE)
+	@-oc new-project $(LOCAL_TEST_NAMESPACE)
+	operator-sdk up local --namespace=$(LOCAL_TEST_NAMESPACE)
 
 .PHONY: deploy-rbac
 ## Setup service account and deploy RBAC
@@ -302,6 +302,7 @@ deploy-rbac:
 deploy-crd:
 	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_component_crd.yaml
 	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_gitsource_crd.yaml
+	@-oc apply -f deploy/crds/devopsconsole_v1alpha1_installer_crd.yaml
 
 .PHONY: deploy-operator
 ## Deploy Operator
