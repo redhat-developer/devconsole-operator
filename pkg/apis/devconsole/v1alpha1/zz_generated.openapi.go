@@ -13,13 +13,13 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.Component":       schema_pkg_apis_devopsconsole_v1alpha1_Component(ref),
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentSpec":   schema_pkg_apis_devopsconsole_v1alpha1_ComponentSpec(ref),
-		"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentStatus": schema_pkg_apis_devopsconsole_v1alpha1_ComponentStatus(ref),
+		"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1.Component":       schema_pkg_apis_devconsole_v1alpha1_Component(ref),
+		"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1.ComponentSpec":   schema_pkg_apis_devconsole_v1alpha1_ComponentSpec(ref),
+		"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1.ComponentStatus": schema_pkg_apis_devconsole_v1alpha1_ComponentStatus(ref),
 	}
 }
 
-func schema_pkg_apis_devopsconsole_v1alpha1_Component(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_devconsole_v1alpha1_Component(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -47,23 +47,23 @@ func schema_pkg_apis_devopsconsole_v1alpha1_Component(ref common.ReferenceCallba
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentSpec"),
+							Ref: ref("github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1.ComponentSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentStatus"),
+							Ref: ref("github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1.ComponentStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentSpec", "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1.ComponentStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1.ComponentSpec", "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1.ComponentStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_devopsconsole_v1alpha1_ComponentSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_devconsole_v1alpha1_ComponentSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -90,7 +90,7 @@ func schema_pkg_apis_devopsconsole_v1alpha1_ComponentSpec(ref common.ReferenceCa
 	}
 }
 
-func schema_pkg_apis_devopsconsole_v1alpha1_ComponentStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_devconsole_v1alpha1_ComponentStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{

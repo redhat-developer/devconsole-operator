@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devopsconsole-operator
+  name: devconsole-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: devopsconsole-operator
+      name: devconsole-operator
   template:
     metadata:
       labels:
-        name: devopsconsole-operator
+        name: devconsole-operator
     spec:
-      serviceAccountName: devopsconsole-operator
+      serviceAccountName: devconsole-operator
       containers:
-        - name: devopsconsole-operator
+        - name: devconsole-operator
           # Replace this with the built image name
-          image: 172.30.1.1:5000/devopsconsole/devopsconsole-operator:latest
+          image: 172.30.1.1:5000/devconsole/devconsole-operator:latest
           command:
-          - devopsconsole-operator
+          - devconsole-operator
           imagePullPolicy: Always # replace with IfNotPresent for local dev to avoid pulling image and use docker cached image
           env:
             - name: WATCH_NAMESPACE
@@ -32,6 +32,6 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "devopsconsole-operator"
+              value: "devconsole-operator"
             - name: APP_SERVICE_IMAGE_NAME
               value: "jarifibrahim/boilerplate-app" # change this to actual image when we have it

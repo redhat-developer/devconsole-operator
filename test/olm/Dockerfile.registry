@@ -3,7 +3,7 @@ FROM quay.io/openshift/origin-operator-registry:latest
 ARG image
 ARG version
 COPY manifests manifests
-RUN sed -e "s,REPLACE_IMAGE,${image}," -i manifests/devopsconsole/${version}/devopsconsole-operator.v${version}.clusterserviceversion.yaml
+RUN sed -e "s,REPLACE_IMAGE,${image}," -i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
 
 RUN initializer
 CMD ["registry-server", "--termination-log=log.txt"]

@@ -38,28 +38,18 @@ function prepare() {
   # Let's test
   make docker-start
   make -d docker-check-go-format
-  make -d docker-deps
-  make -d docker-check-go-code
   make -d docker-build
   echo 'CICO: Preparation complete'
 }
 
 function run_tests_without_coverage() {
-  make docker-test-unit
+  make docker-test
   echo "CICO: ran tests without coverage"
 }
 
 function run_tests_with_coverage() {
   # Run the unit tests that generate coverage information
-  make docker-test-unit-with-coverage
-
-  # Output coverage
-  make docker-coverage-all
-
-  # Upload coverage to codecov.io
-  cp tmp/coverage.mode* coverage.txt
-  bash <(curl -s https://codecov.io/bash) -X search -f coverage.txt -t 3df1c77b-5c96-4072-831f-9eabdaf2cb12
-
+  make docker-test-coverage
   echo "CICO: ran tests and uploaded coverage"
 }
 
@@ -67,7 +57,7 @@ function tag_push() {
   local tag
 
   tag=$1
-  docker tag devopsconsole-operator-deploy $tag
+  docker tag devconsole-operator-deploy $tag
   docker push $tag
 }
 
@@ -81,18 +71,18 @@ function deploy() {
     echo "Could not login, missing credentials for the registry"
   fi
 
-  # Build devopsconsole-operator-deploy
+  # Build devconsole-operator-deploy
   make docker-image-deploy
 
   TAG=$(echo $GIT_COMMIT | cut -c1-${DEVSHIFT_TAG_LEN})
 
 
   if [[ "$TARGET" = "rhel" ]]; then
-    tag_push ${REGISTRY}/openshiftio/rhel-devopsconsole-operator:$TAG
-    tag_push ${REGISTRY}/openshiftio/rhel-devopsconsole-operator:latest
+    tag_push ${REGISTRY}/openshiftio/rhel-devconsole-operator:$TAG
+    tag_push ${REGISTRY}/openshiftio/rhel-devconsole-operator:latest
   else
-    tag_push ${REGISTRY}/openshiftio/devopsconsole-operator:$TAG
-    tag_push ${REGISTRY}/openshiftio/devopsconsole-operator:latest
+    tag_push ${REGISTRY}/openshiftio/devconsole-operator:$TAG
+    tag_push ${REGISTRY}/openshiftio/devconsole-operator:latest
   fi
 
   echo 'CICO: Image pushed, ready to update deployed app'
