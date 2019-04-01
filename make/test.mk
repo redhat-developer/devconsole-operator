@@ -68,7 +68,7 @@ test-olm-integration: push-operator-image olm-integration-setup
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
 	$(Q)docker push $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)
 
-	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)," ./test/e2e/catalog_source.yaml | oc apply -f -
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription.yaml
 
 	$(Q)operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1"
