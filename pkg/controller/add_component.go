@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/redhat-developer/devopsconsole-operator/pkg/controller/component"
+	"github.com/redhat-developer/devconsole-operator/pkg/controller/component"
 )
 
 func init() {

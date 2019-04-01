@@ -1,7 +1,0 @@
-apiVersion: devopsconsole.openshift.io/v1alpha1
-kind: Component
-metadata:
-  name: myapp
-spec:
-  buildType: "nodejs"
-  codebase: "https://github.com/nodeshift-starters/nodejs-rest-http-crud"

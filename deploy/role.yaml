@@ -2,7 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: devopsconsole-operator
+  name: devconsole-operator
 rules:
 - apiGroups:
   - ""
@@ -23,7 +23,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - devopsconsole.openshift.io
+  - devconsole.openshift.io
   resources:
   - '*'
   verbs:
@@ -44,3 +44,15 @@ rules:
   verbs:
   - create
   - get
+  - list
+  - watch
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+

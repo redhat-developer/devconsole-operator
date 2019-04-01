@@ -3,14 +3,14 @@ package component
 import (
 	"context"
 	"fmt"
+	"github.com/openshift/api/apps/v1"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
+	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -23,15 +23,9 @@ import (
 
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
-	corev1 "k8s.io/api/core/v1"
 )
 
 var log = logf.Log.WithName("controller_component")
-
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
 
 // Add creates a new Component Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -118,54 +112,117 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	// We only call the pipeline when the component has been created
 	// and if the Status Revision Number is the same
 	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
-		// Create an empty image name "myapp-output"
-		newImageForOutput := newImageStream(instance.Namespace, instance.Name)
-		err = r.client.Create(context.TODO(), newImageForOutput)
+		outputIS, err := r.CreateOutputImageStream(instance)
 		if err != nil {
-			log.Error(err, "** Creating new OUTPUT image fails **")
 			return reconcile.Result{}, err
 		}
-		log.Info("** Image stream for OUTPUT created **")
-		if err := controllerutil.SetControllerReference(instance, newImageForOutput, r.scheme); err != nil {
-			log.Error(err, "** Setting owner reference fails **")
-			return reconcile.Result{}, err
-		}
-		// Create a build image named either "myapp-builder" or reuse openshift's builder image
-		ir, err := r.getBuilderImage(instance)
+		builderIS, err := r.CreateBuilderImageStream(instance)
 		if err != nil {
-			log.Error(err, "** ImageStream builder creation fails **")
 			return reconcile.Result{}, err
 		}
-
-		// Create build config with s2i
-		bc := generateBuildConfig(instance.Namespace, instance.Name, ir, instance.Spec.Codebase, "master")
-		err = r.client.Create(context.TODO(), &bc)
+		_, err = r.CreateBuildConfig(instance, builderIS)
 		if err != nil {
-			log.Error(err, "** BuildConfig creation fails **")
 			return reconcile.Result{}, err
 		}
-		log.Info("** BuildConfig created **")
+		_, err = r.CreateDeploymentConfig(instance, outputIS)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		log.Info("** ImageStream, BuildConfig and DeploymentConfig successfully created. **")
 	}
 
 	return reconcile.Result{}, nil
 }
 
-type builderImage struct {
-	namespace string
-	name      string
+// CreateDeploymentConfig creates a DeploymentConfig OpenShift resource used in S2I.
+func (r *ReconcileComponent) CreateDeploymentConfig(cr *componentsv1alpha1.Component, outputIS *imagev1.ImageStream) (*v1.DeploymentConfig, error) {
+	dc := newDeploymentConfig(cr, outputIS)
+	if err := controllerutil.SetControllerReference(cr, dc, r.scheme); err != nil {
+		log.Error(err, "** Setting owner reference fails **")
+		return nil, err
+	}
+	foundDc := &v1.DeploymentConfig{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: dc.Name, Namespace: dc.Namespace}, foundDc)
+	if err == nil {
+		log.Info("** Skip Creating DeploymentConfig: Already exist", "DeploymentConfig.Namespace", foundDc.Namespace, "DeploymentConfig.Name", foundDc.Name)
+		return foundDc, nil
+	}
+	if errors.IsNotFound(err) {
+		log.Info("** Creating a new DeploymentConfig", "DeploymentConfig.Namespace", dc.Namespace, "DeploymentConfig.Name", dc.Name)
+		err := r.client.Create(context.TODO(), dc)
+		if err != nil {
+			log.Error(err, "** DeploymentConfig creation fails **")
+			return nil, err
+		}
+		return dc, nil
+	}
+	return nil, err
 }
 
-func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Component) (*builderImage, error) {
+// CreateBuildConfig creates a BuildConfig OpenShift resource used in S2I.
+func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component, builderIS *imagev1.ImageStream) (*buildv1.BuildConfig, error) {
+	bc := newBuildConfig(cr, builderIS)
+	if err := controllerutil.SetControllerReference(cr, bc, r.scheme); err != nil {
+		log.Error(err, "** Setting owner reference fails **")
+		return nil, err
+	}
+	foundBc := &buildv1.BuildConfig{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: bc.Name, Namespace: bc.Namespace}, foundBc)
+	if err == nil {
+		log.Info("** Skip Creating BuildConfig: Already exist", "BuildConfig.Namespace", foundBc.Namespace, "BuildConfig.Name", foundBc.Name)
+		return foundBc, nil
+	}
+	if errors.IsNotFound(err) {
+		log.Info("** Creating a new BuildConfig", "BuildConfig.Namespace", bc.Namespace, "BuildConfig.Name", bc.Name)
+		err := r.client.Create(context.TODO(), bc)
+		if err != nil {
+			log.Error(err, "** BuildConfig creation fails **")
+			return nil, err
+		}
+		return bc, nil
+	}
+	return nil, err
+}
+
+// CreateOutputImageStream creates an empty image name that holds the source code of the component to build and deploy.
+func (r *ReconcileComponent) CreateOutputImageStream(cr *componentsv1alpha1.Component) (*imagev1.ImageStream, error) {
+	outputIS := newOutputImageStream(cr)
+	if err := controllerutil.SetControllerReference(cr, outputIS, r.scheme); err != nil {
+		log.Error(err, "** Setting owner reference fails **")
+		return nil, err
+	}
+
+	foundOutputIS := &imagev1.ImageStream{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: outputIS.Name, Namespace: outputIS.Namespace}, foundOutputIS)
+	if err == nil {
+		log.Info("** Skip Creating output ImageStream: Already exist", "ImageStream.Namespace", foundOutputIS.Namespace, "ImageStream.Name", foundOutputIS.Name)
+		return foundOutputIS, nil
+	}
+	if errors.IsNotFound(err) {
+		log.Info("** Creating a new output ImageStream", "ImageStream.Namespace", outputIS.Namespace, "ImageStream.Name", outputIS.Name)
+		err := r.client.Create(context.TODO(), outputIS)
+		if err != nil {
+			log.Error(err, "** output ImageStream creation fails **")
+			return nil, err
+		}
+		return outputIS, nil
+	}
+	return nil, err
+}
+
+// CreateBuilderImageStream either creates an builder image stream fetch from Docker hub or reuse an existing
+// image stream in OpenShift namespace.
+func (r *ReconcileComponent) CreateBuilderImageStream(instance *componentsv1alpha1.Component) (*imagev1.ImageStream, error) {
 	var newImageForBuilder *imagev1.ImageStream
-	var builderName string
-	var builderNamespace string
-	// Check if builder image exist in openshift namespace
 	found := &imagev1.ImageStream{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.BuildType, Namespace: openshiftNamespace}, found)
-	if err != nil {
+	if err == nil {
+		log.Info("** Skip Creating builder ImageStream: an OpenShift image already exist", "ImageStream.Namespace", found.Namespace, "ImageStream.Name", found.Name)
+		return found, nil
+	}
+	if errors.IsNotFound(err) { // OpenShift builder image is not present, fallback to create one
 		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, instance.Spec.BuildType))
-		// Create an empty image name "<BuildType>-builder"
-		newImageForBuilder = newImageStreamFromDocker(instance.Namespace, instance.Name, instance.Spec.BuildType)
+		newImageForBuilder = newImageStreamFromDocker(instance)
 		if newImageForBuilder == nil {
 			log.Error(err, "** Creating new BUILDER image fails **")
 			return nil, errors.NewNotFound(schema.GroupResource{Resource: "ImageStream"}, "builder image for build not found")
@@ -175,110 +232,10 @@ func (r *ReconcileComponent) getBuilderImage(instance *componentsv1alpha1.Compon
 			log.Error(err, "** Creating new BUILDER image fails **")
 			return nil, err
 		}
-
-		log.Info("** Image stream for BUILDER created **")
 		if err := controllerutil.SetControllerReference(instance, newImageForBuilder, r.scheme); err != nil {
 			log.Error(err, "** Setting owner reference fails **")
 			return nil, err
 		}
-		builderName = instance.Name + "-builder"
-		builderNamespace = instance.Namespace
-	} else {
-		log.Info("** Found openshift's imagestream to use as builder **")
-		newImageForBuilder = found
-		builderName = newImageForBuilder.Name
-		builderNamespace = newImageForBuilder.Namespace
 	}
-	return &builderImage{namespace: builderNamespace, name: builderName}, nil
-}
-
-func newImageStreamFromDocker(namespace string, name string, buildType string) *imagev1.ImageStream {
-	labels := map[string]string{
-		"app": name,
-	}
-
-	if _, ok := buildTypeImages[buildType]; !ok {
-
-		return nil
-	}
-	return &imagev1.ImageStream{ObjectMeta: metav1.ObjectMeta{
-		Name:      name + "-builder",
-		Namespace: namespace,
-		Labels:    labels,
-	}, Spec: imagev1.ImageStreamSpec{
-		LookupPolicy: imagev1.ImageLookupPolicy{
-			Local: false,
-		},
-		Tags: []imagev1.TagReference{
-			{
-				Name: "latest",
-				From: &corev1.ObjectReference{
-					Kind: "DockerImage",
-					Name: buildTypeImages[buildType],
-				},
-			},
-		},
-	}}
-}
-
-func newImageStream(namespace string, name string) *imagev1.ImageStream {
-	labels := map[string]string{
-		"app": name,
-	}
-	return &imagev1.ImageStream{ObjectMeta: metav1.ObjectMeta{
-		Name:      name + "-output",
-		Namespace: namespace,
-		Labels:    labels,
-	}}
-}
-
-func getMetaObj(name string, imageNamespace string) metav1.ObjectMeta {
-	labels := map[string]string{
-		"app": name,
-	}
-	return metav1.ObjectMeta{Name: name, Namespace: imageNamespace, Labels: labels}
-}
-
-func generateBuildConfig(namespace string, name string, builder *builderImage, gitURL string, gitRef string) buildv1.BuildConfig {
-	buildSource := buildv1.BuildSource{
-		Git: &buildv1.GitBuildSource{
-			URI: gitURL,
-			Ref: gitRef,
-		},
-		Type: buildv1.BuildSourceGit,
-	}
-	incremental := true
-
-	return buildv1.BuildConfig{
-		ObjectMeta: getMetaObj(name+"-bc", namespace),
-		Spec: buildv1.BuildConfigSpec{
-			CommonSpec: buildv1.CommonSpec{
-				Output: buildv1.BuildOutput{
-					To: &corev1.ObjectReference{
-						Kind: "ImageStreamTag",
-						Name: name + "-output:latest",
-					},
-				},
-				Source: buildSource,
-				Strategy: buildv1.BuildStrategy{
-					SourceStrategy: &buildv1.SourceBuildStrategy{
-						From: corev1.ObjectReference{
-							Kind:      "ImageStreamTag",
-							Name:      builder.name + ":latest",
-							Namespace: builder.namespace,
-						},
-						Incremental: &incremental,
-					},
-				},
-			},
-			Triggers: []buildv1.BuildTriggerPolicy{
-				{
-					Type: "ConfigChange",
-				}, {
-					Type:        "ImageChange",
-					ImageChange: &buildv1.ImageChangeTrigger{},
-				},
-			},
-		},
-	}
+	return newImageForBuilder, nil
 }

@@ -5,19 +5,19 @@ metadata:
     capabilities: Full Lifecycle
     description: Enables the DevOps perspective in OpenShift 4.x
     categories: "Developer Tools"
-  name: devopsconsole-operator.v0.1.0
+  name: devconsole-operator.v0.1.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
     - kind: Component
-      name: components.devopsconsole.openshift.io
+      name: components.devconsole.openshift.io
       version: v1alpha1
       displayName: Component
       description: Component
     - kind: GitSource
-      name: gitsources.devopsconsole.openshift.io
+      name: gitsources.devconsole.openshift.io
       version: v1alpha1
       displayName: Git Source
       description: Describes a Git repository to be used as a codebase.
@@ -26,21 +26,21 @@ spec:
   install:
     spec:
       deployments:
-      - name: devopsconsole-operator
+      - name: devconsole-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
-              name: devopsconsole-operator
+              name: devconsole-operator
           strategy: {}
           template:
             metadata:
               labels:
-                name: devopsconsole-operator
+                name: devconsole-operator
             spec:
               containers:
               - command:
-                - devopsconsole-operator
+                - devconsole-operator
                 env:
                 - name: WATCH_NAMESPACE
                   value: ""
@@ -49,10 +49,10 @@ spec:
                     fieldRef:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
-                  value: devopsconsole-operator
+                  value: devconsole-operator
                 image: REPLACE_IMAGE
                 imagePullPolicy: Always
-                name: devopsconsole-operator
+                name: devconsole-operator
                 ports:
                 - containerPort: 60000
                   name: metrics
@@ -65,7 +65,7 @@ spec:
                   initialDelaySeconds: 4
                   periodSeconds: 10
                 resources: {}
-              serviceAccountName: devopsconsole-operator
+              serviceAccountName: devconsole-operator
       clusterPermissions:
       - rules:
         - apiGroups:
@@ -103,7 +103,7 @@ spec:
           - get
           - create
         - apiGroups:
-          - devopsconsole.openshift.io
+          - devconsole.openshift.io
           resources:
           - '*'
           verbs:
@@ -124,7 +124,18 @@ spec:
           verbs:
           - create
           - get
-        serviceAccountName: devopsconsole-operator
+          - list
+          - watch
+        - apiGroups:
+          - apps.openshift.io
+          resources:
+          - deploymentconfigs
+          verbs:
+          - create
+          - get
+          - list
+          - watch
+        serviceAccountName: devconsole-operator
     strategy: deployment
   installModes:
   - supported: true

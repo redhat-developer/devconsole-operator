@@ -4,4 +4,4 @@
 
 cico_setup;
 
-run_tests_without_coverage;
+make docker-test
