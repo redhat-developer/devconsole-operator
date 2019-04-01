@@ -98,24 +98,23 @@ e2e-local: build-image-local
 	$(Q)-oc create -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
-	$(Q)sed ${QUIET_FLAG} -i "" 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml
+	$(Q)sed -i "" 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml
 else
-	$(Q)sed ${QUIET_FLAG} -i 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml
+	$(Q)sed -i 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml
 endif
-	$(Q)-oc create -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
+	@-oc create -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
-	$(Q)sed ${QUIET_FLAG} -i "" 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|g' ./deploy/test/operator_test.yaml
+	$(Q)sed -i "" 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|g' ./deploy/test/operator_test.yaml
 else
-	$(Q)sed ${QUIET_FLAG} -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|g' ./deploy/test/operator_test.yaml
+	$(Q)sed -i 's|REPLACE_IMAGE|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|g' ./deploy/test/operator_test.yaml
 endif
 	@eval $$(minishift docker-env) && oc create -f ./deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
-	$(Q)sed ${QUIET_FLAG} -i "" 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' ./deploy/test/role_binding_test.yaml
-	$(Q)sed ${QUIET_FLAG} -i "" 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
+	$(Q)sed -i "" 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' ./deploy/test/role_binding_test.yaml
+	$(Q)sed -i "" 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
 else
-	$(Q)sed ${QUIET_FLAG} -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' ./deploy/test/role_binding_test.yaml
-	$(Q)sed ${QUIET_FLAG} -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
+	$(Q)sed -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' ./deploy/test/role_binding_test.yaml
+	$(Q)sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
 endif
 	$(Q)eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup
-
 endif
