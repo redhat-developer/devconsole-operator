@@ -20,8 +20,6 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/redhat-developer/devconsole-operator/pkg/apis"
-	"github.com/redhat-developer/devconsole-operator/pkg/controller"
 	"github.com/redhat-developer/devopsconsole-operator/pkg/apis"
 	devopsconsolev1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 	"github.com/redhat-developer/devopsconsole-operator/pkg/controller"
