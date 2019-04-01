@@ -30,7 +30,7 @@ get-test-namespace: ./out/test-namespace
 
 .PHONY: test-e2e
 ## Runs the e2e tests without coverage
-test-e2e: build build-image e2e-setup
+test-e2e: build build-image-local e2e-setup
 	$(info Running E2E test: $@)
 	$(Q)go test ./test/e2e/... \
 		-parallel=1 \
