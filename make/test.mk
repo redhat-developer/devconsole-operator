@@ -4,6 +4,8 @@ TEST_MK:=# Prevent repeated "-include".
 include ./make/verbose.mk
 include ./make/out.mk
 
+OLM_TEST_NAMESPACE ?= devopsconsole-test-$(RANDOM)
+
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
 test: ./vendor
@@ -55,6 +57,33 @@ e2e-cleanup: get-test-namespace
 	$(Q)-oc delete -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
+
+.PHONY: test-olm-integration
+## Runs the OLM integration tests without coverage
+test-olm-integration: push-operator-image olm-integration-setup
+	$(call log-info,"Running OLM integration test: $@")
+	$(Q)oc apply -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
+	$(eval package_yaml := ./manifests/devopsconsole/devopsconsole.package.yaml)
+	$(eval devopsconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(eval devopsconsole_csv := $(shell cat $(package_yaml) | grep "currentCSV" | cut -d ":" -f2 | tr -d '[:space:]'))
+	$(Q)docker build -f ./test/e2e/Dockerfile.registry . -t $(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version) \
+		--build-arg image=$(DEVOPSCONSOLE_OPERATOR_IMAGE) --build-arg version=$(devopsconsole_version)
+	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
+	$(Q)docker push $(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version)
+
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVOPSCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devopsconsole_version)," ./test/e2e/catalog_source.yaml | oc apply -f -
+	$(Q)oc apply -f ./test/e2e/subscription.yaml
+
+	$(Q)operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1"
+
+.PHONY: olm-integration-setup
+olm-integration-setup: olm-integration-cleanup
+	$(Q)oc new-project $(OLM_TEST_NAMESPACE)
+
+.PHONY: olm-integration-cleanup
+olm-integration-cleanup:
+	$(Q)oc login -u system:admin
+	$(Q)oc delete project $(OLM_TEST_NAMESPACE)  --wait --all
 
 #-------------------------------------------------------------------------------
 # e2e test in dev mode
