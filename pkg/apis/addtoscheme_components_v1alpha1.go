@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/redhat-developer/devopsconsole-operator/pkg/apis/devconsole/v1alpha1"
+	"github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 )
 
 func init() {
