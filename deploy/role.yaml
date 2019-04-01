@@ -44,6 +44,8 @@ rules:
   verbs:
   - create
   - get
+  - list
+  - watch
 - apiGroups:
   - apps.openshift.io
   resources:
@@ -51,3 +53,6 @@ rules:
   verbs:
   - create
   - get
+  - list
+  - watch
+

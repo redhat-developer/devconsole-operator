@@ -124,6 +124,8 @@ spec:
           verbs:
           - create
           - get
+          - list
+          - watch
         - apiGroups:
           - apps.openshift.io
           resources:
@@ -131,6 +133,8 @@ spec:
           verbs:
           - create
           - get
+          - list
+          - watch
         serviceAccountName: devconsole-operator
     strategy: deployment
   installModes:
