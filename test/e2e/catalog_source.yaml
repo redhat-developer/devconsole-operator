@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-catalog
+  namespace: olm
+spec:
+  sourceType: grpc
+  image: REPLACE_IMAGE
+  displayName: Community Operators
+  publisher: Red Hat
