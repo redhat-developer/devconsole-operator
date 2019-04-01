@@ -20,6 +20,7 @@ import (
 	"github.com/redhat-developer/devopsconsole-operator/pkg/apis"
 	devopsconsolev1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
 	"github.com/redhat-developer/devopsconsole-operator/pkg/controller"
+	"github.com/redhat-developer/devopsconsole-operator/pkg/controller/installer"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -31,6 +32,7 @@ import (
 )
 
 var log = logf.Log.WithName("cmd")
+var operatorNamespaceVar = "OPERATOR_NAMESPACE"
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
@@ -135,15 +137,23 @@ func main() {
 
 	// Create a new "installer". This will trigger the deployment and create route
 	c := mgr.GetClient()
-	installer := &devopsconsolev1alpha1.Installer{}
-	installer.ObjectMeta.Name = "main-installer"
-	installer.ObjectMeta.Namespace = namespace
-	err = c.Create(context.TODO(), installer)
+	installerObj := &devopsconsolev1alpha1.Installer{}
+	installerObj.ObjectMeta.Name = "main-installer"
+	// TODO: Move GetEnvValue out of installer package
+	currentNamespace, err := installer.GetEnvValue(operatorNamespaceVar)
+	if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+	// Create installerObj in the namespace the operator is installed in.
+	installerObj.ObjectMeta.Namespace = currentNamespace
+
+	err = c.Create(context.TODO(), installerObj)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		log.Error(err, "failed to create installer resource")
 		os.Exit(1)
 	}
-	log.Info("Successfully create installer CR.")
+	log.Info("Successfully created installer CR.")
 
 	log.Info("Starting the Cmd.")
 
