@@ -4,9 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"os"
 	"runtime"
+	"time"
+
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
@@ -14,13 +16,24 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	"github.com/operator-framework/operator-sdk/pkg/ready"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
-	"github.com/redhat-developer/devopsconsole-operator/pkg/apis"
-	"github.com/redhat-developer/devopsconsole-operator/pkg/controller"
+	"github.com/redhat-developer/devconsole-operator/pkg/apis"
+	"github.com/redhat-developer/devconsole-operator/pkg/controller"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+)
+
+var (
+	// Commit current build commit set by build script
+	Commit = "0"
+	// BuildTime set by build script in ISO 8601 (UTC) format:
+	// YYYY-MM-DDThh:mm:ssTZD (see https://www.w3.org/TR/NOTE-datetime for
+	// details)
+	BuildTime = "0"
+	// StartTime in ISO 8601 (UTC) format
+	StartTime = time.Now().UTC().Format("2006-01-02T15:04:05Z")
 )
 
 var log = logf.Log.WithName("cmd")
@@ -55,7 +68,7 @@ func main() {
 	}
 
 	// Become the leader before proceeding
-	err = leader.Become(context.TODO(), "devopsconsole-operator-lock")
+	err = leader.Become(context.TODO(), "devconsole-operator-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

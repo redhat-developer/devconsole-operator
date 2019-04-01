@@ -4,4 +4,4 @@ RUN apk upgrade --update --no-cache
 
 USER nobody
 
-ADD build/_output/bin/devopsconsole-operator /usr/local/bin/devopsconsole-operator
+ADD build/_output/bin/devconsole-operator /usr/local/bin/devconsole-operator
