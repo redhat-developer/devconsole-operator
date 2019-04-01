@@ -37,13 +37,13 @@ create-cr:
 .PHONY: build-operator-image
 ## Build and create the operator container image
 build-operator-image:
-	operator-sdk build $(DEVCONSOLE_OPERATOR_IMAGE)
+	operator-sdk build $(DEVCONSOLE_OPERATOR_IMAGE):$(TAG)
 
 .PHONY: push-operator-image
 ## Push the operator container image to a container registry
 push-operator-image: build-operator-image
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
-	docker push $(DEVCONSOLE_OPERATOR_IMAGE)
+	docker push $(DEVCONSOLE_OPERATOR_IMAGE):$(TAG)
 
 .PHONY: deploy-operator-only
 deploy-operator-only:
