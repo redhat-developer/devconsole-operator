@@ -82,7 +82,10 @@ func TestComponent(t *testing.T) {
 		cr2 := &componentsv1alpha1.Component{}
 		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "mycomp", Namespace: namespace}, cr2)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `Component`")
-		// FIXME: These assertions not working
+		// FIXME: Uncomment these lines after upgrading dependency versions
+		// The following (2) statements will fail due to
+		// https://github.com/kubernetes-sigs/controller-runtime/issues/202
+		// This issue is resolved in controller-runtime 0.1.8
 		//require.Equal(t, "Component", cr2.TypeMeta.Kind)
 		//require.Equal(t, "devconsole.openshift.io/v1alpha1", cr2.TypeMeta.APIVersion)
 		require.Equal(t, "mycomp", cr2.ObjectMeta.Name)
