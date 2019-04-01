@@ -6,8 +6,9 @@ include ./make/git.mk
 
 DOCKER_REPO?=quay.io/openshiftio
 IMAGE_NAME?=devconsole-operator
+REGISTRY_URI=quay.io
 
-devconsole_OPERATOR_IMAGE?=quay.io/redhat-developers/devconsole-operator
+DEVCONSOLE_OPERATOR_IMAGE?=quay.io/redhat-developers/devconsole-operator
 TIMESTAMP:=$(shell date +%s)
 TAG?=$(GIT_COMMIT_ID_SHORT)-$(TIMESTAMP)
 
@@ -36,13 +37,13 @@ create-cr:
 .PHONY: build-operator-image
 ## Build and create the operator container image
 build-operator-image:
-	operator-sdk build $(devconsole_OPERATOR_IMAGE)
+	operator-sdk build $(DEVCONSOLE_OPERATOR_IMAGE)
 
 .PHONY: push-operator-image
 ## Push the operator container image to a container registry
 push-operator-image: build-operator-image
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
-	docker push $(devconsole_OPERATOR_IMAGE)
+	docker push $(DEVCONSOLE_OPERATOR_IMAGE)
 
 .PHONY: deploy-operator-only
 deploy-operator-only:

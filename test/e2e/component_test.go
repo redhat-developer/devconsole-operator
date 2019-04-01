@@ -9,8 +9,8 @@ import (
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 
-	"github.com/redhat-developer/devopsconsole-operator/pkg/apis"
-	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
+	"github.com/redhat-developer/devconsole-operator/pkg/apis"
+	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
 	"github.com/stretchr/testify/require"
 
@@ -33,7 +33,7 @@ func TestComponent(t *testing.T) {
 	componentList := &componentsv1alpha1.ComponentList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
-			APIVersion: "devopsconsole.openshift.io/v1alpha1",
+			APIVersion: "devconsole.openshift.io/v1alpha1",
 		},
 	}
 	err = framework.AddToFrameworkScheme(apis.AddToScheme, componentList)
@@ -63,7 +63,7 @@ func TestComponent(t *testing.T) {
 	cr := &componentsv1alpha1.Component{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
-			APIVersion: "devopsconsole.openshift.io/v1alpha1",
+			APIVersion: "devconsole.openshift.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mycomp",
@@ -84,7 +84,7 @@ func TestComponent(t *testing.T) {
 		require.NoError(t, err, "failed to retrieve custom resource of kind `Component`")
 		// FIXME: These assertions not working
 		//require.Equal(t, "Component", cr2.TypeMeta.Kind)
-		//require.Equal(t, "devopsconsole.openshift.io/v1alpha1", cr2.TypeMeta.APIVersion)
+		//require.Equal(t, "devconsole.openshift.io/v1alpha1", cr2.TypeMeta.APIVersion)
 		require.Equal(t, "mycomp", cr2.ObjectMeta.Name)
 		require.Equal(t, namespace, cr2.ObjectMeta.Namespace)
 		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", cr2.Spec.Codebase)
