@@ -12,8 +12,6 @@ import (
 	"github.com/redhat-developer/devopsconsole-operator/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -65,19 +63,13 @@ func (r *ReconcileComponent) newBuildConfig(cr *componentsv1alpha1.Component, bu
 
 	// Check if secrets provided exist or not
 	if gitSource.Spec.SecretRef != nil && gitSource.Spec.SecretRef.Name != "" {
-		u := unstructured.Unstructured{}
-		u.SetGroupVersionKind(schema.GroupVersionKind{
-			Kind:    "Secret",
-			Version: "v1",
-			Group:   "",
-		})
+		u := corev1.Secret{}
 
 		err := r.client.Get(context.TODO(), client.ObjectKey{
 			Namespace: cr.Namespace,
 			Name:      gitSource.Spec.SecretRef.Name,
 		}, &u)
 		if err != nil {
-			// TODO(Akash) - Need to discuss if we need to create buildConfig if secret isn't present.
 			log.Error(err, fmt.Sprintf("Failed to get provided secret please check if secrets %s present or not", gitSource.Spec.SecretRef.Name))
 		} else {
 			// Since error is nil, moving ahead to add secret reference in buildConfig
