@@ -89,7 +89,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request/*  */.
+		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
