@@ -279,6 +279,19 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/redhat-developer/devconsole-operator"
+  packages = [
+    "pkg/apis",
+    "pkg/apis/devconsole-operator/v1alpha1",
+    "pkg/apis/devconsole/v1alpha1",
+    "pkg/controller",
+    "pkg/controller/component",
+    "pkg/resource"
+  ]
+  revision = "dd93eb6b261381d86e622a9f20b256ff160c5d66"
+
+[[projects]]
   name = "github.com/rogpeppe/go-internal"
   packages = [
     "modfile",
@@ -727,6 +740,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5c378cf08e8fa287674bcd9ba3d2055c90596cede7ce990b754644458ae79b15"
+  inputs-digest = "010e8188ae4589c70018ab266c042a6c02b98916b48b06a6e456611184442074"
   solver-name = "gps-cdcl"
   solver-version = 1

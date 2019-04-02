@@ -2,6 +2,7 @@ package component
 
 import (
 	"context"
+	e "errors"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -114,15 +115,10 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	// We only call the pipeline when the component has been created
 	// and if the Status Revision Number is the same
 	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
-		outputIS, err := r.CreateOutputImageStream(instance)
-		if err != nil {
-			return reconcile.Result{}, err
+		// Validate if codebase is present since this is mandantory field
+		if instance.Spec.Codebase == "" {
+			return reconcile.Result{}, e.New("GitSource reference is not provided")
 		}
-		builderIS, err := r.CreateBuilderImageStream(instance)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
 		// Get gitsource referenced in component
 		gitSource := &gitsourcev1alpha1.GitSource{}
 		err = r.client.Get(context.TODO(), client.ObjectKey{
@@ -131,7 +127,15 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		}, gitSource)
 		if err != nil {
 			log.Error(err, "Error occured while getting gitsource")
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, err
+		}
+		outputIS, err := r.CreateOutputImageStream(instance)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		builderIS, err := r.CreateBuilderImageStream(instance)
+		if err != nil {
+			return reconcile.Result{}, err
 		}
 
 		_, err = r.CreateBuildConfig(instance, builderIS, gitSource)
