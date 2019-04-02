@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
@@ -15,6 +16,13 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+)
+
+const (
+	retryInterval        = time.Second * 5
+	timeout              = time.Second * 60
+	cleanupRetryInterval = time.Second * 1
+	cleanupTimeout       = time.Second * 5
 )
 
 // ComponentTest does e2e test as per operator-sdk documentation
