@@ -1,5 +1,6 @@
 ifndef TEST_MK
 TEST_MK:=# Prevent repeated "-include".
+UNAME_S := $(shell uname -s)
 
 include ./make/verbose.mk
 include ./make/out.mk
