@@ -81,6 +81,8 @@ olm-integration-setup: olm-integration-cleanup
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
 	$(Q)oc login -u system:admin
+	$(Q)-oc delete subscription my-devconsole -n operators
+	$(Q)-oc delete catalogsource my-catalog -n olm
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
 #-------------------------------------------------------------------------------
