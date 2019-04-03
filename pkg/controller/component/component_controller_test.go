@@ -7,6 +7,7 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
+	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	compv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,12 +32,12 @@ func TestComponentController(t *testing.T) {
 	reqLogger := log.WithValues("Test", t.Name())
 	reqLogger.Info("TestComponentController")
 
-	gs := &compv1alpha1.GitSource{
+	gs := &devconsoleapi.GitSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "my-git-source",
 			Namespace: Namespace,
 		},
-		Spec: compv1alpha1.GitSourceSpec{
+		Spec: devconsoleapi.GitSourceSpec{
 			URL: "https://somegit.con/myrepo",
 			Ref: "master",
 		},
@@ -49,8 +50,8 @@ func TestComponentController(t *testing.T) {
 			Namespace: Namespace,
 		},
 		Spec: compv1alpha1.ComponentSpec{
-			BuildType: "nodejs",
-			Codebase:  "my-git-source",
+			BuildType:    "nodejs",
+			GitSourceRef: "my-git-source",
 		},
 	}
 
@@ -68,7 +69,7 @@ func TestComponentController(t *testing.T) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(compv1alpha1.SchemeGroupVersion, cp)
-	s.AddKnownTypes(compv1alpha1.SchemeGroupVersion, gs)
+	s.AddKnownTypes(devconsoleapi.SchemeGroupVersion, gs)
 	s.AddKnownTypes(corev1.SchemeGroupVersion, secret)
 
 	// register openshift resource specific schema
@@ -223,7 +224,7 @@ func TestComponentController(t *testing.T) {
 
 	t.Run("with secret defined in the GitSource", func(t *testing.T) {
 		// Add Secret reference in GitSource
-		gs.Spec.SecretRef = &compv1alpha1.SecretRef{
+		gs.Spec.SecretRef = &devconsoleapi.SecretRef{
 			Name: "my-secret",
 		}
 
@@ -320,7 +321,7 @@ func TestComponentController(t *testing.T) {
 			cp,
 		}
 		cp.Spec.BuildType = ""
-		cp.Spec.Codebase = "my-git-source"
+		cp.Spec.GitSourceRef = "my-git-source"
 		// Create a fake client to mock API calls.
 		cl := fake.NewFakeClient(objs...)
 
@@ -364,7 +365,7 @@ func TestComponentController(t *testing.T) {
 			cp,
 		}
 		cp.Spec.BuildType = "nodejs"
-		cp.Spec.Codebase = ""
+		cp.Spec.GitSourceRef = ""
 		// Create a fake client to mock API calls.
 		cl := fake.NewFakeClient(objs...)
 
