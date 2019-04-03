@@ -34,4 +34,4 @@ spec:
             - name: OPERATOR_NAME
               value: "devconsole-operator"
             - name: APP_SERVICE_IMAGE_NAME
-              value: "jarifibrahim/boilerplate-app" # change this to actual image when we have it
+              value: "redhat-developer/app-service"
