@@ -57,7 +57,7 @@ func TestComponent(t *testing.T) {
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, "operators", "devconsole-operator", 1, retryInterval, timeout*2)
 	require.NoError(t, err, "failed while waiting for operator deployment")
 
-	t.Log("component-operator is ready and running state")
+	t.Log("component is ready and running")
 
 	// create a Component custom resource
 	cr := &componentsv1alpha1.Component{
