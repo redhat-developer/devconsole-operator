@@ -24,7 +24,7 @@ type ComponentStatus struct {
 // Component is the Schema for the components API
 // +k8s:openapi-gen=true
 type Component struct {
-	metav1.TypeMeta   `json:"s,inline"`
+	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec ComponentSpec `json:"spec,omitempty"`
