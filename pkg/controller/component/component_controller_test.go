@@ -2,7 +2,6 @@ package component
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	appsv1 "github.com/openshift/api/apps/v1"
@@ -224,7 +223,7 @@ func TestComponentController(t *testing.T) {
 
 	t.Run("with secret defined in the GitSource", func(t *testing.T) {
 		// Add Secret reference in GitSource
-		gs.Spec.SecretRef = &gitsourcev1alpha1.SecretRef{
+		gs.Spec.SecretRef = &compv1alpha1.SecretRef{
 			Name: "my-secret",
 		}
 
@@ -391,7 +390,6 @@ func TestComponentController(t *testing.T) {
 
 		is := &imagev1.ImageStream{}
 		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, is)
-		fmt.Println("IS", is)
 		require.Error(t, errGetImage, "output imagestream is not created")
 
 		isBuilder := &imagev1.ImageStream{}

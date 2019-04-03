@@ -279,19 +279,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/redhat-developer/devconsole-operator"
-  packages = [
-    "pkg/apis",
-    "pkg/apis/devconsole-operator/v1alpha1",
-    "pkg/apis/devconsole/v1alpha1",
-    "pkg/controller",
-    "pkg/controller/component",
-    "pkg/resource"
-  ]
-  revision = "dd93eb6b261381d86e622a9f20b256ff160c5d66"
-
-[[projects]]
   name = "github.com/rogpeppe/go-internal"
   packages = [
     "modfile",
