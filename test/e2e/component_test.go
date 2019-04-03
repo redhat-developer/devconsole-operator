@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -53,8 +54,13 @@ func TestComponent(t *testing.T) {
 	// get global framework variables
 	f := framework.Global
 	t.Log(fmt.Sprintf("namespace: %s", namespace))
+	openshiftVersion := os.Getenv("OPENSHIFT_VERSION")
 	// wait for component-operator to be ready
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, "operators", "devconsole-operator", 1, retryInterval, timeout*2)
+	if openshiftVersion == "4" {
+		err = e2eutil.WaitForDeployment(t, f.KubeClient, "openshift-operators", "devconsole-operator", 1, retryInterval, timeout*2)
+	} else if openshiftVersion == "3" {
+		err = e2eutil.WaitForDeployment(t, f.KubeClient, "operators", "devconsole-operator", 1, retryInterval, timeout*2)
+	}
 	require.NoError(t, err, "failed while waiting for operator deployment")
 
 	t.Log("component is ready and running")

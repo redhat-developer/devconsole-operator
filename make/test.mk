@@ -61,17 +61,23 @@ e2e-cleanup: get-test-namespace
 ## Runs the OLM integration tests without coverage
 test-olm-integration: push-operator-image olm-integration-setup
 	$(call log-info,"Running OLM integration test: $@")
+ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)oc apply -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
+endif
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
 	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
 	$(Q)docker build -f ./test/e2e/Dockerfile.registry . -t $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG) \
 		--build-arg image=$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG) --build-arg version=$(devconsole_version)
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
 	$(Q)docker push $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)
-
-	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source.yaml | oc apply -f -
-	$(Q)oc apply -f ./test/e2e/subscription.yaml
-
+ifeq ($(OPENSHIFT_VERSION),3)
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS3.yaml | oc apply -f -
+	$(Q)oc apply -f ./test/e2e/subscription_OS3.yaml
+endif
+ifeq ($(OPENSHIFT_VERSION),4)
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
+	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
+endif
 	$(Q)operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1"
 
 .PHONY: olm-integration-setup
@@ -80,9 +86,15 @@ olm-integration-setup: olm-integration-cleanup
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
-	$(Q)oc login -u system:admin
+	@oc login -u $(OC_LOGIN_USERNAME) -p $(OC_LOGIN_PASSWORD)
+ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)-oc delete subscription my-devconsole -n operators
 	$(Q)-oc delete catalogsource my-catalog -n olm
+endif
+ifeq ($(OPENSHIFT_VERSION),4)
+	$(Q)-oc delete subscription my-devconsole -n openshift-operators
+	$(Q)-oc delete catalogsource my-catalog -n openshift-operator-lifecycle-manager
+endif
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
 #-------------------------------------------------------------------------------
