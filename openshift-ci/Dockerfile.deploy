@@ -3,7 +3,7 @@ LABEL maintainer "Devtools <devtools@redhat.com>"
 LABEL author "Devtools <devtools@redhat.com>"
 ENV LANG=en_US.utf8
 
-COPY out /usr/local/bin/devconsole-operator
+COPY operator /usr/local/bin/devconsole-operator
 USER 10001
 
 ENTRYPOINT [ "/usr/local/bin/devconsole-operator" ]
