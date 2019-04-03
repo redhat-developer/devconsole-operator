@@ -8,7 +8,6 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
-	gitsourcev1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole-operator/v1alpha1"
 	compv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,12 +32,12 @@ func TestComponentController(t *testing.T) {
 	reqLogger := log.WithValues("Test", t.Name())
 	reqLogger.Info("TestComponentController")
 
-	gs := &gitsourcev1alpha1.GitSource{
+	gs := &compv1alpha1.GitSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "my-git-source",
 			Namespace: Namespace,
 		},
-		Spec: gitsourcev1alpha1.GitSourceSpec{
+		Spec: compv1alpha1.GitSourceSpec{
 			URL: "https://somegit.con/myrepo",
 			Ref: "master",
 		},
@@ -70,7 +69,7 @@ func TestComponentController(t *testing.T) {
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(compv1alpha1.SchemeGroupVersion, cp)
-	s.AddKnownTypes(gitsourcev1alpha1.SchemeGroupVersion, gs)
+	s.AddKnownTypes(compv1alpha1.SchemeGroupVersion, gs)
 	s.AddKnownTypes(corev1.SchemeGroupVersion, secret)
 
 	// register openshift resource specific schema
