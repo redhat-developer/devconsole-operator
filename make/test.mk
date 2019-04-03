@@ -62,9 +62,9 @@ e2e-cleanup: get-test-namespace
 .PHONY: test-olm-integration
 ## Runs the OLM integration tests without coverage
 test-olm-integration: push-operator-image olm-integration-setup
-	$(eval DEPLOYED_NAMESAPCE := operators)
 	$(call log-info,"Running OLM integration test: $@")
 ifeq ($(OPENSHIFT_VERSION),3)
+	$(eval DEPLOYED_NAMESAPCE := operators)
 	$(Q)oc apply -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
 endif
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
@@ -78,6 +78,7 @@ ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)oc apply -f ./test/e2e/subscription_OS3.yaml
 endif
 ifeq ($(OPENSHIFT_VERSION),4)
+	$(eval DEPLOYED_NAMESAPCE := openshift-operators)
 	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
 endif
