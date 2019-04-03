@@ -7,9 +7,9 @@ import (
 	v1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
-	gitsourcev1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1"
-	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
-	"github.com/redhat-developer/devopsconsole-operator/pkg/resource"
+	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
+	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
+	"github.com/redhat-developer/devconsole-operator/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,7 +50,7 @@ func newOutputImageStream(cr *componentsv1alpha1.Component) *imagev1.ImageStream
 	}}
 }
 
-func (r *ReconcileComponent) newBuildConfig(cr *componentsv1alpha1.Component, builder *imagev1.ImageStream, gitSource *gitsourcev1alpha1.GitSource) *buildv1.BuildConfig {
+func (r *ReconcileComponent) newBuildConfig(cr *componentsv1alpha1.Component, builder *imagev1.ImageStream, gitSource *devconsoleapi.GitSource) *buildv1.BuildConfig {
 	labels := resource.GetLabelsForCR(cr)
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{

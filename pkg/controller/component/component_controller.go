@@ -11,8 +11,8 @@ import (
 
 	"strconv"
 
-	gitsourcev1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole-operator/v1alpha1"
-	componentsv1alpha1 "github.com/redhat-developer/devopsconsole-operator/pkg/apis/devopsconsole/v1alpha1"
+	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
+	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -116,15 +116,16 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	// and if the Status Revision Number is the same
 	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
 		// Validate if codebase is present since this is mandantory field
-		if instance.Spec.Codebase == "" {
+		if instance.Spec.GitSourceRef == "" {
 			return reconcile.Result{}, e.New("GitSource reference is not provided")
 		}
 		// Get gitsource referenced in component
-		gitSource := &gitsourcev1alpha1.GitSource{}
+		gitSource := &devconsoleapi.GitSource{}
 		err = r.client.Get(context.TODO(), client.ObjectKey{
 			Namespace: instance.Namespace,
-			Name:      instance.Spec.Codebase,
+			Name:      instance.Spec.GitSourceRef,
 		}, gitSource)
+
 		if err != nil {
 			log.Error(err, "Error occured while getting gitsource")
 			return reconcile.Result{}, err
@@ -178,7 +179,7 @@ func (r *ReconcileComponent) CreateDeploymentConfig(cr *componentsv1alpha1.Compo
 }
 
 // CreateBuildConfig creates a BuildConfig OpenShift resource used in S2I.
-func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component, builderIS *imagev1.ImageStream, gitSource *gitsourcev1alpha1.GitSource) (*buildv1.BuildConfig, error) {
+func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component, builderIS *imagev1.ImageStream, gitSource *devconsoleapi.GitSource) (*buildv1.BuildConfig, error) {
 	bc := r.newBuildConfig(cr, builderIS, gitSource)
 	if err := controllerutil.SetControllerReference(cr, bc, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")

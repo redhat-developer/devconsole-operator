@@ -9,8 +9,8 @@ import (
 type ComponentSpec struct {
 	// Container image use to build (nodejs, golang etc..)
 	BuildType string `json:"buildType"`
-	// Codebase is the source code of your component. Atm only public remote URL are supported.
-	Codebase string `json:"codebase"`
+	// GitSourceRef is the source code of your component. Atm only public remote URL are supported.
+	GitSourceRef string `json:"gitSourceRef"`
 }
 
 // ComponentStatus defines the observed state of Component
@@ -24,7 +24,7 @@ type ComponentStatus struct {
 // Component is the Schema for the components API
 // +k8s:openapi-gen=true
 type Component struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta   `json:"s,inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec ComponentSpec `json:"spec,omitempty"`
