@@ -31,6 +31,13 @@ spec:
               - nodejs
             codebase:
               type: string
+              description: The git url of your component source code.
+            port:
+              type: string
+              description: The cluster port of the service for your deployed component. The same port also matches target port.
+            exposed:
+              type: boolean
+              description: If the service is exposed, create a route.
           required:
           - buildType
           - codebase

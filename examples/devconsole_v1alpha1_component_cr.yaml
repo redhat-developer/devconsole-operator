@@ -5,4 +5,6 @@ metadata:
 spec:
   buildType: "nodejs"
   codebase: "https://github.com/sclorg/nodejs-ex" #"https://github.com/nodeshift-starters/nodejs-rest-http-crud"
+  port: "8080"
+  exposed: true
 

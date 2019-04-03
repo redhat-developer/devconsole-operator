@@ -135,6 +135,15 @@ spec:
           - get
           - list
           - watch
+        - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes
+          verbs:
+          - get
+          - create
+          - list
+          - watch
         serviceAccountName: devconsole-operator
     strategy: deployment
   installModes:

@@ -5,13 +5,16 @@ import (
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	compv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -46,6 +49,10 @@ func TestComponentController(t *testing.T) {
 	s.AddKnownTypes(compv1alpha1.SchemeGroupVersion, cp)
 
 	// register openshift resource specific schema
+	if err := routev1.AddToScheme(s); err != nil {
+		log.Error(err, "")
+		assert.Nil(t, err, "adding imagestream schema is failing")
+	}
 	if err := imagev1.AddToScheme(s); err != nil {
 		log.Error(err, "")
 		assert.Nil(t, err, "adding imagestream schema is failing")
@@ -123,6 +130,100 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, Name+":latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
 		require.Equal(t, 1, len(dc.Labels), "dc should contain one label")
 		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have one label with name of CR.")
+
+		svc := &corev1.Service{}
+		errGetSvc := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, svc)
+		require.NoError(t, errGetSvc, "service is not created")
+		require.Equal(t, 1, len(svc.Spec.Ports), "service is using one port")
+		require.Equal(t, int32(8080), svc.Spec.Ports[0].Port, "default service port should be 8080")
+	})
+
+	t.Run("with ReconcileComponent CR containing all optional fields for service port and route should create resources", func(t *testing.T) {
+		//given
+		// Objects to track in the fake client.
+		// A Component resource with metadata and spec.
+		cpOptional := &compv1alpha1.Component{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+			Spec: compv1alpha1.ComponentSpec{
+				BuildType: "nodejs",
+				Codebase:  "https://somegit.con/myrepo",
+				Port:      "3000",
+				Exposed:   true,
+			},
+		}
+		objs := []runtime.Object{
+			cpOptional,
+		}
+		// Create a fake client to mock API calls.
+		cl := fake.NewFakeClient(objs...)
+
+		// Create a ReconcileComponent object with the scheme and fake client.
+		r := &ReconcileComponent{client: cl, scheme: s}
+
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+		}
+
+		//when
+		_, err := r.Reconcile(req)
+
+		//then
+		require.NoError(t, err, "reconcile is failing")
+
+		svc := &corev1.Service{}
+		errGetSvc := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, svc)
+		require.NoError(t, errGetSvc, "service is not created")
+		require.Equal(t, 1, len(svc.Spec.Ports), "service is using one port")
+		require.Equal(t, int32(3000), svc.Spec.Ports[0].Port, "service port should be 3000")
+
+		rte := &routev1.Route{}
+		errGetRte := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, rte)
+		require.NoError(t, errGetRte, "route is not created")
+		require.Equal(t, intstr.IntOrString{IntVal: 3000}, rte.Spec.Port.TargetPort)
+	})
+
+	t.Run("with ReconcileComponent CR containing all optional fields for service port and route should create resources", func(t *testing.T) {
+		//given
+		// Objects to track in the fake client.
+		cpOptional := &compv1alpha1.Component{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+			Spec: compv1alpha1.ComponentSpec{
+				BuildType: "nodejs",
+				Codebase:  "https://somegit.con/myrepo",
+				Port:      "NotValidPort",
+				Exposed:   true,
+			},
+		}
+		objs := []runtime.Object{
+			cpOptional,
+		}
+		// Create a fake client to mock API calls.
+		cl := fake.NewFakeClient(objs...)
+
+		// Create a ReconcileComponent object with the scheme and fake client.
+		r := &ReconcileComponent{client: cl, scheme: s}
+
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+		}
+
+		//when
+		_, err := r.Reconcile(req)
+
+		//then
+		require.Error(t, err, "reconcile should failing")
 	})
 
 	t.Run("with ReconcileComponent CR containing all required field and buildtype matches openshift namespace imagestream", func(t *testing.T) {

@@ -4,10 +4,13 @@ import (
 	"github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
+	routev1 "github.com/openshift/api/route/v1"
 	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 	"github.com/redhat-developer/devconsole-operator/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"strconv"
 )
 
 func newImageStreamFromDocker(cr *componentsv1alpha1.Component) *imagev1.ImageStream {
@@ -141,4 +144,67 @@ func newDeploymentConfig(cr *componentsv1alpha1.Component, output *imagev1.Image
 			},
 		},
 	}
+}
+
+func getInt32Port(port string) (int32, error) {
+	portNumber, err := strconv.ParseInt(port, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return int32(portNumber), nil
+}
+
+func newService(cr *componentsv1alpha1.Component, port string) (*corev1.Service, error) {
+	labels := resource.GetLabelsForCR(cr)
+	int32Port, err := getInt32Port(port)
+	if err != nil {
+		return nil, err
+	}
+	var svcPorts []corev1.ServicePort
+	svcPort := corev1.ServicePort{
+		Name:       cr.Name + "-tcp",
+		Port:       int32Port,
+		Protocol:   corev1.ProtocolTCP,
+		TargetPort: intstr.FromInt(int(int32Port)),
+	}
+	svcPorts = append(svcPorts, svcPort)
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cr.Name,
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: svcPorts,
+			Selector: map[string]string{
+				"deploymentconfig": cr.Name,
+			},
+		},
+	}
+	return svc, nil
+}
+
+func newRoute(cr *componentsv1alpha1.Component) (*routev1.Route, error) {
+	labels := resource.GetLabelsForCR(cr)
+	int32Port, err := getInt32Port(cr.Spec.Port)
+	if err != nil {
+		return nil, err
+	}
+	route := &routev1.Route{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cr.Name,
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Spec: routev1.RouteSpec{
+			To: routev1.RouteTargetReference{
+				Kind: "Service",
+				Name: cr.Name,
+			},
+			Port: &routev1.RoutePort{
+				TargetPort: intstr.FromInt(int(int32Port)),
+			},
+		},
+	}
+	return route, nil
 }
