@@ -160,8 +160,8 @@ Please consult [the documentation](https://github.com/operator-framework/operato
 | vendor | The golang [Vendor](https://golang.org/cmd/go/#hdr-Vendor_Directories) folder that contains the local copies of the external dependencies that satisfy the imports of this project. [dep](https://github.com/golang/dep) manages the vendor directly.|
 
 
-## Enabling the DevOps perspective in OpenShift
+## Enabling the Dev perspective in OpenShift
 
-The frontend can check for the presence of the devconsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devconsole.openshift.io`.  If it exists, it will enable the DevOps perspective in the Openshift Console.
+The frontend can check for the presence of the devconsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devconsole.openshift.io`.  If it exists, it will enable the Dev perspective in the Openshift Console.
 
-Refer to OLM test [README](test/README.md) to install the DevOps Console operator.
+Refer to OLM test [README](test/README.md) to install the Dev Console operator.
