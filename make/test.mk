@@ -5,7 +5,8 @@ UNAME_S := $(shell uname -s)
 include ./make/verbose.mk
 include ./make/out.mk
 
-export DEPLOY_NAMESAPCE=
+export DEPLOYED_NAMESAPCE:=
+
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
 test: ./vendor

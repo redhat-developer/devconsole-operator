@@ -56,7 +56,7 @@ func TestComponent(t *testing.T) {
 	t.Log(fmt.Sprintf("namespace: %s", namespace))
 
 	// get the namespace to check deployment on
-	deployedNamespace := os.Getenv("DEPLOY_NAMESAPCE")
+	deployedNamespace := os.Getenv("DEPLOYED_NAMESAPCE")
 
 	// wait for component-operator to be ready
 	err = e2eutil.WaitForDeployment(t, f.KubeClient, deployedNamespace, "devconsole-operator", 1, retryInterval, timeout*2)
