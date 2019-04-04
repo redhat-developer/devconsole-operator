@@ -100,6 +100,9 @@ ifeq ($(OPENSHIFT_VERSION),4)
 	$(Q)-oc delete subscription my-devconsole -n openshift-operators
 	$(Q)-oc delete catalogsource my-catalog -n openshift-operator-lifecycle-manager
 endif
+	# The following cleanup is required due to a potential bug in the test framework.
+	$(Q)-oc delete clusterroles.rbac.authorization.k8s.io "devconsole-operator"
+	$(Q)-oc delete clusterrolebindings.rbac.authorization.k8s.io "devconsole-operator"
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
 #-------------------------------------------------------------------------------
