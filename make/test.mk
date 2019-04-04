@@ -54,6 +54,7 @@ e2e-setup: e2e-cleanup
 e2e-cleanup: get-test-namespace
 	$(Q)-oc login -u system:admin
 	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
 	$(Q)-oc delete -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
@@ -102,6 +103,7 @@ e2e-local: build-image-local
 	$(Q)-oc login -u system:admin
 	$(Q)-oc project $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
 	$(Q)-oc create -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
 ifeq ($(UNAME_S),Darwin)
