@@ -86,6 +86,9 @@ olm-integration-cleanup: get-test-namespace
 	$(Q)oc login -u system:admin
 	$(Q)-oc delete subscription my-devconsole -n operators
 	$(Q)-oc delete catalogsource my-catalog -n olm
+	# The following cleanup is required due to a potential bug in the test framework.
+	$(Q)-oc delete clusterroles.rbac.authorization.k8s.io "devconsole-operator"
+	$(Q)-oc delete clusterrolebindings.rbac.authorization.k8s.io "devconsole-operator"
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
 #-------------------------------------------------------------------------------
