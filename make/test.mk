@@ -75,8 +75,9 @@ test-olm-integration: push-operator-image olm-integration-setup
 	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription.yaml
 
-	@-oc delete clusterroles.rbac.authorization.k8s.io "devconsole-operator"
-	@-oc delete clusterrolebindings.rbac.authorization.k8s.io "devconsole-operator"
+	# The following cleanup is required due to a potential bug in the test framework.
+	$(Q)-oc delete clusterroles.rbac.authorization.k8s.io "devconsole-operator"
+	$(Q)-oc delete clusterrolebindings.rbac.authorization.k8s.io "devconsole-operator"
 	$(Q)operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1"
 
 .PHONY: olm-integration-setup
