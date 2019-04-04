@@ -34,7 +34,7 @@ spec:
               type: string
             gitSourceRef:
               description: GitSourceRef is the source code of your component. Currently,
-                only public remote URL are supported.
+                only public remote URLs are supported.
               type: string
           required:
           - buildType
