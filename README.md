@@ -7,7 +7,7 @@ This repository was initially bootstrapped using [CoreOS operator](https://githu
 ## Build
 
 ### Pre-requisites
-- [yamllint] version stable (https://yamllint.readthedocs.io/en/stable/quickstart.html)
+- [yamllint](https://yamllint.readthedocs.io/en/stable/quickstart.html) version stable
 - [operator-sdk v0.5.0](https://github.com/operator-framework/operator-sdk#quick-start) 
 - [dep][dep_tool] version v0.5.0+.
 - [git][git_tool]
