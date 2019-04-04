@@ -4,17 +4,18 @@ import (
 	"context"
 	e "errors"
 	"fmt"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
 	"strconv"
+
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -87,10 +88,10 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
+			// Return and don't requeue.
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request/*  */.
+		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
@@ -102,7 +103,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	log.Info(fmt.Sprintf("** Deletion time : %s", instance.ObjectMeta.DeletionTimestamp))
 	log.Info("============================================================")
 
-	// Assign the generated ResourceVersion to the resource status
+	// Assign the generated ResourceVersion to the resource status.
 	if instance.Status.RevNumber == "" {
 		instance.Status.RevNumber = instance.ObjectMeta.ResourceVersion
 	}
@@ -113,13 +114,13 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// We only call the pipeline when the component has been created
-	// and if the Status Revision Number is the same
+	// and if the Status Revision Number is the same.
 	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
-		// Validate if codebase is present since this is mandantory field
+		// Validate if GitSourceRef is present since this is mandantory field.
 		if instance.Spec.GitSourceRef == "" {
 			return reconcile.Result{}, e.New("GitSource reference is not provided")
 		}
-		// Get gitsource referenced in component
+		// Get gitsource referenced in component.
 		gitSource := &devconsoleapi.GitSource{}
 		err = r.client.Get(context.TODO(), client.ObjectKey{
 			Namespace: instance.Namespace,
@@ -239,7 +240,7 @@ func (r *ReconcileComponent) CreateBuilderImageStream(instance *componentsv1alph
 		log.Info("** Skip Creating builder ImageStream: an OpenShift image already exist", "ImageStream.Namespace", found.Namespace, "ImageStream.Name", found.Name)
 		return found, nil
 	}
-	if errors.IsNotFound(err) { // OpenShift builder image is not present, fallback to create one
+	if errors.IsNotFound(err) { // OpenShift builder image is not present, fallback to create one.
 		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, instance.Spec.BuildType))
 		newImageForBuilder = newImageStreamFromDocker(instance)
 		if newImageForBuilder == nil {

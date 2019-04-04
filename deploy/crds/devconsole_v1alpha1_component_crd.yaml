@@ -30,10 +30,10 @@ spec:
         spec:
           properties:
             buildType:
-              description: Container image use to build (nodejs, golang etc..)
+              description: Container image used to build (nodejs, golang etc..)
               type: string
             gitSourceRef:
-              description: GitSourceRef is the source code of your component. Atm
+              description: GitSourceRef is the source code of your component. Currently,
                 only public remote URL are supported.
               type: string
           required:
