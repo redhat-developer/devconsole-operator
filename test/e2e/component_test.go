@@ -62,7 +62,7 @@ func TestComponent(t *testing.T) {
 	t.Log("component is ready and running")
 
 	// create a Component custom resource
-	cr := &componentsv1alpha1.Component{
+	inputCR := &componentsv1alpha1.Component{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
 			APIVersion: "devconsole.openshift.io/v1alpha1",
@@ -77,23 +77,23 @@ func TestComponent(t *testing.T) {
 		},
 	}
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
-	err = f.Client.Create(context.TODO(), cr, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err = f.Client.Create(context.TODO(), inputCR, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	require.NoError(t, err, "failed to create custom resource of kind `Component`")
 
 	t.Run("retrieve component and verify related resources are created", func(t *testing.T) {
-		cr2 := &componentsv1alpha1.Component{}
-		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "mycomp", Namespace: namespace}, cr2)
+		outputCR := &componentsv1alpha1.Component{}
+		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "mycomp", Namespace: namespace}, outputCR)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `Component`")
 		// FIXME: Uncomment these lines after upgrading dependency versions
 		// The following (2) statements will fail due to
 		// https://github.com/kubernetes-sigs/controller-runtime/issues/202
 		// This issue is resolved in controller-runtime 0.1.8
-		//require.Equal(t, "Component", cr2.TypeMeta.Kind)
-		//require.Equal(t, "devconsole.openshift.io/v1alpha1", cr2.TypeMeta.APIVersion)
-		require.Equal(t, "mycomp", cr2.ObjectMeta.Name)
-		require.Equal(t, namespace, cr2.ObjectMeta.Namespace)
-		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", cr2.Spec.Codebase)
-		require.Equal(t, "nodejs", cr2.Spec.BuildType)
-		require.Equal(t, "", cr2.Status.RevNumber)
+		//require.Equal(t, "Component", outputCR.TypeMeta.Kind)
+		//require.Equal(t, "devconsole.openshift.io/v1alpha1", outputCR.TypeMeta.APIVersion)
+		require.Equal(t, "mycomp", outputCR.ObjectMeta.Name)
+		require.Equal(t, namespace, outputCR.ObjectMeta.Namespace)
+		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", outputCR.Spec.Codebase)
+		require.Equal(t, "nodejs", outputCR.Spec.BuildType)
+		require.Equal(t, "", outputCR.Status.RevNumber)
 	})
 }
