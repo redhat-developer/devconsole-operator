@@ -2,29 +2,37 @@ package component
 
 import (
 	"context"
+	"testing"
+
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+
+	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	compv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	corev1 "k8s.io/api/core/v1"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
 	"k8s.io/client-go/kubernetes/scheme"
+
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"testing"
 )
 
 const (
 	Name      = "MyComp"
 	Namespace = "test-project"
-	Port = 3000
+	Port      = 3000
 )
 
 // TestComponentController runs Component.Reconcile() against a
@@ -33,6 +41,17 @@ func TestComponentController(t *testing.T) {
 	reqLogger := log.WithValues("Test", t.Name())
 	reqLogger.Info("TestComponentController")
 
+	gs := &devconsoleapi.GitSource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-git-source",
+			Namespace: Namespace,
+		},
+		Spec: devconsoleapi.GitSourceSpec{
+			URL: "https://somegit.con/myrepo",
+			Ref: "master",
+		},
+	}
+
 	// A Component resource with metadata and spec.
 	cp := &compv1alpha1.Component{
 		ObjectMeta: metav1.ObjectMeta{
@@ -40,14 +59,27 @@ func TestComponentController(t *testing.T) {
 			Namespace: Namespace,
 		},
 		Spec: compv1alpha1.ComponentSpec{
-			BuildType: "nodejs",
-			Codebase:  "https://somegit.con/myrepo",
+			BuildType:    "nodejs",
+			GitSourceRef: "my-git-source",
 		},
 	}
 
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-secret",
+			Namespace: Namespace,
+		},
+		Type: "Opaque",
+		Data: map[string][]byte{
+			"username": []byte("username"),
+			"password": []byte("password"),
+		},
+	}
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(compv1alpha1.SchemeGroupVersion, cp)
+	s.AddKnownTypes(devconsoleapi.SchemeGroupVersion, gs)
+	s.AddKnownTypes(corev1.SchemeGroupVersion, secret)
 
 	// register openshift resource specific schema
 	if err := routev1.AddToScheme(s); err != nil {
@@ -71,6 +103,7 @@ func TestComponentController(t *testing.T) {
 		//given
 		// Objects to track in the fake client.
 		objs := []runtime.Object{
+			gs,
 			cp,
 		}
 		// Create a fake client to mock API calls.
@@ -149,13 +182,14 @@ func TestComponentController(t *testing.T) {
 				Namespace: Namespace,
 			},
 			Spec: compv1alpha1.ComponentSpec{
-				BuildType: "nodejs",
-				Codebase:  "https://somegit.con/myrepo",
-				Port:      Port,
-				Exposed:   true,
+				BuildType:    "nodejs",
+				GitSourceRef: "my-git-source",
+				Port:         Port,
+				Exposed:      true,
 			},
 		}
 		objs := []runtime.Object{
+			gs,
 			cpOptional,
 		}
 		// Create a fake client to mock API calls.
@@ -206,10 +240,10 @@ func TestComponentController(t *testing.T) {
 				Namespace: Namespace,
 			},
 			Spec: compv1alpha1.ComponentSpec{
-				BuildType: "nodejs",
-				Codebase:  "https://somegit.con/myrepo",
-				Port:      65700, // not a valid port
-				Exposed:   true,
+				BuildType:    "nodejs",
+				GitSourceRef: "https://somegit.con/myrepo",
+				Port:         65700, // not a valid port
+				Exposed:      true,
 			},
 		}
 		objs := []runtime.Object{
@@ -246,6 +280,7 @@ func TestComponentController(t *testing.T) {
 		}
 		// Objects to track in the fake client.
 		objs := []runtime.Object{
+			gs,
 			cp,
 			isNodejs,
 		}
@@ -303,13 +338,106 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have one label with name of CR.")
 	})
 
+	t.Run("with secret defined in the GitSource", func(t *testing.T) {
+		// Add Secret reference in GitSource
+		gs.Spec.SecretRef = &devconsoleapi.SecretRef{
+			Name: "my-secret",
+		}
+
+		// Track objects
+		objs := []runtime.Object{
+			secret,
+			gs,
+			cp,
+		}
+
+		// Create a fake client to mock API calls.
+		cl := fake.NewFakeClient(objs...)
+
+		// Create a ReconcileComponent object with the scheme and fake client.
+		r := &ReconcileComponent{client: cl, scheme: s}
+
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+		}
+
+		//when
+		_, err := r.Reconcile(req)
+
+		//then
+		require.NoError(t, err, "reconcile is failing")
+
+		instance := &compv1alpha1.Component{}
+		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
+		require.NoError(t, errGet, "component is not created")
+
+		is := &imagev1.ImageStream{}
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, is)
+		require.NoError(t, errGetImage, "output imagestream is not created")
+
+		bc := &buildv1.BuildConfig{}
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
+		require.NoError(t, errGetBC, "build config should not not created with missing CR's buildtype")
+		require.Equal(t, "https://somegit.con/myrepo", bc.Spec.Source.Git.URI, "build config should not have any source attached")
+		// BuildConfig should have reference to secret
+		require.Equal(t, "my-secret", bc.Spec.CommonSpec.Source.SourceSecret.Name, "Secret name is not present")
+	})
+
+	t.Run("without secret defined in the GitSource", func(t *testing.T) {
+		// Add Secret reference in GitSource
+		gs.Spec.SecretRef = nil
+		// Track objects
+		objs := []runtime.Object{
+			gs,
+			cp,
+		}
+
+		// Create a fake client to mock API calls.
+		cl := fake.NewFakeClient(objs...)
+
+		// Create a ReconcileComponent object with the scheme and fake client.
+		r := &ReconcileComponent{client: cl, scheme: s}
+
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+		}
+
+		//when
+		_, err := r.Reconcile(req)
+
+		//then
+		require.NoError(t, err, "reconcile is failing")
+
+		instance := &compv1alpha1.Component{}
+		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
+		require.NoError(t, errGet, "component is not created")
+
+		is := &imagev1.ImageStream{}
+		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, is)
+		require.NoError(t, errGetImage, "output imagestream is not created")
+
+		bc := &buildv1.BuildConfig{}
+		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
+		require.NoError(t, errGetBC, "build config should not not created with missing CR's buildtype")
+		require.Equal(t, "https://somegit.con/myrepo", bc.Spec.Source.Git.URI, "build config should not have any source attached")
+		// BuildConfig should not have reference to secret
+		require.Nil(t, nil, bc.Spec.CommonSpec.Source.SourceSecret, "Source secret reference should not be present since we don't have secret defined in GitSource")
+	})
+
 	t.Run("with ReconcileComponent CR without buildtype", func(t *testing.T) {
 		//given
 		objs := []runtime.Object{
+			gs,
 			cp,
 		}
 		cp.Spec.BuildType = ""
-		cp.Spec.Codebase = "https://somegit.con/myrepo"
+		cp.Spec.GitSourceRef = "my-git-source"
 		// Create a fake client to mock API calls.
 		cl := fake.NewFakeClient(objs...)
 
@@ -353,7 +481,7 @@ func TestComponentController(t *testing.T) {
 			cp,
 		}
 		cp.Spec.BuildType = "nodejs"
-		cp.Spec.Codebase = ""
+		cp.Spec.GitSourceRef = ""
 		// Create a fake client to mock API calls.
 		cl := fake.NewFakeClient(objs...)
 
@@ -371,7 +499,7 @@ func TestComponentController(t *testing.T) {
 		_, err := r.Reconcile(req)
 
 		//then
-		require.NoError(t, err, "reconcile is failing")
+		require.Error(t, err, "reconcile should fail since no gitsource reference provided")
 
 		instance := &compv1alpha1.Component{}
 		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
@@ -379,15 +507,15 @@ func TestComponentController(t *testing.T) {
 
 		is := &imagev1.ImageStream{}
 		errGetImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, is)
-		require.NoError(t, errGetImage, "output imagestream is not created")
+		require.Error(t, errGetImage, "output imagestream is not created")
 
 		isBuilder := &imagev1.ImageStream{}
 		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, isBuilder)
-		require.NoError(t, errGetBuilderImage, "builder imagestream is not created")
+		require.Error(t, errGetBuilderImage, "builder imagestream is not created")
 
 		bc := &buildv1.BuildConfig{}
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
-		require.NoError(t, errGetBC, "buildconfig is not created")
-		require.Equal(t, "", bc.Spec.Source.Git.URI, "build config should not have any source attached")
+		require.Error(t, errGetBC, "buildconfig should not have created")
 	})
+
 }

@@ -9,8 +9,8 @@ import (
 type ComponentSpec struct {
 	// Container image use to build (nodejs, golang etc..)
 	BuildType string `json:"buildType"`
-	// Codebase is the source code of your component. Atm only public remote URL are supported.
-	Codebase string `json:"codebase"`
+	// GitSourceRef is the source code of your component. Currently, only public remote URLs are supported.
+	GitSourceRef string `json:"gitSourceRef"`
 	// The cluster port of the service for your deployed component. The same port also matches target port.
 	Port int32 `json:"port,omitempty"`
 	// If the service is exposed, create a route.
