@@ -2,27 +2,31 @@ package component
 
 import (
 	"context"
+	e "errors"
 	"fmt"
-	"github.com/openshift/api/apps/v1"
+	"strconv"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
+	v1 "github.com/openshift/api/apps/v1"
+	buildv1 "github.com/openshift/api/build/v1"
+	imagev1 "github.com/openshift/api/image/v1"
+	routev1 "github.com/openshift/api/route/v1"
+	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
+
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strconv"
-
-	buildv1 "github.com/openshift/api/build/v1"
-	imagev1 "github.com/openshift/api/image/v1"
 )
 
 var log = logf.Log.WithName("controller_component")
@@ -84,10 +88,10 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
+			// Return and don't requeue.
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
+		// Error reading the object - requeue the request/*  */.
 		return reconcile.Result{}, err
 	}
 
@@ -99,7 +103,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	log.Info(fmt.Sprintf("** Deletion time : %s", instance.ObjectMeta.DeletionTimestamp))
 	log.Info("============================================================")
 
-	// Assign the generated ResourceVersion to the resource status
+	// Assign the generated ResourceVersion to the resource status.
 	if instance.Status.RevNumber == "" {
 		instance.Status.RevNumber = instance.ObjectMeta.ResourceVersion
 	}
@@ -110,8 +114,23 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	// We only call the pipeline when the component has been created
-	// and if the Status Revision Number is the same
+	// and if the Status Revision Number is the same.
 	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
+		// Validate if codebase is present since this is mandantory field
+		if instance.Spec.GitSourceRef == "" {
+			return reconcile.Result{}, e.New("GitSource reference is not provided")
+		}
+		// Get gitsource referenced in component
+		gitSource := &devconsoleapi.GitSource{}
+		err = r.client.Get(context.TODO(), client.ObjectKey{
+			Namespace: instance.Namespace,
+			Name:      instance.Spec.GitSourceRef,
+		}, gitSource)
+
+		if err != nil {
+			log.Error(err, "Error occured while getting gitsource")
+			return reconcile.Result{}, err
+		}
 		outputIS, err := r.CreateOutputImageStream(instance)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -120,7 +139,8 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		_, err = r.CreateBuildConfig(instance, builderIS)
+
+		_, err = r.CreateBuildConfig(instance, builderIS, gitSource)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -128,10 +148,78 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		log.Info("** ImageStream, BuildConfig and DeploymentConfig successfully created. **")
+		_, err = r.CreateService(instance)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if instance.Spec.Exposed == true {
+			_, err = r.CreateRoute(instance)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+		log.Info("🎉🎉  All resources have been successfully created!  🎉🎉 ")
 	}
 
 	return reconcile.Result{}, nil
+}
+
+// CreateRoute creates a route to expose the service if CRD's exposed field is true.
+func (r *ReconcileComponent) CreateRoute(cr *componentsv1alpha1.Component) (*routev1.Route, error) {
+	route := newRoute(cr)
+	if err := controllerutil.SetControllerReference(cr, route, r.scheme); err != nil {
+		log.Error(err, "** Setting owner reference fails **")
+		return nil, err
+	}
+	foundRoute := &routev1.Route{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, foundRoute)
+	if err == nil {
+		log.Info("** Skip Creating CreateRoute: Already exist", "CreateRoute.Namespace", foundRoute.Namespace, "CreateRoute.Name", foundRoute.Name)
+		return foundRoute, nil
+	}
+	if errors.IsNotFound(err) {
+		log.Info("** Creating a new CreateRoute", "CreateRoute.Namespace", route.Namespace, "CreateRoute.Name", route.Name)
+		err := r.client.Create(context.TODO(), route)
+		if err != nil {
+			log.Error(err, "** CreateRoute creation fails **")
+			return nil, err
+		}
+		return route, nil
+	}
+	return nil, err
+}
+
+// CreateService creates a service resource to expose the component S2I deployed image.
+func (r *ReconcileComponent) CreateService(cr *componentsv1alpha1.Component) (*corev1.Service, error) {
+	port := int32(8080) // default port to 8080
+	if cr.Spec.Port != 0 {
+		port = cr.Spec.Port
+	}
+	svc, err := newService(cr, port)
+	if err != nil {
+		log.Info("** CreateService: Port is not valid")
+		return nil, err
+	}
+	if err := controllerutil.SetControllerReference(cr, svc, r.scheme); err != nil {
+		log.Error(err, "** Setting owner reference fails **")
+		return nil, err
+	}
+	foundSvc := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, foundSvc)
+	if err == nil {
+		log.Info("** Skip Creating CreateService: Already exist", "CreateService.Namespace", foundSvc.Namespace, "CreateService.Name", foundSvc.Name)
+		return foundSvc, nil
+	}
+	if errors.IsNotFound(err) {
+		log.Info("** Creating a new CreateService", "CreateService.Namespace", svc.Namespace, "CreateService.Name", svc.Name)
+		err := r.client.Create(context.TODO(), svc)
+		if err != nil {
+			log.Error(err, "** CreateService creation fails **")
+			return nil, err
+		}
+		return svc, nil
+	}
+	return nil, err
 }
 
 // CreateDeploymentConfig creates a DeploymentConfig OpenShift resource used in S2I.
@@ -160,8 +248,8 @@ func (r *ReconcileComponent) CreateDeploymentConfig(cr *componentsv1alpha1.Compo
 }
 
 // CreateBuildConfig creates a BuildConfig OpenShift resource used in S2I.
-func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component, builderIS *imagev1.ImageStream) (*buildv1.BuildConfig, error) {
-	bc := newBuildConfig(cr, builderIS)
+func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component, builderIS *imagev1.ImageStream, gitSource *devconsoleapi.GitSource) (*buildv1.BuildConfig, error) {
+	bc := r.newBuildConfig(cr, builderIS, gitSource)
 	if err := controllerutil.SetControllerReference(cr, bc, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
 		return nil, err
@@ -220,7 +308,7 @@ func (r *ReconcileComponent) CreateBuilderImageStream(instance *componentsv1alph
 		log.Info("** Skip Creating builder ImageStream: an OpenShift image already exist", "ImageStream.Namespace", found.Namespace, "ImageStream.Name", found.Name)
 		return found, nil
 	}
-	if errors.IsNotFound(err) { // OpenShift builder image is not present, fallback to create one
+	if errors.IsNotFound(err) { // OpenShift builder image is not present, fallback to create one.
 		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, instance.Spec.BuildType))
 		newImageForBuilder = newImageStreamFromDocker(instance)
 		if newImageForBuilder == nil {

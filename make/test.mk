@@ -54,6 +54,7 @@ e2e-setup: e2e-cleanup
 e2e-cleanup: get-test-namespace
 	$(Q)-oc login -u system:admin
 	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
 	$(Q)-oc delete -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
@@ -102,26 +103,42 @@ ifeq ($(OPENSHIFT_VERSION),4)
 endif
 	# The following cleanup is required due to a potential bug in the test framework.
 	$(Q)-oc delete clusterroles.rbac.authorization.k8s.io "devconsole-operator"
-	$(Q)-oc delete clusterrolebindings.rbac.authorization.k8s.io "devconsole-operator"
+	$(Q)-oc delete clusterrolebindinhttps://github.com/redhat-developer/devconsole-operator/pull/54gs.rbac.authorization.k8s.io "devconsole-operator"
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
 #-------------------------------------------------------------------------------
 # e2e test in dev mode
 #-------------------------------------------------------------------------------
 
+.PHONY: e2e-cleanup
+## Create a namespace used in e2e tests
+e2e-cleanup: get-test-namespace
+	$(Q)-oc login -u system:admin
+	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc delete -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
+	$(Q)-oc delete -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
+	$(Q)-oc delete -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
+	$(Q)-oc delete -f ./deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
+
+.PHONY: e2e-setup
+## Create a namespace used in e2e tests
+e2e-setup: e2e-cleanup
+	$(Q)-oc new-project $(TEST_NAMESPACE)
+
 .PHONY: build-image-local
 build-image-local: e2e-setup
 	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/$(TEST_NAMESPACE)/devconsole-operator
 
-.PHONY: e2e-local
-e2e-local: build-image-local
+.PHONY: test-e2e-local
+test-e2e-local: build-image-local
 	$(eval DEPLOYED_NAMESAPCE := $(TEST_NAMESPACE))
 	$(Q)-oc login -u system:admin
 	$(Q)-oc project $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
 	$(Q)-oc create -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
-ifeq ($(UNAME_S),Darwin)
+ifeq ($(UNAME_S),Darwin	)
 	$(Q)sed -i "" 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml
 else
 	$(Q)sed -i 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml

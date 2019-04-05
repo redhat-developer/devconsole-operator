@@ -1,13 +1,10 @@
-# devconsole
-
-[![Build Status](https://ci.centos.org/buildStatus/icon?job=devtools-devconsole-operator)](https://ci.centos.org/job/devtools-devconsole-operator/)
+# DevConsole Operator
 
 This repository was initially bootstrapped using [CoreOS operator](https://github.com/operator-framework/operator-sdk). 
 
 ## Build
 
 ### Pre-requisites
-- [yamllint](https://yamllint.readthedocs.io/en/stable/quickstart.html) version stable
 - [operator-sdk v0.5.0](https://github.com/operator-framework/operator-sdk#quick-start) 
 - [dep][dep_tool] version v0.5.0+.
 - [git][git_tool]
@@ -23,12 +20,12 @@ make build
 ### Test
 * run unit test:
 ```
-make test-unit
+make test
 ```
 * run e2e test:
 For running e2e tests, have minishift started.
 ```
-make e2e-local
+make test-e2e-local
 ```
 > Note: e2e test will deploy operator in project `devconsole-e2e-test`, if your tests timeout and you wan to debug:
 > - oc project devconsole-e2e-test
@@ -46,16 +43,9 @@ minishift profile set devconsole
 ```
 minishift addon enable admin-user
 ```
-* optionally, configure the VM 
-
-```
-minishift config set cpus 4
-minishift config set memory 8GB
-minishift config set vm-driver virtualbox
-```
 * start the instance
 ```
-minishift start
+make minishift-start
 ```
 > NOTE: this setup should be deprecated in favor of [OCP4 install]().
 
@@ -69,10 +59,7 @@ make local
 If a specific namespace is provided only that project will watched. 
 As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
 
-* Make sure minishift is running and use myproject
-```
-oc project myproject
-```
+* Make sure minishift is running 
 * Clean previously created resources
 ```
 make deploy-clean
@@ -84,18 +71,6 @@ make deploy-test
 * See the newly created resources
 ```
 oc get is,bc,svc,component.devconsole,build
-NAME                                           DOCKER REPO                               TAGS      UPDATED
-imagestream.image.openshift.io/myapp-output    172.30.1.1:5000/myproject/myapp-output
-imagestream.image.openshift.io/myapp-runtime   172.30.1.1:5000/myproject/myapp-runtime   latest    46 seconds ago
-
-NAME                                      TYPE      FROM         LATEST
-buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
-
-NAME                                         AGE
-component.devconsole.openshift.io/myapp   48s
-
-NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
-build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 seconds ago
 ```
 
 ### Deploy the operator with Deployment yaml
@@ -134,17 +109,6 @@ oc create -f examples/devconsole_v1alpha1_component_cr.yaml --namespace tina
 * check if the resources are created
 ```
 oc get all,is,component,bc,build,deployment,pod
-NAME                   READY     STATUS    RESTARTS   AGE
-pod/myapp-bc-1-build   1/1       Running   0          23s
-
-NAME                                      TYPE      FROM         LATEST
-buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
-
-NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
-build.build.openshift.io/myapp-bc-1   Source    Git@afc0f38   Running   23 seconds ago
-
-NAME                                          DOCKER REPO                         TAGS      UPDATED
-imagestream.image.openshift.io/myapp-output   172.30.1.1:5000/tina/myapp-output
 ```
 ## Directory layout
 
@@ -161,8 +125,13 @@ Please consult [the documentation](https://github.com/operator-framework/operato
 | vendor | The golang [Vendor](https://golang.org/cmd/go/#hdr-Vendor_Directories) folder that contains the local copies of the external dependencies that satisfy the imports of this project. [dep](https://github.com/golang/dep) manages the vendor directly.|
 
 
-## Enabling the DevOps perspective in OpenShift
+## Enabling the Developer  perspective in OpenShift
 
-The frontend can check for the presence of the devconsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devconsole.openshift.io`.  If it exists, it will enable the DevOps perspective in the Openshift Console.
+The frontend can check for the presence of the devconsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devconsole.openshift.io`.  If it exists, it will enable the Developer perspective in the Openshift Console.
 
 Refer to OLM test [README](test/README.md) to install the DevOps Console operator.
+
+[dep_tool]:https://golang.github.io/dep/docs/installation.html
+[git_tool]:https://git-scm.com/downloads
+[go_tool]:https://golang.org/dl/
+[docker_tool]:https://docs.docker.com/install/

@@ -10,7 +10,7 @@ LOCAL_TEST_NAMESPACE ?= "local-test"
 .PHONY: local
 ## Run Operator locally
 local: deploy-rbac build deploy-crd
-	$(Q)-oc new-project $(APP_NAMESPACE)
+	$(Q)-oc new-project $(LOCAL_TEST_NAMESPACE)
 	$(Q)operator-sdk up local --namespace=$(APP_NAMESPACE)
 
 .PHONY: deploy-rbac

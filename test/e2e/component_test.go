@@ -10,6 +10,8 @@ import (
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 
+	devconsole "github.com/redhat-developer/devconsole-api/pkg/apis"
+	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	"github.com/redhat-developer/devconsole-operator/pkg/apis"
 	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
@@ -30,6 +32,12 @@ const (
 // https://github.com/operator-framework/operator-sdk/blob/cc7b175/doc/test-framework/writing-e2e-tests.md
 func TestComponent(t *testing.T) {
 	var err error
+	gitSourceList := &devconsoleapi.GitSourceList{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GitSource",
+			APIVersion: "devconsole.openshift.io/v1alpha1",
+		},
+	}
 	// Register types with framework scheme
 	componentList := &componentsv1alpha1.ComponentList{
 		TypeMeta: metav1.TypeMeta{
@@ -37,6 +45,12 @@ func TestComponent(t *testing.T) {
 			APIVersion: "devconsole.openshift.io/v1alpha1",
 		},
 	}
+
+	err = framework.AddToFrameworkScheme(devconsole.AddToScheme, gitSourceList)
+	if err != nil {
+		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
+	}
+
 	err = framework.AddToFrameworkScheme(apis.AddToScheme, componentList)
 	if err != nil {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
@@ -61,6 +75,24 @@ func TestComponent(t *testing.T) {
 
 	t.Log("component is ready and running")
 
+	gs := &devconsoleapi.GitSource{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GitSource",
+			APIVersion: "devconsole.openshift.io/v1alpha1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-git-source",
+			Namespace: namespace,
+		},
+		Spec: devconsoleapi.GitSourceSpec{
+			URL: "https://somegit.con/myrepo",
+			Ref: "master",
+		},
+	}
+	// use TestCtx's create helper to create the object and add a cleanup function for the new object
+	err = f.Client.Create(context.TODO(), gs, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	require.NoError(t, err, "failed to create custom resource of kind `GitSource`")
+
 	// create a Component custom resource
 	inputCR := &componentsv1alpha1.Component{
 		TypeMeta: metav1.TypeMeta{
@@ -72,8 +104,8 @@ func TestComponent(t *testing.T) {
 			Namespace: namespace,
 		},
 		Spec: componentsv1alpha1.ComponentSpec{
-			BuildType: "nodejs",
-			Codebase:  "https://github.com/nodeshift-starters/nodejs-rest-http-crud",
+			BuildType:    "nodejs",
+			GitSourceRef: "my-git-source",
 		},
 	}
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
@@ -88,11 +120,11 @@ func TestComponent(t *testing.T) {
 		// The following (2) statements will fail due to
 		// https://github.com/kubernetes-sigs/controller-runtime/issues/202
 		// This issue is resolved in controller-runtime 0.1.8
-		//require.Equal(t, "Component", outputCR.TypeMeta.Kind)
-		//require.Equal(t, "devconsole.openshift.io/v1alpha1", outputCR.TypeMeta.APIVersion)
+		//require.Equal(t, "Component", cr2.TypeMeta.Kind)
+		//require.Equal(t, "devconsole.openshift.io/v1alpha1", cr2.TypeMeta.APIVersion)
 		require.Equal(t, "mycomp", outputCR.ObjectMeta.Name)
 		require.Equal(t, namespace, outputCR.ObjectMeta.Namespace)
-		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", outputCR.Spec.Codebase)
+		require.Equal(t, "my-git-source", outputCR.Spec.GitSourceRef)
 		require.Equal(t, "nodejs", outputCR.Spec.BuildType)
 		require.Equal(t, "", outputCR.Status.RevNumber)
 	})
