@@ -4,4 +4,7 @@ metadata:
   name: myapp
 spec:
   buildType: "nodejs"
-  codebase: "example-gitsource"
+  gitSourceRef: "example-gitsource"
+  port: 8080
+  exposed: true
+

@@ -122,10 +122,10 @@ func TestComponent(t *testing.T) {
 		// This issue is resolved in controller-runtime 0.1.8
 		//require.Equal(t, "Component", cr2.TypeMeta.Kind)
 		//require.Equal(t, "devconsole.openshift.io/v1alpha1", cr2.TypeMeta.APIVersion)
-		require.Equal(t, "mycomp", cr2.ObjectMeta.Name)
-		require.Equal(t, namespace, cr2.ObjectMeta.Namespace)
-		require.Equal(t, "my-git-source", cr2.Spec.GitSourceRef)
-		require.Equal(t, "nodejs", cr2.Spec.BuildType)
-		require.Equal(t, "", cr2.Status.RevNumber)
+		require.Equal(t, "mycomp", outputCR.ObjectMeta.Name)
+		require.Equal(t, namespace, outputCR.ObjectMeta.Namespace)
+		require.Equal(t, "my-git-source", outputCR.Spec.GitSourceRef)
+		require.Equal(t, "nodejs", outputCR.Spec.BuildType)
+		require.Equal(t, "", outputCR.Status.RevNumber)
 	})
 }

@@ -30,7 +30,7 @@ spec:
         spec:
           properties:
             contextDir:
-              description: ContextDir is a path to the subfolder in the repo. Optional.
+              description: ContextDir is a path to subfolder in the repo. Optional.
               type: string
             flavor:
               description: Flavor of the git provider like github, gitlab, bitbucket,
@@ -55,13 +55,13 @@ spec:
               properties:
                 name:
                   description: Name is the name of the secret that contains credentials
-                    to access the git repo.
+                    to access the git repo
                   type: string
               required:
               - name
               type: object
             url:
-              description: URL of the git repo.
+              description: URL of the git repo
               type: string
           required:
           - url
