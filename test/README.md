@@ -7,7 +7,7 @@
 ```
 make minishift-start
 eval $(minishift docker-env)
-make e2e-local
+make test-e2e-local
 ```
 
 ## Steps to verify operator registry

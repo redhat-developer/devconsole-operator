@@ -83,8 +83,8 @@ e2e-setup: e2e-cleanup
 build-image-local: e2e-setup
 	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/$(TEST_NAMESPACE)/devconsole-operator
 
-.PHONY: e2e-local
-e2e-local: build-image-local
+.PHONY: test-e2e-local
+test-e2e-local: build-image-local
 	$(eval DEPLOYED_NAMESAPCE := $(TEST_NAMESPACE))
 	$(Q)-oc login -u system:admin
 	$(Q)-oc project $(TEST_NAMESPACE)
