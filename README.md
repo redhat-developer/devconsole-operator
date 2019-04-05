@@ -1,3 +1,5 @@
+[![Docker Repository on Quay](https://quay.io/repository/redhat-developer/devconsole-operator/status "Docker Repository on Quay")](https://quay.io/repository/redhat-developer/devconsole-operator)
+
 # DevConsole Operator
 
 This repository was initially bootstrapped using [CoreOS operator](https://github.com/operator-framework/operator-sdk). 
