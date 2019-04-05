@@ -24,6 +24,7 @@ import (
 const (
 	Name      = "MyComp"
 	Namespace = "test-project"
+	Port = 3000
 )
 
 // TestComponentController runs Component.Reconcile() against a
@@ -150,7 +151,7 @@ func TestComponentController(t *testing.T) {
 			Spec: compv1alpha1.ComponentSpec{
 				BuildType: "nodejs",
 				Codebase:  "https://somegit.con/myrepo",
-				Port:      3000,
+				Port:      Port,
 				Exposed:   true,
 			},
 		}
@@ -180,12 +181,20 @@ func TestComponentController(t *testing.T) {
 		errGetSvc := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, svc)
 		require.NoError(t, errGetSvc, "service is not created")
 		require.Equal(t, 1, len(svc.Spec.Ports), "service is using one port")
-		require.Equal(t, int32(3000), svc.Spec.Ports[0].Port, "service port should be 3000")
+		require.Equal(t, int32(Port), svc.Spec.Ports[0].Port, "service port should be 3000")
 
 		rte := &routev1.Route{}
 		errGetRte := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, rte)
 		require.NoError(t, errGetRte, "route is not created")
-		require.Equal(t, intstr.IntOrString{IntVal: 3000}, rte.Spec.Port.TargetPort)
+		require.Equal(t, intstr.IntOrString{IntVal: Port}, rte.Spec.Port.TargetPort)
+
+		// TODO(corinne): ask Dipak
+		//ep := &corev1.Endpoints{}
+		//labels := map[string]string{
+		//	"app": Name,
+		//}
+		//errGetEp := cl.List(context.Background(), client.MatchingLabels(labels), ep)
+		//require.NoError(t, errGetEp, "endpoints are not created")
 	})
 
 	t.Run("with ReconcileComponent CR containing all optional fields for service port and route should create resources", func(t *testing.T) {
