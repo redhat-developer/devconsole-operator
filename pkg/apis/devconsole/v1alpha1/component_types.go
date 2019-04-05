@@ -9,7 +9,7 @@ import (
 type ComponentSpec struct {
 	// Container image use to build (nodejs, golang etc..)
 	BuildType string `json:"buildType"`
-	// GitSourceRef is the source code of your component. Atm only public remote URL are supported.
+	// GitSourceRef is the source code of your component. Currently, only public remote URLs are supported.
 	GitSourceRef string `json:"gitSourceRef"`
 }
 

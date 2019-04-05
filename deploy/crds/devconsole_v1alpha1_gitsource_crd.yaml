@@ -55,13 +55,21 @@ spec:
               properties:
                 name:
                   description: Name is the name of the secret that contains credentials
+<<<<<<< HEAD
                     to access the git repo
+=======
+                    to access the git repo.
+>>>>>>> 9e4b6310cf08bd98b5c4c846a32cdcd1243527af
                   type: string
               required:
               - name
               type: object
             url:
+<<<<<<< HEAD
               description: URL of the git repo
+=======
+              description: URL of the git repo.
+>>>>>>> 9e4b6310cf08bd98b5c4c846a32cdcd1243527af
               type: string
           required:
           - url
