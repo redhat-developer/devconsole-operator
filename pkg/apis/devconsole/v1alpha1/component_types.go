@@ -12,7 +12,7 @@ type ComponentSpec struct {
 	// Codebase is the source code of your component. Atm only public remote URL are supported.
 	Codebase string `json:"codebase"`
 	// The cluster port of the service for your deployed component. The same port also matches target port.
-	Port string `json:"port,omitempty"`
+	Port int32 `json:"port,omitempty"`
 	// If the service is exposed, create a route.
 	Exposed bool `json:"exposed,omitempty"`
 }

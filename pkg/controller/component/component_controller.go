@@ -139,8 +139,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 				return reconcile.Result{}, err
 			}
 		}
-
-		log.Info("** ImageStream, BuildConfig, DeploymentConfig and Service successfully created. **")
+		log.Info("🎉🎉  All resources have been successfully created!  🎉🎉 ")
 	}
 
 	return reconcile.Result{}, nil
@@ -148,17 +147,13 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 
 // CreateRoute creates a route to expose the service if CRD's exposed field is true.
 func (r *ReconcileComponent) CreateRoute(cr *componentsv1alpha1.Component) (*routev1.Route, error) {
-	route, err := newRoute(cr)
-	if err != nil {
-		log.Info("** CreateRoute: Port is not valid")
-		return nil, err
-	}
+	route := newRoute(cr)
 	if err := controllerutil.SetControllerReference(cr, route, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
 		return nil, err
 	}
 	foundRoute := &routev1.Route{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, foundRoute)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: route.Namespace}, foundRoute)
 	if err == nil {
 		log.Info("** Skip Creating CreateRoute: Already exist", "CreateRoute.Namespace", foundRoute.Namespace, "CreateRoute.Name", foundRoute.Name)
 		return foundRoute, nil
@@ -177,8 +172,8 @@ func (r *ReconcileComponent) CreateRoute(cr *componentsv1alpha1.Component) (*rou
 
 // CreateService creates a service resource to expose the component S2I deployed image.
 func (r *ReconcileComponent) CreateService(cr *componentsv1alpha1.Component) (*corev1.Service, error) {
-	port := "8080" // default port to 8080
-	if cr.Spec.Port != "" {
+	port := int32(8080) // default port to 8080
+	if cr.Spec.Port != 0 {
 		port = cr.Spec.Port
 	}
 	svc, err := newService(cr, port)

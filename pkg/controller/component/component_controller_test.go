@@ -51,7 +51,7 @@ func TestComponentController(t *testing.T) {
 	// register openshift resource specific schema
 	if err := routev1.AddToScheme(s); err != nil {
 		log.Error(err, "")
-		assert.Nil(t, err, "adding imagestream schema is failing")
+		assert.Nil(t, err, "adding route schema is failing")
 	}
 	if err := imagev1.AddToScheme(s); err != nil {
 		log.Error(err, "")
@@ -150,7 +150,7 @@ func TestComponentController(t *testing.T) {
 			Spec: compv1alpha1.ComponentSpec{
 				BuildType: "nodejs",
 				Codebase:  "https://somegit.con/myrepo",
-				Port:      "3000",
+				Port:      3000,
 				Exposed:   true,
 			},
 		}
@@ -199,7 +199,7 @@ func TestComponentController(t *testing.T) {
 			Spec: compv1alpha1.ComponentSpec{
 				BuildType: "nodejs",
 				Codebase:  "https://somegit.con/myrepo",
-				Port:      "NotValidPort",
+				Port:      65700, // not a valid port
 				Exposed:   true,
 			},
 		}

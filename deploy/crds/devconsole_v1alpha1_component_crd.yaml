@@ -33,7 +33,9 @@ spec:
               type: string
               description: The git url of your component source code.
             port:
-              type: string
+              type: integer
+              minimum: 1024
+              maximum: 65535
               description: The cluster port of the service for your deployed component. The same port also matches target port.
             exposed:
               type: boolean

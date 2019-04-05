@@ -1,6 +1,7 @@
 package component
 
 import (
+	"fmt"
 	"github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -10,7 +11,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"strconv"
 )
 
 func newImageStreamFromDocker(cr *componentsv1alpha1.Component) *imagev1.ImageStream {
@@ -146,26 +146,17 @@ func newDeploymentConfig(cr *componentsv1alpha1.Component, output *imagev1.Image
 	}
 }
 
-func getInt32Port(port string) (int32, error) {
-	portNumber, err := strconv.ParseInt(port, 10, 32)
-	if err != nil {
-		return 0, err
-	}
-	return int32(portNumber), nil
-}
-
-func newService(cr *componentsv1alpha1.Component, port string) (*corev1.Service, error) {
+func newService(cr *componentsv1alpha1.Component, port int32) (*corev1.Service, error) {
 	labels := resource.GetLabelsForCR(cr)
-	int32Port, err := getInt32Port(port)
-	if err != nil {
-		return nil, err
+	if port > 65536 || port < 1024 {
+		return nil, fmt.Errorf("port %d is out of range [1024-65535]", port)
 	}
 	var svcPorts []corev1.ServicePort
 	svcPort := corev1.ServicePort{
 		Name:       cr.Name + "-tcp",
-		Port:       int32Port,
+		Port:       port,
 		Protocol:   corev1.ProtocolTCP,
-		TargetPort: intstr.FromInt(int(int32Port)),
+		TargetPort: intstr.FromInt(int(port)),
 	}
 	svcPorts = append(svcPorts, svcPort)
 	svc := &corev1.Service{
@@ -184,12 +175,9 @@ func newService(cr *componentsv1alpha1.Component, port string) (*corev1.Service,
 	return svc, nil
 }
 
-func newRoute(cr *componentsv1alpha1.Component) (*routev1.Route, error) {
+func newRoute(cr *componentsv1alpha1.Component) (*routev1.Route) {
 	labels := resource.GetLabelsForCR(cr)
-	int32Port, err := getInt32Port(cr.Spec.Port)
-	if err != nil {
-		return nil, err
-	}
+
 	route := &routev1.Route{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name,
@@ -202,9 +190,9 @@ func newRoute(cr *componentsv1alpha1.Component) (*routev1.Route, error) {
 				Name: cr.Name,
 			},
 			Port: &routev1.RoutePort{
-				TargetPort: intstr.FromInt(int(int32Port)),
+				TargetPort: intstr.IntOrString{ IntVal:cr.Spec.Port, StrVal: fmt.Sprintf("%d-tcp", cr.Spec.Port)},
 			},
 		},
 	}
-	return route, nil
+	return route
 }
