@@ -27,7 +27,7 @@ make test-unit
 * run e2e test:
 For running e2e tests, have minishift started.
 ```
-make e2e-local
+make test-e2e-local
 ```
 > Note: e2e test will deploy operator in project `devconsole-e2e-test`, if your tests timeout and you wan to debug:
 > - oc project devconsole-e2e-test
