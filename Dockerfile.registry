@@ -1,7 +1,7 @@
 FROM quay.io/openshift/origin-operator-registry:latest
 
-ARG image
-ARG version
+ARG image=quay.io/redhat-developer/devconsole-operator
+ARG version=latest
 COPY manifests manifests
 RUN sed -e "s,REPLACE_IMAGE,${image}," -i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
 
