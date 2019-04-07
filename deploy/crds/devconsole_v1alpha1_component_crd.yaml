@@ -36,7 +36,6 @@ spec:
               description: GitSourceRef is the source code of your component. Atm
                 only public remote URL are supported.
               type: string
-              description: The git url of your component source code.
             port:
               type: integer
               minimum: 1024

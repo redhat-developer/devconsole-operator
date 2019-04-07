@@ -13,7 +13,7 @@ func (in *Component) DeepCopyInto(out *Component) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-	in.Spec.DeepCopyInto(&out.Spec)
+	out.Spec = in.Spec
 	out.Status = in.Status
 	return
 }
