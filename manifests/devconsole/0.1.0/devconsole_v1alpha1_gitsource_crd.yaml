@@ -58,13 +58,13 @@ spec:
                     to access the git repo
                   type: string
               required:
-              - name
+                - name
               type: object
             url:
               description: URL of the git repo
               type: string
           required:
-          - url
+            - url
           type: object
         status:
           properties:
@@ -76,8 +76,8 @@ spec:
               description: Connection holds information whether the last attempt to reach the git source
               was successful or not. Optional
               properties:
-                state:  State is the result of the attempt to reach a GitSource. Can be either Failed or OK
-                  description:
+                state:
+                  description: State is the result of the attempt to reach a GitSource. Can be either Failed or OK
                   type: string
                   mimimum: 1
                 error:
@@ -85,6 +85,6 @@ spec:
                   type: string
   version: v1alpha1
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
+    - name: v1alpha1
+      served: true
+      storage: true
