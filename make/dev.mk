@@ -39,7 +39,7 @@ create-cr:
 
 .PHONY: build-operator-image
 ## Build and create the operator container image
-build-operator-image:
+build-operator-image: ./vendor
 	operator-sdk build $(DEVCONSOLE_OPERATOR_IMAGE):$(TAG)
 
 .PHONY: push-operator-image
