@@ -76,4 +76,8 @@ spec:
               description: Error contains an error message in case the build environment detection fails. Optional
               type: string
   version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
 
