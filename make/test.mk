@@ -5,7 +5,7 @@ UNAME_S := $(shell uname -s)
 include ./make/verbose.mk
 include ./make/out.mk
 
-export DEPLOYED_NAMESAPCE:=
+export DEPLOYED_NAMESPACE:=
 
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
@@ -63,7 +63,7 @@ e2e-cleanup: get-test-namespace
 .PHONY: test-olm-integration
 ## Runs the OLM integration tests without coverage
 test-olm-integration: push-operator-image olm-integration-setup
-	$(eval DEPLOYED_NAMESAPCE := operators)
+	$(eval DEPLOYED_NAMESPACE := operators)
 	$(call log-info,"Running OLM integration test: $@")
 	$(Q)oc apply -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
@@ -117,7 +117,7 @@ build-image-local: e2e-setup
 
 .PHONY: test-e2e-local
 test-e2e-local: build-image-local
-	$(eval DEPLOYED_NAMESAPCE := $(TEST_NAMESPACE))
+	$(eval DEPLOYED_NAMESPACE := $(TEST_NAMESPACE))
 	$(Q)-oc login -u system:admin
 	$(Q)-oc project $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
