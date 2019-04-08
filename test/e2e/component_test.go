@@ -23,7 +23,7 @@ import (
 
 const (
 	retryInterval        = time.Second * 5
-	timeout              = time.Second * 60
+	timeout              = time.Minute * 15
 	cleanupRetryInterval = time.Second * 1
 	cleanupTimeout       = time.Second * 5
 )
@@ -70,7 +70,7 @@ func TestComponent(t *testing.T) {
 	t.Log(fmt.Sprintf("namespace: %s", namespace))
 
 	// wait for component-operator to be ready
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, os.Getenv("DEPLOYED_NAMESPACE"), "devconsole-operator", 1, retryInterval, timeout*2)
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, os.Getenv("DEPLOYED_NAMESPACE"), "devconsole-operator", 1, retryInterval, timeout)
 	require.NoError(t, err, "failed while waiting for operator deployment")
 
 	t.Log("component is ready and running")
