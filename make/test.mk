@@ -63,20 +63,27 @@ e2e-cleanup: get-test-namespace
 .PHONY: test-olm-integration
 ## Runs the OLM integration tests without coverage
 test-olm-integration: push-operator-image olm-integration-setup
-	$(eval DEPLOYED_NAMESPACE := operators)
 	$(call log-info,"Running OLM integration test: $@")
+ifeq ($(OPENSHIFT_VERSION),3)
+	$(eval DEPLOYED_NAMESPACE := operators)
 	$(Q)oc apply -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
+endif
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
 	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
 	$(Q)docker build -f Dockerfile.registry . -t $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG) \
 		--build-arg image=$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG) --build-arg version=$(devconsole_version)
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
 	$(Q)docker push $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)
-
-	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source.yaml | oc apply -f -
-	$(Q)oc apply -f ./test/e2e/subscription.yaml
-
-	$(Q)operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1"
+ifeq ($(OPENSHIFT_VERSION),3)
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS3.yaml | oc apply -f -
+	$(Q)oc apply -f ./test/e2e/subscription_OS3.yaml
+endif
+ifeq ($(OPENSHIFT_VERSION),4)
+	$(eval DEPLOYED_NAMESPACE := openshift-operators)
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
+	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
+endif
+	$(Q)operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1 -timeout=15m"
 
 .PHONY: olm-integration-setup
 olm-integration-setup: olm-integration-cleanup
@@ -84,9 +91,16 @@ olm-integration-setup: olm-integration-cleanup
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
+ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)oc login -u system:admin
 	$(Q)-oc delete subscription my-devconsole -n operators
 	$(Q)-oc delete catalogsource my-catalog -n olm
+endif
+ifeq ($(OPENSHIFT_VERSION),4)
+	@oc login -u $(OC_LOGIN_USERNAME) -p $(OC_LOGIN_PASSWORD)
+	$(Q)-oc delete subscription my-devconsole -n openshift-operators
+	$(Q)-oc delete catalogsource my-catalog -n openshift-operator-lifecycle-manager
+endif
 	# The following cleanup is required due to a potential bug in the test framework.
 	$(Q)-oc delete clusterroles.rbac.authorization.k8s.io "devconsole-operator"
 	$(Q)-oc delete clusterrolebindings.rbac.authorization.k8s.io "devconsole-operator"
