@@ -67,7 +67,17 @@ spec:
           - url
           type: object
         status:
-          type: object
+          properties:
+            state:
+              type: string
+              minimum: 1
+            connection:
+              properties:
+                state:
+                  type: string
+                  mimimum: 1
+                error:
+                  type: string
   version: v1alpha1
   versions:
   - name: v1alpha1
