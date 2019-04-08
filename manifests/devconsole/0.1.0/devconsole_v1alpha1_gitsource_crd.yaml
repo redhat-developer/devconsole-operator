@@ -67,7 +67,22 @@ spec:
           - url
           type: object
         status:
-          type: object
+          properties:
+            state:
+              description: State represents current state of the GitSource, can be either initializing or ready
+              type: string
+              minimum: 1
+            connection:
+              description: Connection holds information whether the last attempt to reach the git source
+              was successful or not. Optional
+              properties:
+                state:  State is the result of the attempt to reach a GitSource. Can be either Failed or OK
+                  description:
+                  type: string
+                  mimimum: 1
+                error:
+                  description: Error has the error message if the attempt to reach a GitSource failed
+                  type: string
   version: v1alpha1
   versions:
   - name: v1alpha1
