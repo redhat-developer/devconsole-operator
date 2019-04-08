@@ -5,7 +5,7 @@ UNAME_S := $(shell uname -s)
 include ./make/verbose.mk
 include ./make/out.mk
 
-export DEPLOYED_NAMESAPCE:=
+export DEPLOYED_NAMESPACE:=
 
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
@@ -65,7 +65,7 @@ e2e-cleanup: get-test-namespace
 test-olm-integration: push-operator-image olm-integration-setup
 	$(call log-info,"Running OLM integration test: $@")
 ifeq ($(OPENSHIFT_VERSION),3)
-	$(eval DEPLOYED_NAMESAPCE := operators)
+	$(eval DEPLOYED_NAMESPACE := operators)
 	$(Q)oc apply -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
 endif
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
@@ -79,7 +79,7 @@ ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)oc apply -f ./test/e2e/subscription_OS3.yaml
 endif
 ifeq ($(OPENSHIFT_VERSION),4)
-	$(eval DEPLOYED_NAMESAPCE := openshift-operators)
+	$(eval DEPLOYED_NAMESPACE := openshift-operators)
 	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
 endif
@@ -131,7 +131,7 @@ build-image-local: e2e-setup
 
 .PHONY: test-e2e-local
 test-e2e-local: build-image-local
-	$(eval DEPLOYED_NAMESAPCE := $(TEST_NAMESPACE))
+	$(eval DEPLOYED_NAMESPACE := $(TEST_NAMESPACE))
 	$(Q)-oc login -u system:admin
 	$(Q)-oc project $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
