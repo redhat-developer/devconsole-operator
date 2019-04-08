@@ -70,7 +70,7 @@ func TestComponent(t *testing.T) {
 	t.Log(fmt.Sprintf("namespace: %s", namespace))
 
 	// wait for component-operator to be ready
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, os.Getenv("DEPLOYED_NAMESAPCE"), "devconsole-operator", 1, retryInterval, timeout*2)
+	err = e2eutil.WaitForDeployment(t, f.KubeClient, os.Getenv("DEPLOYED_NAMESPACE"), "devconsole-operator", 1, retryInterval, timeout*2)
 	require.NoError(t, err, "failed while waiting for operator deployment")
 
 	t.Log("component is ready and running")
