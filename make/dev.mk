@@ -6,9 +6,10 @@ include ./make/git.mk
 
 DOCKER_REPO?=quay.io/openshiftio
 IMAGE_NAME?=devconsole-operator
-REGISTRY_URI=quay.io
+REGISTRY_URI?=quay.io
+REGISTRY_ORG?=redhat-developers
 
-DEVCONSOLE_OPERATOR_IMAGE?=quay.io/redhat-developers/devconsole-operator
+DEVCONSOLE_OPERATOR_IMAGE?=$(REGISTRY_URI)/$(REGISTRY_ORG)/$(IMAGE_NAME)
 TIMESTAMP:=$(shell date +%s)
 TAG?=$(GIT_COMMIT_ID_SHORT)-$(TIMESTAMP)
 

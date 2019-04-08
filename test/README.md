@@ -10,7 +10,66 @@ eval $(minishift docker-env)
 make test-e2e-local
 ```
 
-## Steps to verify operator registry
+## Steps to verify operator registry on OCP4
+### Pre-requisites
+* have a 48h-ephemeral cluster on AWS for OCP4
+* have a quay account
+* `oc` client installed
+> NOTE: you can also do all those steps with the UI
+
+### 1. Build and push image to quay
+```
+QUAY_USERNAME=YYY QUAY_PASSWORD=XXX REGISTRY_ORG=YYY make push-operator-image
+```
+> NOTE: to test you can push to your own username in quay, therefore QUAY_USERNAME and REGISTRY_ORG are the same
+
+### 2. create a catalog 
+This catalog contains a link to the operator image you've just created in step1.
+* Create a new file `catalog.yaml`
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: my-catalog
+  namespace: openshift-operator-lifecycle-manager
+spec:
+  sourceType: grpc
+  image: quay.io/YYY/operator-registry:0.1.0-2613b51-dirty-1554395857
+  displayName: Community Operators
+  publisher: Red Hat
+```
+* login to OCP4 
+```
+oc apply -f catalog.yaml
+oc get catsrc —all-namespaces
+```
+You should see your new catalog.
+
+### 3. create a subscription
+* Create a new file `subscription.yaml`
+```
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  generateName: devconsole-
+  namespace: openshift-operators
+spec:
+  source: my-catalog
+  sourceNamespace: openshift-operator-lifecycle-manager
+  name: devconsole
+  startingCSV: devconsole-operator.v0.1.0
+  channel: alpha
+```
+
+### 4. Create a new Component
+```
+oc new-project demo
+oc apply -f examples/devconsole_v1alpha1_gitsource_cr.yaml
+oc apply -f examples/devconsole_v1alpha1_component_cr.yaml
+```
+You should be able to see the route of your nodejs app.
+
+## Steps to verify operator registry on minishift
 
 ### 1. Install OLM (not required for OpenShift 4)
 
