@@ -21,6 +21,10 @@ spec:
       version: v1alpha1
       displayName: Git Source
       description: Describes a Git repository to be used as a codebase.
+    - kind: GitSourceAnalysis
+      name: gitsourceanalyses.devconsole.openshift.io
+      displayName: Git Source Analysis
+      description: Triggers analysis of a codebase defined as a GitSource.
   description: The operator that enables the Developer perspective in OpenShift 4.x
   displayName: OpenShift Developer Console
   install:
