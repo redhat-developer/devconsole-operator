@@ -32,7 +32,7 @@ spec:
               minimum: 1
               properties:
                 name:
-                  description: Name is the name of the GitSource that contains
+                  description: Name is the name of the GitSource within the same namespace that contains
                     all necessary information of the git repo to by analyzed
                   type: string
                   minimum: 1
