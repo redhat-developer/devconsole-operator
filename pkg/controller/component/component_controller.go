@@ -152,7 +152,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		if instance.Spec.Exposed == true {
+		if instance.Spec.Exposed {
 			_, err = r.CreateRoute(instance)
 			if err != nil {
 				return reconcile.Result{}, err
