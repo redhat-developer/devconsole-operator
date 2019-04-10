@@ -362,7 +362,7 @@
   name = "github.com/redhat-developer/devconsole-api"
   packages = ["pkg/apis/devconsole/v1alpha1"]
   pruneopts = "NT"
-  revision = "a95aac0e2e03bb970f93066662e500a77b82cc7a"
+  revision = "a67d77335e36554ccf3fea971af2d0ff10af3161"
 
 [[projects]]
   digest = "1:fcef1ce61da6f8f6f115154fb0e0e5b159fe11656839ba1e6061372711c013ee"

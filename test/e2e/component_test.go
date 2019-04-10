@@ -13,7 +13,6 @@ import (
 	devconsole "github.com/redhat-developer/devconsole-api/pkg/apis"
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	"github.com/redhat-developer/devconsole-operator/pkg/apis"
-	// componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
 	"github.com/stretchr/testify/require"
 
