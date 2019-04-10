@@ -13,12 +13,12 @@ lint: lint-go-code lint-yaml courier
 YAML_FILES := $(shell find . -type f -regex ".*y[a]ml" | grep -v vendor)
 .PHONY: lint-yaml
 ## runs yamllint on all yaml files
-lint-yaml: ${YAML_FILES}
+lint-yaml: ./vendor ${YAML_FILES}
 	$(Q)yamllint -c .yamllint $^
 
 .PHONY: lint-go-code
 ## Checks the code with golangci-lint
-lint-go-code: $(GOLANGCI_LINT_BIN)
+lint-go-code: ./vendor $(GOLANGCI_LINT_BIN)
 	$(Q)./out/golangci-lint ${V_FLAG} run
 
 $(GOLANGCI_LINT_BIN):
