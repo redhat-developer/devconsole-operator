@@ -9,8 +9,22 @@ export DEPLOYED_NAMESPACE:=
 
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
-test: ./vendor
+test: ./vendor courier
 	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v /test/e2e) -failfast
+
+.PHONY: courier
+## Validate manifests using operator-courier
+courier:
+	$(Q)python3 -m venv ./out/venv3
+	$(Q)./out/venv3/bin/pip install --upgrade setuptools
+	$(Q)./out/venv3/bin/pip install --upgrade pip
+	$(Q)./out/venv3/bin/pip install operator-courier==1.3.0
+	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
+	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
+	# flatten command is throwing error. suppress it for now
+	@-./out/venv3/bin/operator-courier flatten ./manifests/devconsole ./out/manifests-flat
+	$(Q)./out/venv3/bin/operator-courier verify ./out/manifests-flat
 
 .PHONY: test-coverage
 ## Runs Go package tests and produces coverage information
@@ -70,6 +84,7 @@ ifeq ($(OPENSHIFT_VERSION),3)
 endif
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
 	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
 	$(Q)docker build -f Dockerfile.registry . -t $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG) \
 		--build-arg image=$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG) --build-arg version=$(devconsole_version)
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
@@ -101,9 +116,6 @@ ifeq ($(OPENSHIFT_VERSION),4)
 	$(Q)-oc delete subscription my-devconsole -n openshift-operators
 	$(Q)-oc delete catalogsource my-catalog -n openshift-operator-lifecycle-manager
 endif
-	# The following cleanup is required due to a potential bug in the test framework.
-	$(Q)-oc delete clusterroles.rbac.authorization.k8s.io "devconsole-operator"
-	$(Q)-oc delete clusterrolebindings.rbac.authorization.k8s.io "devconsole-operator"
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
 #-------------------------------------------------------------------------------
