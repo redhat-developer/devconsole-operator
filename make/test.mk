@@ -17,7 +17,8 @@ test: ./vendor courier
 courier:
 	$(Q)python3 -m venv ./out/venv3
 	$(Q)./out/venv3/bin/pip install --upgrade setuptools
-	$(Q)./out/venv3/bin/pip install operator-courier
+	$(Q)./out/venv3/bin/pip install --upgrade pip
+	$(Q)./out/venv3/bin/pip install operator-courier==1.3.0
 	# flatten command is throwing error. suppress it for now
 	@-./out/venv3/bin/operator-courier flatten ./manifests/devconsole ./out/manifests-flat
 	$(Q)./out/venv3/bin/operator-courier verify ./out/manifests-flat
