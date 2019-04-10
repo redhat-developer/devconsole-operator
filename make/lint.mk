@@ -1,6 +1,8 @@
 ifndef LINT_MK
 LINT_MK:=# Prevent repeated "-include".
 
+GOLANGCI_LINT_BIN=./out/golangci-lint
+
 include ./make/verbose.mk
 include ./make/go.mk
 
@@ -16,10 +18,11 @@ lint-yaml: ${YAML_FILES}
 
 .PHONY: lint-go-code
 ## Checks the code with golangci-lint
-lint-go-code:
-	# binary will be $(go env GOPATH)/bin/golangci-lint
-	$(Q)curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.16.0
-	$(Q)$(shell go env GOPATH)/bin/golangci-lint ${V_FLAG} run
+lint-go-code: $(GOLANGCI_LINT_BIN)
+	$(Q)./out/golangci-lint ${V_FLAG} run
+
+$(GOLANGCI_LINT_BIN):
+	$(Q)curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./out v1.16.0
 
 .PHONY: courier
 ## Validate manifests using operator-courier
