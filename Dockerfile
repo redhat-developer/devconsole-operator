@@ -18,6 +18,7 @@ RUN yum install epel-release -y \
     bc \
     kubectl \
     yamllint \
+    python36-virtualenv \
     && yum clean all
 
 # install dep
