@@ -9,8 +9,18 @@ export DEPLOYED_NAMESPACE:=
 
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
-test: ./vendor
+test: ./vendor courier
 	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v /test/e2e) -failfast
+
+.PHONY: courier
+## Validate manifests using operator-courier
+courier:
+	$(Q)python3 -m venv ./out/venv3
+	$(Q)./out/venv3/bin/pip install --upgrade setuptools
+	$(Q)./out/venv3/bin/pip install operator-courier
+	# flatten command is throwing error. suppress it for now
+	@-./out/venv3/bin/operator-courier flatten ./manifests/devconsole ./out/manifests-flat
+	$(Q)./out/venv3/bin/operator-courier verify ./out/manifests-flat
 
 .PHONY: test-coverage
 ## Runs Go package tests and produces coverage information
