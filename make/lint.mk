@@ -19,7 +19,7 @@ lint-yaml: ${YAML_FILES}
 lint-go-code:
 	# binary will be $(go env GOPATH)/bin/golangci-lint
 	$(Q)curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.16.0
-	$(Q)${GOPATH}/bin/golangci-lint ${V_FLAG} run
+	$(Q)$(shell go env GOPATH)/bin/golangci-lint ${V_FLAG} run
 
 .PHONY: courier
 ## Validate manifests using operator-courier
