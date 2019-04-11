@@ -9,4 +9,3 @@ spec:
   name: devconsole
   source: my-catalog
   sourceNamespace: olm
-
