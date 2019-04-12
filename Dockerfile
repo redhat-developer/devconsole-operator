@@ -43,10 +43,10 @@ RUN curl -L -s https://github.com/openshift/origin/releases/download/v3.11.0/ope
     && rm -rf ./openshift* \
     && oc version
 
-# install operator-sdk (from git with no history and only the master branch)
+# install operator-sdk (from git with no history and only the tag)
 RUN mkdir -p $GOPATH/src/github.com/operator-framework \
     && cd $GOPATH/src/github.com/operator-framework \
-    && git clone --depth 1 -b master https://github.com/operator-framework/operator-sdk \
+    && git clone --depth 1 -b v0.7.0 https://github.com/operator-framework/operator-sdk \
     && cd operator-sdk \
     && make dep \
     && make install
