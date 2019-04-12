@@ -9,7 +9,7 @@ export DEPLOYED_NAMESPACE:=
 
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
-test: ./vendor courier
+test: ./vendor
 	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v /test/e2e) -failfast
 
 .PHONY: test-coverage
