@@ -98,7 +98,6 @@ ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)-oc delete catalogsource my-catalog -n olm
 endif
 ifeq ($(OPENSHIFT_VERSION),4)
-	@oc login -u $(OC_LOGIN_USERNAME) -p $(OC_LOGIN_PASSWORD)
 	$(Q)-oc delete subscription my-devconsole -n openshift-operators
 	$(Q)-oc delete catalogsource my-catalog -n openshift-operator-lifecycle-manager
 endif

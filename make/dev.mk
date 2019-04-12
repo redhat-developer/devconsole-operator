@@ -11,7 +11,7 @@ REGISTRY_URI=quay.io
 DEVCONSOLE_OPERATOR_IMAGE?=quay.io/redhat-developers/devconsole-operator
 TIMESTAMP:=$(shell date +%s)
 TAG?=$(GIT_COMMIT_ID_SHORT)-$(TIMESTAMP)
-OPENSHIFT_VERSION?=3
+OPENSHIFT_VERSION?=4
 OC_LOGIN_USERNAME?=system:admin
 OC_LOGIN_PASSWORD?=admin
 
