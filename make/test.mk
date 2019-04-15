@@ -33,7 +33,7 @@ get-test-namespace: ./out/test-namespace
 
 .PHONY: test-e2e
 ## Runs the e2e tests without coverage
-test-e2e: build build-image e2e-setup
+test-e2e: build build-image-local e2e-setup
 	$(info Running E2E test: $@)
 	$(Q)go test ./test/e2e/... \
 		-parallel=1 \
@@ -155,5 +155,5 @@ else
 	$(Q)sed -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' ./deploy/test/role_binding_test.yaml
 	$(Q)sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
 endif
-	$(Q)eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup
+	$(Q)eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup --go-test-flags "-v"
 endif
