@@ -14,25 +14,27 @@ spec:
     openAPIV3Schema:
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          description: 'APIVersion defines the versioned schema of this
+            representation of an object. Servers should convert recognized
+            schemas to the latest internal value, and may reject unrecognized
+            values.'
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          description: 'Kind is a string value representing the REST resource
+            this object represents. Servers may infer this from the endpoint
+            the client submits requests to. Cannot be updated. In CamelCase.'
           type: string
         metadata:
           type: object
         spec:
           properties:
             contextDir:
-              description: ContextDir is a path to subfolder in the repo. Optional.
+              description: ContextDir is a path to subfolder in the repo.
+                Optional.
               type: string
             flavor:
-              description: Flavor of the git provider like github, gitlab, bitbucket,
-                generic, etc. Optional.
+              description: Flavor of the git provider like github, gitlab,
+                bitbucket, generic, etc. Optional.
               type: string
             httpProxy:
               description: HttpProxy is optional.
@@ -41,19 +43,20 @@ spec:
               description: HttpsProxy is optional.
               type: string
             noProxy:
-              description: NoProxy can be used to specify domains for which no proxying
-                should be performed. Optional.
+              description: NoProxy can be used to specify domains for which no
+                proxying should be performed. Optional.
               type: string
             ref:
-              description: Ref is a git reference. Optional. "master" is used by default.
+              description: Ref is a git reference. Optional. "master" is used
+                by default.
               type: string
             secretRef:
-              description: SecretRef refers to the secret that contains credentials
-                to access the git repo. Optional.
+              description: SecretRef refers to the secret that contains
+                credentials to access the git repo. Optional.
               properties:
                 name:
-                  description: Name is the name of the secret that contains credentials
-                    to access the git repo
+                  description: Name is the name of the secret that contains
+                    credentials to access the git repo
                   type: string
               required:
                 - name
@@ -68,17 +71,20 @@ spec:
           type: object
           properties:
             state:
-              description: State represents current state of the GitSource, can be either initializing or ready
+              description: State represents current state of the GitSource, can
+                be either initializing or ready
               type: string
             connection:
-              description: Connection holds information whether the last attempt to reach the git source
-                was successful or not. Optional
+              description: Connection has information whether the last attempt
+                to reach the git source was successful or not. Optional
               properties:
                 state:
-                  description: State is the result of the attempt to reach a GitSource. Can be either Failed or OK
+                  description: State is the result of the attempt to reach
+                    a GitSource. Can be either Failed or OK
                   type: string
                 error:
-                  description: Error has the error message if the attempt to reach a GitSource failed
+                  description: Error has the error message if the attempt to
+                    reach a GitSource failed
                   type: string
               required:
                 - state

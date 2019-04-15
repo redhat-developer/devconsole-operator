@@ -1,5 +1,6 @@
 #
-# example where repository is reachable (is public) but the name of the branch cannot be found
+# example where repository is reachable (is public)
+# but the name of the branch cannot be found
 #
 apiVersion: devconsole.openshift.io/v1alpha1
 kind: GitSource
