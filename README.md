@@ -1,19 +1,49 @@
-[![Docker Repository on Quay](https://quay.io/repository/redhat-developer/devconsole-operator/status "Docker Repository on Quay")](https://quay.io/repository/redhat-developer/devconsole-operator)
-
 # DevConsole Operator
 
-This repository was initially bootstrapped using [CoreOS operator](https://github.com/operator-framework/operator-sdk). 
+[![Go Report Card](https://goreportcard.com/badge/github.com/redhat-developer/devconsole-operator)](https://goreportcard.com/report/github.com/redhat-developer/devconsole-operator)
+[![Docker Repository on Quay](https://quay.io/repository/redhat-developer/devconsole-operator/status "Docker Repository on Quay")](https://quay.io/repository/redhat-developer/devconsole-operator)
 
-## Build
+DevConsole operator enables a developer-focused view in OpenShift 4.
+It provides a view switcher to transition between the traditional
+Kubernetes cluster administration console referred to as
+Administrator, to this new Developer perspective.
 
-### Pre-requisites
-- [operator-sdk v0.5.0](https://github.com/operator-framework/operator-sdk#quick-start) 
-- [dep][dep_tool] version v0.5.0+.
+This new Developer perspective provides a high-level abstraction over
+Kubernetes and OpenShift primitives to allow developers to focus on
+their application development.
+
+## Key Features
+
+The Developer perspective is still under active development.  These
+are the main features that are getting developed:
+
+* Add - The place to create and build the application using one of this method:
+
+	- Importing source code from Git
+	- Deploying an existing image
+	- Browse a catalog to deploy or connect application serves
+	- Deploy quick-starters or samples
+
+* Topology - The landing page that shows application structure and
+  health in an easy-to-use diagram
+* Builds - Lists OpenShift BuildConfig resources for the selected
+  project
+* Pipelines - Lists Tekton Pipeline resources for the selected project
+
+## Development
+
+This repository was initially bootstrapped using the [Operator Framework SDK][operator-sdk].
+This project requires [Go] version 1.11 or above.
+
+Here is the complete list of pre-requisites:
+
+- [Operator SDK][operator-sdk] version 0.7.0
+- [dep][dep_tool] version 0.5.1
 - [git][git_tool]
-- [go][go_tool] version v1.10+.
-- [docker][docker_tool] version 17.03+.
+- [go][go_tool] version 1.11 or above
+- [docker][docker_tool] version 17.03+
 - [kubectl][kubectl_tool] version v1.11.0+ or [oc] version 3.11
-- Access to a kubernetes v.1.11.0+ cluster or openshift cluster version 3.11
+- Access to OpenShift 4 cluster
 
 ### Build
 ```
@@ -133,7 +163,11 @@ The frontend can check for the presence of the devconsole CRDs using the Kuberne
 
 Refer to OLM test [README](test/README.md) to install the DevOps Console operator.
 
-[dep_tool]:https://golang.github.io/dep/docs/installation.html
-[git_tool]:https://git-scm.com/downloads
-[go_tool]:https://golang.org/dl/
-[docker_tool]:https://docs.docker.com/install/
+[operator-sdk]: https://github.com/operator-framework/operator-sdk
+[dep_tool]: https://golang.github.io/dep/docs/installation.html
+[git_tool]: https://git-scm.com/downloads
+[kubectl_tool]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
+[oc]: https://www.okd.io/download.html
+[go_tool]: https://golang.org/dl/
+[docker_tool]: https://docs.docker.com/install/
+[Go]: https://golang.org

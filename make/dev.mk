@@ -11,6 +11,7 @@ REGISTRY_URI=quay.io
 DEVCONSOLE_OPERATOR_IMAGE?=quay.io/redhat-developers/devconsole-operator
 TIMESTAMP:=$(shell date +%s)
 TAG?=$(GIT_COMMIT_ID_SHORT)-$(TIMESTAMP)
+OPENSHIFT_VERSION?=4
 
 .PHONY: create-resources
 create-resources:
@@ -36,7 +37,7 @@ create-cr:
 
 .PHONY: build-operator-image
 ## Build and create the operator container image
-build-operator-image:
+build-operator-image: ./vendor
 	operator-sdk build $(DEVCONSOLE_OPERATOR_IMAGE):$(TAG)
 
 .PHONY: push-operator-image

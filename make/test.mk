@@ -5,7 +5,7 @@ UNAME_S := $(shell uname -s)
 include ./make/verbose.mk
 include ./make/out.mk
 
-export DEPLOYED_NAMESAPCE:=
+export DEPLOYED_NAMESPACE:=
 
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
@@ -63,20 +63,27 @@ e2e-cleanup: get-test-namespace
 .PHONY: test-olm-integration
 ## Runs the OLM integration tests without coverage
 test-olm-integration: push-operator-image olm-integration-setup
-	$(eval DEPLOYED_NAMESAPCE := operators)
 	$(call log-info,"Running OLM integration test: $@")
+ifeq ($(OPENSHIFT_VERSION),3)
+	$(eval DEPLOYED_NAMESPACE := operators)
 	$(Q)oc apply -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
+endif
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
 	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
 	$(Q)docker build -f Dockerfile.registry . -t $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG) \
 		--build-arg image=$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG) --build-arg version=$(devconsole_version)
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
 	$(Q)docker push $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)
-
-	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source.yaml | oc apply -f -
-	$(Q)oc apply -f ./test/e2e/subscription.yaml
-
-	$(Q)operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1"
+ifeq ($(OPENSHIFT_VERSION),3)
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS3.yaml | oc apply -f -
+	$(Q)oc apply -f ./test/e2e/subscription_OS3.yaml
+endif
+ifeq ($(OPENSHIFT_VERSION),4)
+	$(eval DEPLOYED_NAMESPACE := openshift-operators)
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
+	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
+endif
+	$(Q)operator-sdk test local ./test/e2e/ --go-test-flags "-v -parallel=1 -timeout=15m"
 
 .PHONY: olm-integration-setup
 olm-integration-setup: olm-integration-cleanup
@@ -84,12 +91,15 @@ olm-integration-setup: olm-integration-cleanup
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
+ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)oc login -u system:admin
 	$(Q)-oc delete subscription my-devconsole -n operators
 	$(Q)-oc delete catalogsource my-catalog -n olm
-	# The following cleanup is required due to a potential bug in the test framework.
-	$(Q)-oc delete clusterroles.rbac.authorization.k8s.io "devconsole-operator"
-	$(Q)-oc delete clusterrolebindings.rbac.authorization.k8s.io "devconsole-operator"
+endif
+ifeq ($(OPENSHIFT_VERSION),4)
+	$(Q)-oc delete subscription my-devconsole -n openshift-operators
+	$(Q)-oc delete catalogsource my-catalog -n openshift-operator-lifecycle-manager
+endif
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
 #-------------------------------------------------------------------------------
@@ -117,7 +127,7 @@ build-image-local: e2e-setup
 
 .PHONY: test-e2e-local
 test-e2e-local: build-image-local
-	$(eval DEPLOYED_NAMESAPCE := $(TEST_NAMESPACE))
+	$(eval DEPLOYED_NAMESPACE := $(TEST_NAMESPACE))
 	$(Q)-oc login -u system:admin
 	$(Q)-oc project $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
@@ -143,5 +153,5 @@ else
 	$(Q)sed -i 's|$(TEST_NAMESPACE)|REPLACE_NAMESPACE|g' ./deploy/test/role_binding_test.yaml
 	$(Q)sed -i 's|172.30.1.1:5000/$(TEST_NAMESPACE)/devconsole-operator:latest|REPLACE_IMAGE|g' ./deploy/test/operator_test.yaml
 endif
-	$(Q)eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup
+	$(Q)eval $$(minishift docker-env) && operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup --go-test-flags "-v"
 endif

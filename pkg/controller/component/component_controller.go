@@ -11,7 +11,6 @@ import (
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
-	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -51,7 +50,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource Component
-	err = c.Watch(&source.Kind{Type: &componentsv1alpha1.Component{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &devconsoleapi.Component{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -82,7 +81,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	reqLogger.Info("Reconciling Component")
 
 	// Fetch the Component instance
-	instance := &componentsv1alpha1.Component{}
+	instance := &devconsoleapi.Component{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -152,7 +151,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		if instance.Spec.Exposed == true {
+		if instance.Spec.Exposed {
 			_, err = r.CreateRoute(instance)
 			if err != nil {
 				return reconcile.Result{}, err
@@ -165,7 +164,7 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 }
 
 // CreateRoute creates a route to expose the service if CRD's exposed field is true.
-func (r *ReconcileComponent) CreateRoute(cr *componentsv1alpha1.Component) (*routev1.Route, error) {
+func (r *ReconcileComponent) CreateRoute(cr *devconsoleapi.Component) (*routev1.Route, error) {
 	route := newRoute(cr)
 	if err := controllerutil.SetControllerReference(cr, route, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
@@ -190,7 +189,7 @@ func (r *ReconcileComponent) CreateRoute(cr *componentsv1alpha1.Component) (*rou
 }
 
 // CreateService creates a service resource to expose the component S2I deployed image.
-func (r *ReconcileComponent) CreateService(cr *componentsv1alpha1.Component) (*corev1.Service, error) {
+func (r *ReconcileComponent) CreateService(cr *devconsoleapi.Component) (*corev1.Service, error) {
 	port := int32(8080) // default port to 8080
 	if cr.Spec.Port != 0 {
 		port = cr.Spec.Port
@@ -223,7 +222,7 @@ func (r *ReconcileComponent) CreateService(cr *componentsv1alpha1.Component) (*c
 }
 
 // CreateDeploymentConfig creates a DeploymentConfig OpenShift resource used in S2I.
-func (r *ReconcileComponent) CreateDeploymentConfig(cr *componentsv1alpha1.Component, outputIS *imagev1.ImageStream) (*v1.DeploymentConfig, error) {
+func (r *ReconcileComponent) CreateDeploymentConfig(cr *devconsoleapi.Component, outputIS *imagev1.ImageStream) (*v1.DeploymentConfig, error) {
 	dc := newDeploymentConfig(cr, outputIS)
 	if err := controllerutil.SetControllerReference(cr, dc, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
@@ -248,7 +247,7 @@ func (r *ReconcileComponent) CreateDeploymentConfig(cr *componentsv1alpha1.Compo
 }
 
 // CreateBuildConfig creates a BuildConfig OpenShift resource used in S2I.
-func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component, builderIS *imagev1.ImageStream, gitSource *devconsoleapi.GitSource) (*buildv1.BuildConfig, error) {
+func (r *ReconcileComponent) CreateBuildConfig(cr *devconsoleapi.Component, builderIS *imagev1.ImageStream, gitSource *devconsoleapi.GitSource) (*buildv1.BuildConfig, error) {
 	bc := r.newBuildConfig(cr, builderIS, gitSource)
 	if err := controllerutil.SetControllerReference(cr, bc, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
@@ -273,7 +272,7 @@ func (r *ReconcileComponent) CreateBuildConfig(cr *componentsv1alpha1.Component,
 }
 
 // CreateOutputImageStream creates an empty image name that holds the source code of the component to build and deploy.
-func (r *ReconcileComponent) CreateOutputImageStream(cr *componentsv1alpha1.Component) (*imagev1.ImageStream, error) {
+func (r *ReconcileComponent) CreateOutputImageStream(cr *devconsoleapi.Component) (*imagev1.ImageStream, error) {
 	outputIS := newOutputImageStream(cr)
 	if err := controllerutil.SetControllerReference(cr, outputIS, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
@@ -300,7 +299,7 @@ func (r *ReconcileComponent) CreateOutputImageStream(cr *componentsv1alpha1.Comp
 
 // CreateBuilderImageStream either creates an builder image stream fetch from Docker hub or reuse an existing
 // image stream in OpenShift namespace.
-func (r *ReconcileComponent) CreateBuilderImageStream(instance *componentsv1alpha1.Component) (*imagev1.ImageStream, error) {
+func (r *ReconcileComponent) CreateBuilderImageStream(instance *devconsoleapi.Component) (*imagev1.ImageStream, error) {
 	var newImageForBuilder *imagev1.ImageStream
 	found := &imagev1.ImageStream{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.BuildType, Namespace: openshiftNamespace}, found)

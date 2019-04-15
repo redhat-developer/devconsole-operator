@@ -1,0 +1,7 @@
+apiVersion: devconsole.openshift.io/v1alpha1
+kind: GitSourceAnalysis
+metadata:
+  name: example-gitsource-analysis
+spec:
+  gitSourceRef:
+    name: example-gitsource
