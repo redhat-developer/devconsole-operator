@@ -14,7 +14,7 @@ YAML_FILES := $(shell find . -path ./vendor -prune -o -type f -regex ".*y[a]ml" 
 .PHONY: lint-yaml
 ## runs yamllint on all yaml files
 lint-yaml: ./vendor ${YAML_FILES}
-	$(Q)yamllint -c .yamllint $^
+	$(Q)yamllint -c .yamllint $(shell find . -path ./vendor -prune -o -type f -regex ".*y[a]ml" -print)
 
 .PHONY: lint-go-code
 ## Checks the code with golangci-lint
