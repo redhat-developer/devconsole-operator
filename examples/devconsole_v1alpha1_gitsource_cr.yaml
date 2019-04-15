@@ -9,6 +9,4 @@ spec:
   httpProxy: http://proxy.example.com
   httpsProxy: https://proxy.example.com
   noProxy: somedomain.com, otherdomain.com
-  secretRef:
-    name: mysecret
   flavor: github
