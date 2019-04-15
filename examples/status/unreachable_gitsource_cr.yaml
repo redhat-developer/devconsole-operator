@@ -14,4 +14,3 @@ status:
     error: unable to reach the URL
     state: failed
   state: initializing
-

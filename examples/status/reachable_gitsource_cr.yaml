@@ -13,4 +13,3 @@ status:
   connection:
     state: ok
   state: initializing
-

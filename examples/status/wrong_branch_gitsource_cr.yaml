@@ -15,4 +15,3 @@ status:
     error: unable to find the branch
     state: failed
   state: initializing
-
