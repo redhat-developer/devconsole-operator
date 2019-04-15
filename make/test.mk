@@ -9,7 +9,7 @@ export DEPLOYED_NAMESPACE:=
 
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
-test: ./vendor courier
+test: ./vendor
 	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v /test/e2e) -failfast
 
 .PHONY: test-coverage
@@ -70,7 +70,6 @@ ifeq ($(OPENSHIFT_VERSION),3)
 endif
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
 	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
-	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
 	$(Q)docker build -f Dockerfile.registry . -t $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG) \
 		--build-arg image=$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG) --build-arg version=$(devconsole_version)
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
@@ -98,7 +97,6 @@ ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)-oc delete catalogsource my-catalog -n olm
 endif
 ifeq ($(OPENSHIFT_VERSION),4)
-	@oc login -u $(OC_LOGIN_USERNAME) -p $(OC_LOGIN_PASSWORD)
 	$(Q)-oc delete subscription my-devconsole -n openshift-operators
 	$(Q)-oc delete catalogsource my-catalog -n openshift-operator-lifecycle-manager
 endif
