@@ -1,7 +1,8 @@
 package resource
 
-// NameGetter comment
-type NameGetter interface {
+// CRGetter is an interface which contains getter functions
+// to retrieve data from the custom resource.
+type CRGetter interface {
 	GetName() string
 	GetComponent() string
 	GetInstance() string
@@ -9,8 +10,8 @@ type NameGetter interface {
 	GetVersion() string
 }
 
-// GetLabelsForCR comment
-func GetLabelsForCR(cr NameGetter) map[string]string {
+// GetLabelsForCR retrieves labels for the custom resource
+func GetLabelsForCR(cr CRGetter) map[string]string {
 	labels := make(map[string]string)
 
 	name := cr.GetName()
