@@ -28,14 +28,11 @@ $(GOLANGCI_LINT_BIN):
 
 .PHONY: courier
 ## Validate manifests using operator-courier
-courier:
+courier: copy-crds
 	$(Q)python3 -m venv ./out/venv3
 	$(Q)./out/venv3/bin/pip install --upgrade setuptools
 	$(Q)./out/venv3/bin/pip install --upgrade pip
 	$(Q)./out/venv3/bin/pip install operator-courier==1.3.0
-	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
-	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
-	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
 	# flatten command is throwing error. suppress it for now
 	@-./out/venv3/bin/operator-courier flatten ./manifests/devconsole ./out/manifests-flat
 	$(Q)./out/venv3/bin/operator-courier verify ./out/manifests-flat

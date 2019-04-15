@@ -2,6 +2,7 @@ out/
 coverage.txt
 bin/
 tmp/
+manifests/devconsole/*/*_crd.yaml
 
 # Created by https://www.gitignore.io/api/go,vim,git,macos,linux,emacs,windows,eclipse,intellij+all,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=go,vim,git,macos,linux,emacs,windows,eclipse,intellij+all,visualstudiocode
