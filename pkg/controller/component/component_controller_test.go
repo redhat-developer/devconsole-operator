@@ -10,7 +10,6 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
-	compv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -53,12 +52,12 @@ func TestComponentController(t *testing.T) {
 	}
 
 	// A Component resource with metadata and spec.
-	cp := &compv1alpha1.Component{
+	cp := &devconsoleapi.Component{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      Name,
 			Namespace: Namespace,
 		},
-		Spec: compv1alpha1.ComponentSpec{
+		Spec: devconsoleapi.ComponentSpec{
 			BuildType:    "nodejs",
 			GitSourceRef: "my-git-source",
 		},
@@ -77,7 +76,7 @@ func TestComponentController(t *testing.T) {
 	}
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(compv1alpha1.SchemeGroupVersion, cp)
+	s.AddKnownTypes(devconsoleapi.SchemeGroupVersion, cp)
 	s.AddKnownTypes(devconsoleapi.SchemeGroupVersion, gs)
 	s.AddKnownTypes(corev1.SchemeGroupVersion, secret)
 
@@ -125,7 +124,7 @@ func TestComponentController(t *testing.T) {
 		//then
 		require.NoError(t, err, "reconcile is failing")
 
-		instance := &compv1alpha1.Component{}
+		instance := &devconsoleapi.Component{}
 		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
 		require.NoError(t, errGet, "component is not created")
 
@@ -176,12 +175,12 @@ func TestComponentController(t *testing.T) {
 		//given
 		// Objects to track in the fake client.
 		// A Component resource with metadata and spec.
-		cpOptional := &compv1alpha1.Component{
+		cpOptional := &devconsoleapi.Component{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      Name,
 				Namespace: Namespace,
 			},
-			Spec: compv1alpha1.ComponentSpec{
+			Spec: devconsoleapi.ComponentSpec{
 				BuildType:    "nodejs",
 				GitSourceRef: "my-git-source",
 				Port:         Port,
@@ -234,12 +233,12 @@ func TestComponentController(t *testing.T) {
 	t.Run("with ReconcileComponent CR containing all optional fields for service port and route should create resources", func(t *testing.T) {
 		//given
 		// Objects to track in the fake client.
-		cpOptional := &compv1alpha1.Component{
+		cpOptional := &devconsoleapi.Component{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      Name,
 				Namespace: Namespace,
 			},
-			Spec: compv1alpha1.ComponentSpec{
+			Spec: devconsoleapi.ComponentSpec{
 				BuildType:    "nodejs",
 				GitSourceRef: "https://somegit.con/myrepo",
 				Port:         65700, // not a valid port
@@ -303,7 +302,7 @@ func TestComponentController(t *testing.T) {
 		//then
 		require.NoError(t, err, "reconcile is failing")
 
-		instance := &compv1alpha1.Component{}
+		instance := &devconsoleapi.Component{}
 		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
 		require.NoError(t, errGet, "component is not created")
 
@@ -370,7 +369,7 @@ func TestComponentController(t *testing.T) {
 		//then
 		require.NoError(t, err, "reconcile is failing")
 
-		instance := &compv1alpha1.Component{}
+		instance := &devconsoleapi.Component{}
 		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
 		require.NoError(t, errGet, "component is not created")
 
@@ -414,7 +413,7 @@ func TestComponentController(t *testing.T) {
 		//then
 		require.NoError(t, err, "reconcile is failing")
 
-		instance := &compv1alpha1.Component{}
+		instance := &devconsoleapi.Component{}
 		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
 		require.NoError(t, errGet, "component is not created")
 
@@ -457,7 +456,7 @@ func TestComponentController(t *testing.T) {
 		//then
 		require.Error(t, err, "reconcile is failing")
 
-		instance := &compv1alpha1.Component{}
+		instance := &devconsoleapi.Component{}
 		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
 		require.NoError(t, errGet, "component is not created")
 
@@ -501,7 +500,7 @@ func TestComponentController(t *testing.T) {
 		//then
 		require.Error(t, err, "reconcile should fail since no gitsource reference provided")
 
-		instance := &compv1alpha1.Component{}
+		instance := &devconsoleapi.Component{}
 		errGet := r.client.Get(context.TODO(), req.NamespacedName, instance)
 		require.NoError(t, errGet, "component is not created")
 

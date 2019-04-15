@@ -10,7 +10,6 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
-	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
 	"github.com/redhat-developer/devconsole-operator/pkg/resource"
 
@@ -22,7 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func newImageStreamFromDocker(cr *componentsv1alpha1.Component) *imagev1.ImageStream {
+func newImageStreamFromDocker(cr *devconsoleapi.Component) *imagev1.ImageStream {
 	labels := resource.GetLabelsForCR(cr)
 
 	if _, ok := buildTypeImages[cr.Spec.BuildType]; !ok {
@@ -48,7 +47,7 @@ func newImageStreamFromDocker(cr *componentsv1alpha1.Component) *imagev1.ImageSt
 	}}
 }
 
-func newOutputImageStream(cr *componentsv1alpha1.Component) *imagev1.ImageStream {
+func newOutputImageStream(cr *devconsoleapi.Component) *imagev1.ImageStream {
 	labels := resource.GetLabelsForCR(cr)
 	return &imagev1.ImageStream{ObjectMeta: metav1.ObjectMeta{
 		Name:      cr.Name,
@@ -57,7 +56,7 @@ func newOutputImageStream(cr *componentsv1alpha1.Component) *imagev1.ImageStream
 	}}
 }
 
-func (r *ReconcileComponent) newBuildConfig(cr *componentsv1alpha1.Component, builder *imagev1.ImageStream, gitSource *devconsoleapi.GitSource) *buildv1.BuildConfig {
+func (r *ReconcileComponent) newBuildConfig(cr *devconsoleapi.Component, builder *imagev1.ImageStream, gitSource *devconsoleapi.GitSource) *buildv1.BuildConfig {
 	labels := resource.GetLabelsForCR(cr)
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{
@@ -120,7 +119,7 @@ func (r *ReconcileComponent) newBuildConfig(cr *componentsv1alpha1.Component, bu
 	}
 }
 
-func newDeploymentConfig(cr *componentsv1alpha1.Component, output *imagev1.ImageStream) *v1.DeploymentConfig {
+func newDeploymentConfig(cr *devconsoleapi.Component, output *imagev1.ImageStream) *v1.DeploymentConfig {
 	labels := resource.GetLabelsForCR(cr)
 	return &v1.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -173,7 +172,7 @@ func newDeploymentConfig(cr *componentsv1alpha1.Component, output *imagev1.Image
 	}
 }
 
-func newService(cr *componentsv1alpha1.Component, port int32) (*corev1.Service, error) {
+func newService(cr *devconsoleapi.Component, port int32) (*corev1.Service, error) {
 	labels := resource.GetLabelsForCR(cr)
 	if port > 65536 || port < 1024 {
 		return nil, fmt.Errorf("port %d is out of range [1024-65535]", port)
@@ -202,7 +201,7 @@ func newService(cr *componentsv1alpha1.Component, port int32) (*corev1.Service, 
 	return svc, nil
 }
 
-func newRoute(cr *componentsv1alpha1.Component) *routev1.Route {
+func newRoute(cr *devconsoleapi.Component) *routev1.Route {
 	labels := resource.GetLabelsForCR(cr)
 
 	route := &routev1.Route{

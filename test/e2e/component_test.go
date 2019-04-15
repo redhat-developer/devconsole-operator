@@ -13,7 +13,6 @@ import (
 	devconsole "github.com/redhat-developer/devconsole-api/pkg/apis"
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	"github.com/redhat-developer/devconsole-operator/pkg/apis"
-	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
 	"github.com/stretchr/testify/require"
 
@@ -39,7 +38,7 @@ func TestComponent(t *testing.T) {
 		},
 	}
 	// Register types with framework scheme
-	componentList := &componentsv1alpha1.ComponentList{
+	componentList := &devconsoleapi.ComponentList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
 			APIVersion: "devconsole.openshift.io/v1alpha1",
@@ -94,7 +93,7 @@ func TestComponent(t *testing.T) {
 	require.NoError(t, err, "failed to create custom resource of kind `GitSource`")
 
 	// create a Component custom resource
-	inputCR := &componentsv1alpha1.Component{
+	inputCR := &devconsoleapi.Component{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
 			APIVersion: "devconsole.openshift.io/v1alpha1",
@@ -103,7 +102,7 @@ func TestComponent(t *testing.T) {
 			Name:      "mycomp",
 			Namespace: namespace,
 		},
-		Spec: componentsv1alpha1.ComponentSpec{
+		Spec: devconsoleapi.ComponentSpec{
 			BuildType:    "nodejs",
 			GitSourceRef: "my-git-source",
 		},
@@ -113,7 +112,7 @@ func TestComponent(t *testing.T) {
 	require.NoError(t, err, "failed to create custom resource of kind `Component`")
 
 	t.Run("retrieve component and verify related resources are created", func(t *testing.T) {
-		outputCR := &componentsv1alpha1.Component{}
+		outputCR := &devconsoleapi.Component{}
 		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "mycomp", Namespace: namespace}, outputCR)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `Component`")
 		// FIXME: Uncomment these lines after upgrading dependency versions

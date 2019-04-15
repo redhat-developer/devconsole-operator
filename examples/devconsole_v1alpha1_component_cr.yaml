@@ -7,4 +7,3 @@ spec:
   gitSourceRef: "example-gitsource"
   port: 8080
   exposed: true
-
