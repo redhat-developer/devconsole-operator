@@ -1,41 +1,41 @@
 package resource
 
-// CRGetter is an interface which contains getter functions
+// CRLabelGetter is an interface which contains getter functions
 // to retrieve data from the custom resource.
-type CRGetter interface {
-	GetName() string
-	GetComponent() string
-	GetInstance() string
-	GetPartOf() string
-	GetVersion() string
+type CRLabelGetter interface {
+	GetLabelName() string
+	GetLabelComponent() string
+	GetLabelInstance() string
+	GetLabelPartOf() string
+	GetLabelVersion() string
 }
 
 // GetLabelsForCR retrieves labels for the custom resource
-func GetLabelsForCR(cr CRGetter) map[string]string {
+func GetLabelsForCR(cr CRLabelGetter) map[string]string {
 	labels := make(map[string]string)
 
-	name := cr.GetName()
+	name := cr.GetLabelName()
 	if name != "" {
 		labels["app.kubernetes.io/name"] = name
 		labels["app"] = name
 	}
 
-	component := cr.GetComponent()
+	component := cr.GetLabelComponent()
 	if component != "" {
 		labels["app.kubernetes.io/component"] = component
 	}
 
-	partOf := cr.GetPartOf()
+	partOf := cr.GetLabelPartOf()
 	if partOf != "" {
 		labels["app.kubernetes.io/part-of"] = partOf
 	}
 
-	instance := cr.GetInstance()
+	instance := cr.GetLabelInstance()
 	if instance != "" {
 		labels["app.kubernetes.io/instance"] = instance
 	}
 
-	version := cr.GetVersion()
+	version := cr.GetLabelVersion()
 	if version != "" {
 		labels["app.kubernetes.io/version"] = version
 	}
