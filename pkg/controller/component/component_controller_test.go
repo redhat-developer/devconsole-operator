@@ -63,6 +63,10 @@ func TestComponentController(t *testing.T) {
 				"app.kubernetes.io/instance":  "mycomp-1",
 				"app.kubernetes.io/version":   "1.0",
 			},
+			Annotations: map[string]string{
+				"app.openshift.io/vcs-uri": "https://github.com/test/example",
+				"app.openshift.io/vcs-ref": "master",
+			},
 		},
 		Spec: devconsoleapi.ComponentSpec{
 			BuildType:    "nodejs",
@@ -155,6 +159,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "latest", isBuilder.Spec.Tags[0].Name, "imagestream builder should take latest version")
 		require.Equal(t, "DockerImage", isBuilder.Spec.Tags[0].From.Kind, "imagestream builder should be taken from docker when not found in cluster")
 		require.Equal(t, "nodeshift/centos7-s2i-nodejs:10.x", isBuilder.Spec.Tags[0].From.Name, "imagestream builder should be taken from nodeshift/centos7-s2i-nodejs:10.x")
+		require.Equal(t, 2, len(isBuilder.Annotations), "imagestream builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", isBuilder.Annotations["app.openshift.io/vcs-uri"], "imagestream builder should have a annotation with vsc-uri of CR")
+		require.Equal(t, "master", isBuilder.Annotations["app.openshift.io/vcs-ref"], "imagestream builder should have an annotation with vcs-ref of CR")
 
 		bc := &buildv1.BuildConfig{}
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
@@ -170,6 +177,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "backend", bc.ObjectMeta.Labels["app.kubernetes.io/component"], "bc builder should have a label with component of CR")
 		require.Equal(t, "mycomp-1", bc.ObjectMeta.Labels["app.kubernetes.io/instance"], "bc builder should have a label with instance of CR")
 		require.Equal(t, "1.0", bc.ObjectMeta.Labels["app.kubernetes.io/version"], "bc builder should have a label with version of CR")
+		require.Equal(t, 2, len(bc.Annotations), "bc builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", bc.ObjectMeta.Annotations["app.openshift.io/vcs-uri"], "bc builder should have an annotation with vcs-uri of CR")
+		require.Equal(t, "master", bc.ObjectMeta.Annotations["app.openshift.io/vcs-ref"], "bc builder should have an annotation with vcs-ref of CR")
 
 		dc := &appsv1.DeploymentConfig{}
 		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
@@ -192,6 +202,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "backend", dc.Spec.Selector["app.kubernetes.io/component"], "dc builder should have a selector with component of CR")
 		require.Equal(t, "mycomp-1", dc.Spec.Selector["app.kubernetes.io/instance"], "dc builder should have a selector with instance of CR")
 		require.Equal(t, "1.0", dc.Spec.Selector["app.kubernetes.io/version"], "dc builder should have a selector with version of CR")
+		require.Equal(t, 2, len(dc.Annotations), "dc builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", dc.ObjectMeta.Annotations["app.openshift.io/vcs-uri"], "dc builder should have an annotation with vcs-uri of CR")
+		require.Equal(t, "master", dc.ObjectMeta.Annotations["app.openshift.io/vcs-ref"], "dc builder should have an annotation with vcs-ref of CR")
 
 		svc := &corev1.Service{}
 		errGetSvc := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, svc)
@@ -359,6 +372,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "backend", bc.ObjectMeta.Labels["app.kubernetes.io/component"], "bc builder should have a label with component of CR")
 		require.Equal(t, "mycomp-1", bc.ObjectMeta.Labels["app.kubernetes.io/instance"], "bc builder should have a label with instance of CR")
 		require.Equal(t, "1.0", bc.ObjectMeta.Labels["app.kubernetes.io/version"], "bc builder should have a label with version of CR")
+		require.Equal(t, 2, len(bc.Annotations), "bc builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", bc.ObjectMeta.Annotations["app.openshift.io/vcs-uri"], "bc builder should have an annotation with vcs-uri of CR")
+		require.Equal(t, "master", bc.ObjectMeta.Annotations["app.openshift.io/vcs-ref"], "bc builder should have an annotation with vcs-ref of CR")
 
 		dc := &appsv1.DeploymentConfig{}
 		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
@@ -381,6 +397,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "backend", dc.Spec.Selector["app.kubernetes.io/component"], "dc builder should have a selector with component of CR")
 		require.Equal(t, "mycomp-1", dc.Spec.Selector["app.kubernetes.io/instance"], "dc builder should have a selector with instance of CR")
 		require.Equal(t, "1.0", dc.Spec.Selector["app.kubernetes.io/version"], "dc builder should have a selector with version of CR")
+		require.Equal(t, 2, len(dc.Annotations), "dc builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", dc.ObjectMeta.Annotations["app.openshift.io/vcs-uri"], "dc builder should have an annotation with vcs-uri of CR")
+		require.Equal(t, "master", dc.ObjectMeta.Annotations["app.openshift.io/vcs-ref"], "dc builder should have an annotation with vcs-ref of CR")
 	})
 
 	t.Run("with secret defined in the GitSource", func(t *testing.T) {
