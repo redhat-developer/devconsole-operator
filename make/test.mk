@@ -32,33 +32,22 @@ get-test-namespace: ./out/test-namespace
 	@echo -n "test-namespace-$(shell uuidgen | tr '[:upper:]' '[:lower:]')" > ./out/test-namespace
 
 .PHONY: test-e2e
-## Runs the e2e tests without coverage
-test-e2e: build build-image e2e-setup
+## Runs the e2e tests locally
+test-e2e: e2e-setup
 	$(info Running E2E test: $@)
-	$(Q)go test ./test/e2e/... \
-		-parallel=1 \
-		${V_FLAG} \
-		-root=$(PWD) \
-		-kubeconfig=$(HOME)/.kube/config \
-		-globalMan ./deploy/test/global-manifests.yaml \
-		-namespacedMan ./deploy/test/namespace-manifests.yaml \
-		-singleNamespace
+ifeq ($(OPENSHIFT_VERSION),3)
+	$(Q)oc login -u system:admin
+endif
+	$(Q)operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --up-local --go-test-flags "-v -timeout=15m"
+
 
 .PHONY: e2e-setup
-## TODO: TBD
 e2e-setup: e2e-cleanup 
-	$(Q)-oc new-project $(TEST_NAMESPACE)
+	$(Q)oc new-project $(TEST_NAMESPACE)
 
 .PHONY: e2e-cleanup
-## TODO: TBD
 e2e-cleanup: get-test-namespace
-	$(Q)-oc login -u system:admin
-	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
-	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
-	$(Q)-oc delete -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
-	$(Q)-oc delete -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
-	$(Q)-oc delete -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
-	$(Q)-oc delete -f ./deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
+	$(Q)-oc delete project $(TEST_NAMESPACE) --timeout=10s --wait
 
 .PHONY: test-olm-integration
 ## Runs the OLM integration tests without coverage
