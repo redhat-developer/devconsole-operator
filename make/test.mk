@@ -106,9 +106,9 @@ endif
 # e2e test in dev mode
 #-------------------------------------------------------------------------------
 
-.PHONY: e2e-cleanup
+.PHONY: e2e-cleanup-local
 ## Create a namespace used in e2e tests
-e2e-cleanup: get-test-namespace
+e2e-cleanup-local: get-test-namespace
 	$(Q)-oc login -u system:admin
 	$(Q)-oc delete -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
 	$(Q)-oc delete -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
@@ -116,13 +116,13 @@ e2e-cleanup: get-test-namespace
 	$(Q)-oc delete -f ./deploy/test/role_binding_test.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc delete -f ./deploy/test/operator_test.yaml --namespace $(TEST_NAMESPACE)
 
-.PHONY: e2e-setup
+.PHONY: e2e-setup-local
 ## Create a namespace used in e2e tests
-e2e-setup: e2e-cleanup
+e2e-setup-local: e2e-cleanup-local
 	$(Q)-oc new-project $(TEST_NAMESPACE)
 
 .PHONY: build-image-local
-build-image-local: e2e-setup
+build-image-local: e2e-setup-local
 	eval $$(minishift docker-env) && operator-sdk build $(shell minishift openshift registry)/$(TEST_NAMESPACE)/devconsole-operator
 
 .PHONY: test-e2e-local
