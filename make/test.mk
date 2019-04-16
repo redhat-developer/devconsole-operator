@@ -44,11 +44,11 @@ endif
 
 .PHONY: e2e-setup
 e2e-setup: e2e-cleanup 
-	$(Q)-oc new-project $(TEST_NAMESPACE)
+	$(Q)oc new-project $(TEST_NAMESPACE)
 
 .PHONY: e2e-cleanup
 e2e-cleanup: get-test-namespace
-	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
+	$(Q)-oc delete project $(TEST_NAMESPACE) --timeout=10s --wait
 
 .PHONY: test-olm-integration
 ## Runs the OLM integration tests without coverage
