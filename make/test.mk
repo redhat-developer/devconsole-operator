@@ -36,6 +36,9 @@ get-test-namespace: ./out/test-namespace
 test-e2e: e2e-setup
 	$(info Running E2E test: $@)
 	$(eval DEPLOYED_NAMESPACE := $(TEST_NAMESPACE))
+ifeq ($(OPENSHIFT_VERSION),3)
+	$(Q)oc login -u system:admin
+endif
 	$(Q)operator-sdk test local ./test/e2e --namespace $(DEPLOYED_NAMESPACE) --up-local --go-test-flags "-v -timeout=15m"
 
 
