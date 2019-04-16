@@ -1,0 +1,16 @@
+#
+# example where repository is unreachable (is either private or url is wrong)
+#
+apiVersion: devconsole.openshift.io/v1alpha1
+kind: GitSource
+metadata:
+  name: example-gitsource
+spec:
+  url: https://github.com/redhat-developer/devconsole-operator
+  ref: master
+  flavor: github
+status:
+  connection:
+    error: unable to reach the URL
+    state: failed
+  state: initializing

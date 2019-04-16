@@ -1,0 +1,17 @@
+#
+# example where repository is reachable (is public)
+# but the name of the branch cannot be found
+#
+apiVersion: devconsole.openshift.io/v1alpha1
+kind: GitSource
+metadata:
+  name: example-gitsource
+spec:
+  url: https://github.com/redhat-developer/devconsole-operator
+  ref: unexisting
+  flavor: github
+status:
+  connection:
+    error: unable to find the branch
+    state: failed
+  state: initializing
