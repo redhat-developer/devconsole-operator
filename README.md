@@ -2,6 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/redhat-developer/devconsole-operator)](https://goreportcard.com/report/github.com/redhat-developer/devconsole-operator)
 [![Docker Repository on Quay](https://quay.io/repository/redhat-developer/devconsole-operator/status "Docker Repository on Quay")](https://quay.io/repository/redhat-developer/devconsole-operator)
+[![Docker Repository on Quay](https://quay.io/repository/redhat-developer/operator-registry/status "Docker Repository on Quay")](https://quay.io/repository/redhat-developer/operator-registry)
 
 DevConsole operator enables a developer-focused view in OpenShift 4.
 It provides a view switcher to transition between the traditional
