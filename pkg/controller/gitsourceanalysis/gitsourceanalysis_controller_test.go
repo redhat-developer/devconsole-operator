@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	pathToTestDir  = "../../test"
+	pathToTestDir  = "../../../vendor/github.com/redhat-developer/devconsole-git/pkg/test"
 	repoIdentifier = "some-org/some-repo"
 	repoGitHubURL  = "https://github.com/" + repoIdentifier
 )

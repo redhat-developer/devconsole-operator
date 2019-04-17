@@ -663,7 +663,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2e28af6dfc8a774763caf25119fc7f286b2feae3f53efd991bb957140efd6239"
+  digest = "1:8cb541044846389e2acb1ed0f5504fd61be6b7d3efec1083b2b3348d634c652a"
   name = "github.com/redhat-developer/devconsole-git"
   packages = [
     "pkg/git",
@@ -677,7 +677,7 @@
     "pkg/log",
     "pkg/test",
   ]
-  pruneopts = "NT"
+  pruneopts = "T"
   revision = "e093f25f2b0082f11a3907c075dae960a452c3d1"
 
 [[projects]]
