@@ -33,7 +33,7 @@ get-test-namespace: ./out/test-namespace
 
 .PHONY: test-e2e
 ## Runs the e2e tests locally
-test-e2e: e2e-setup
+test-e2e: ./vendor e2e-setup
 	$(info Running E2E test: $@)
 ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)oc login -u system:admin
