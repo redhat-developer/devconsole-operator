@@ -142,9 +142,10 @@ func newDeploymentConfig(cr *devconsoleapi.Component, output *imagev1.ImageStrea
 			Selector: labels,
 			Template: &corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      cr.Name,
-					Namespace: cr.Namespace,
-					Labels:    labels,
+					Name:        cr.Name,
+					Namespace:   cr.Namespace,
+					Labels:      labels,
+					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
