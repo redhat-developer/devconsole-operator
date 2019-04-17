@@ -1525,6 +1525,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/go-logr/logr",
+    "github.com/golang/protobuf/proto",
+    "github.com/go-openapi/spec",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
     "github.com/openshift/api/image/v1",
