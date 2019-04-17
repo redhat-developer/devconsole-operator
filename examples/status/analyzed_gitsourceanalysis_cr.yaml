@@ -1,0 +1,23 @@
+#
+# example where repository is successfully analyzed
+#
+apiVersion: devconsole.openshift.io/v1alpha1
+kind: GitSourceAnalysis
+metadata:
+  name: example-gitsource-analysis
+spec:
+  spec:
+    gitSourceRef:
+      name: example-gitsource
+status:
+  analyzed: true
+  buildEnvStatistics:
+    detectedBuildTypes:
+      detectedFiles:
+        Gopkg.toml
+      language: go
+      name: Golang
+    sortedLanguages:
+      Go
+      Makefile
+      Dockerfile

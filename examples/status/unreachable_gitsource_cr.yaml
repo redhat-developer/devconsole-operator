@@ -12,5 +12,6 @@ spec:
 status:
   connection:
     error: unable to reach the URL
+    reason: RepoNotReachable
     state: failed
   state: initializing

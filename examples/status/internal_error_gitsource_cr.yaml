@@ -1,6 +1,5 @@
 #
-# example where repository is reachable (is public)
-# but the name of the branch cannot be found
+# example with internal error while fetching secret object
 #
 apiVersion: devconsole.openshift.io/v1alpha1
 kind: GitSource
@@ -12,7 +11,7 @@ spec:
   flavor: github
 status:
   connection:
-    error: unable to find the branch
-    reason: BranchNotFound
+    error: failed to fetch the secret object
+    reason: InternalFailure
     state: failed
   state: initializing

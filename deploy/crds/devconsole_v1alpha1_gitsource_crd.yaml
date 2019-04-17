@@ -86,6 +86,10 @@ spec:
                   description: Error has the error message if the attempt to
                     reach a GitSource failed
                   type: string
+                reason:
+                  description: Reason is a short predefined string representing
+                    a reason for the connection failure
+                  type: string
               required:
                 - state
   version: v1alpha1
