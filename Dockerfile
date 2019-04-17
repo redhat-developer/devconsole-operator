@@ -67,9 +67,11 @@ RUN make VERBOSE=${VERBOSE} test
 
 #--------------------------------------------------------------------
 
-FROM centos:7 as deploy
+FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:latest
+LABEL com.redhat.delivery.appregistry=true
+
 LABEL maintainer "Devtools <devtools@redhat.com>"
-LABEL author "Konrad Kleine <kkleine@redhat.com>"
+LABEL author "Devtools <devtools@redhat.com>"
 ENV LANG=en_US.utf8
 
 ENV GOPATH=/tmp/go
