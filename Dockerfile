@@ -77,13 +77,8 @@ ENV LANG=en_US.utf8
 ENV GOPATH=/tmp/go
 ARG GO_PACKAGE_PATH=github.com/redhat-developer/devconsole-operator
 
-# Create a non-root user and a group with the same name: "devconsole-operator"
-ENV OPERATOR_USER_NAME=devconsole-operator
-RUN useradd --no-create-home -s /bin/bash ${OPERATOR_USER_NAME}
-
 COPY --from=builder ${GOPATH}/src/${GO_PACKAGE_PATH}/out/operator /usr/local/bin/devconsole-operator
 
-# From here onwards, any RUN, CMD, or ENTRYPOINT will be run under the following user
-USER ${OPERATOR_USER_NAME}
+USER 10001
 
 ENTRYPOINT [ "/usr/local/bin/devconsole-operator" ]
