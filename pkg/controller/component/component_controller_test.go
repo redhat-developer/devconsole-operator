@@ -81,6 +81,7 @@ func TestComponentController(t *testing.T) {
 			"password": []byte("password"),
 		},
 	}
+
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
 	s.AddKnownTypes(devconsoleapi.SchemeGroupVersion, cp)
