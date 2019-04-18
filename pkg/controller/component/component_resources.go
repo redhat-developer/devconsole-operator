@@ -1,7 +1,6 @@
 package component
 
 import (
-	"context"
 	"fmt"
 
 	v1 "github.com/openshift/api/apps/v1"
@@ -17,8 +16,6 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func newImageStreamFromDocker(cr *devconsoleapi.Component) *imagev1.ImageStream {
@@ -56,7 +53,7 @@ func newOutputImageStream(cr *devconsoleapi.Component) *imagev1.ImageStream {
 	}}
 }
 
-func (r *ReconcileComponent) newBuildConfig(cr *devconsoleapi.Component, builder *imagev1.ImageStream, gitSource *devconsoleapi.GitSource) *buildv1.BuildConfig {
+func newBuildConfig(cr *devconsoleapi.Component, builder *imagev1.ImageStream, gitSource *devconsoleapi.GitSource, secret *corev1.Secret) *buildv1.BuildConfig {
 	labels := resource.GetLabelsForCR(cr)
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{
@@ -65,26 +62,12 @@ func (r *ReconcileComponent) newBuildConfig(cr *devconsoleapi.Component, builder
 		},
 		Type: buildv1.BuildSourceGit,
 	}
-	incremental := true
-
-	// Check if secrets provided exist or not
-	if gitSource.Spec.SecretRef != nil && gitSource.Spec.SecretRef.Name != "" {
-		u := corev1.Secret{}
-
-		err := r.client.Get(context.TODO(), client.ObjectKey{
-			Namespace: cr.Namespace,
-			Name:      gitSource.Spec.SecretRef.Name,
-		}, &u)
-		if err != nil {
-			log.Error(err, fmt.Sprintf("Failed to get provided secret please check if secrets %s present or not", gitSource.Spec.SecretRef.Name))
-		} else {
-			// Since error is nil, moving ahead to add secret reference in buildConfig
-			buildSource.SourceSecret = &corev1.LocalObjectReference{
-				Name: gitSource.Spec.SecretRef.Name,
-			}
+	if secret != nil {
+		buildSource.SourceSecret = &corev1.LocalObjectReference{
+			Name: secret.Name,
 		}
 	}
-
+	incremental := true
 	return &buildv1.BuildConfig{
 		ObjectMeta: metav1.ObjectMeta{Name: cr.Name, Namespace: cr.Namespace, Labels: labels},
 		Spec: buildv1.BuildConfigSpec{
@@ -221,4 +204,14 @@ func newRoute(cr *devconsoleapi.Component) *routev1.Route {
 		},
 	}
 	return route
+}
+
+func newSecret(cr *devconsoleapi.Component, gitSource *devconsoleapi.GitSource) *corev1.Secret {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      gitSource.Spec.SecretRef.Name,
+			Namespace: cr.Namespace,
+		},
+	}
+	return secret
 }
