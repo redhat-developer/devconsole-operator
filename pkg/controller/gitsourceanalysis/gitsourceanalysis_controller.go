@@ -99,7 +99,7 @@ func (r *ReconcileGitSourceAnalysis) Reconcile(request reconcile.Request) (recon
 
 func analyze(logger logr.Logger, client client.Client, gsAnalysis *v1alpha1.GitSourceAnalysis, namespace string) (reconcile.Result, error) {
 	gitSource := &v1alpha1.GitSource{}
-	err := client.Get(context.TODO(), newNsdName(namespace, gsAnalysis.Spec.GitSourceRef.Name), gitSource)
+	err := client.Get(context.TODO(), newNamespacedName(namespace, gsAnalysis.Spec.GitSourceRef.Name), gitSource)
 	if err != nil {
 		gsAnalysis.Status.Error = "Failed to fetch the input source"
 		logger.WithValues("git-source", gsAnalysis.Spec.GitSourceRef).
@@ -150,6 +150,6 @@ func analyzeGitSource(logger *log.GitSourceLogger, client client.Client, gitSour
 	}
 }
 
-func newNsdName(namespace, name string) types.NamespacedName {
+func newNamespacedName(namespace, name string) types.NamespacedName {
 	return types.NamespacedName{Namespace: namespace, Name: name}
 }

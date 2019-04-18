@@ -232,7 +232,7 @@ func TestReconcileGitSourceAnalysisFromLocalRepoWithSshKeyWithPassphrase(t *test
 
 func assertGitSourceAnalysis(t *testing.T, client client.Client, errorMsg string, langs test.SliceOfStrings, buildTypes ...typeWithFiles) {
 	gitSourceAnalysis := &v1alpha1.GitSourceAnalysis{}
-	err := client.Get(context.TODO(), newNsdName(test.Namespace, test.GitSourceAnalysisName), gitSourceAnalysis)
+	err := client.Get(context.TODO(), newNamespacedName(test.Namespace, test.GitSourceAnalysisName), gitSourceAnalysis)
 	require.NoError(t, err)
 
 	if errorMsg != "" {
