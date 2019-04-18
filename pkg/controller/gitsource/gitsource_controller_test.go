@@ -53,7 +53,7 @@ func TestReconcileGitSourceConnectionFail(t *testing.T) {
 
 	//then
 	require.NoError(t, err)
-	assertGitSource(t, client, v1alpha1.Ready, v1alpha1.Failed, "unable to reach the repo")
+	assertGitSource(t, client, v1alpha1.Ready, v1alpha1.Failed, v1alpha1.RepoNotReachable)
 }
 
 func TestReconcileGitSourceConnectionSkip(t *testing.T) {
@@ -61,6 +61,7 @@ func TestReconcileGitSourceConnectionSkip(t *testing.T) {
 	gs := test.NewGitSource(test.WithURL(repoGitHubURL))
 	gs.Status.Connection.State = v1alpha1.OK
 	gs.Status.Connection.Error = "my cool error"
+	gs.Status.Connection.Reason = v1alpha1.ConnectionInternalFailure
 	reconciler, request, client := PrepareClient(test.GitSourceName,
 		test.RegisterGvkObject(v1alpha1.SchemeGroupVersion, gs))
 
@@ -69,7 +70,7 @@ func TestReconcileGitSourceConnectionSkip(t *testing.T) {
 
 	//then
 	require.NoError(t, err)
-	assertGitSource(t, client, "", v1alpha1.OK, "my cool error")
+	assertGitSource(t, client, "", v1alpha1.OK, v1alpha1.ConnectionInternalFailure)
 }
 
 func PrepareClient(name string, gvkObjects ...test.GvkObject) (*ReconcileGitSource, reconcile.Request, client.Client) {
@@ -83,14 +84,17 @@ func PrepareClient(name string, gvkObjects ...test.GvkObject) (*ReconcileGitSour
 	return r, req, cl
 }
 
-func assertGitSource(t *testing.T, client client.Client, gsState v1alpha1.State, state v1alpha1.ConnectionState, errorMsg string) {
+func assertGitSource(t *testing.T, client client.Client, gsState v1alpha1.State, state v1alpha1.ConnectionState,
+	reason v1alpha1.ConnectionFailureReason) {
+
 	gitSource := &v1alpha1.GitSource{}
 	err := client.Get(context.TODO(), newNsdName(test.Namespace, test.GitSourceName), gitSource)
 	require.NoError(t, err)
 
 	require.NotNil(t, gitSource.Status.Connection)
-	if errorMsg != "" {
-		assert.Contains(t, gitSource.Status.Connection.Error, errorMsg)
+	if reason != "" {
+		assert.Contains(t, gitSource.Status.Connection.Reason, reason)
+		assert.NotEmpty(t, gitSource.Status.Connection.Error)
 	} else {
 		assert.Empty(t, gitSource.Status.Connection.Error)
 	}

@@ -3,9 +3,7 @@ package gitsource
 import (
 	"context"
 	"github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
-	"github.com/redhat-developer/devconsole-git/pkg/git/repository"
 	gslog "github.com/redhat-developer/devconsole-git/pkg/log"
-	gittransport "gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -17,10 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var (
-	log         = logf.Log.WithName("controller_gitsource")
-	unableReach = NewConnection("Unable to reach the URL", v1alpha1.Failed)
-)
+var log = logf.Log.WithName("controller_gitsource")
 
 // Add creates a new GitSource Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -85,9 +80,9 @@ func (r *ReconcileGitSource) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 	gitSourceLogger := gslog.LogWithGSValues(reqLogger, gitSource)
 
-	shouldUpdate := updateStatus(gitSourceLogger, gitSource)
+	isDirty := updateStatus(gitSourceLogger, gitSource)
 
-	if shouldUpdate {
+	if isDirty {
 		err = r.client.Update(context.TODO(), gitSource)
 		if err != nil {
 			gitSourceLogger.Error(err, "Error updating GitSource object")
@@ -104,7 +99,8 @@ func (r *ReconcileGitSource) Reconcile(request reconcile.Request) (reconcile.Res
 	return reconcile.Result{}, nil
 }
 
-func updateStatus(log *gslog.GitSourceLogger, gitSource *v1alpha1.GitSource) (isUpdated bool) {
+func updateStatus(log *gslog.GitSourceLogger, gitSource *v1alpha1.GitSource) (isDirty bool) {
+
 	if gitSource.Status.Connection.State != "" {
 		return false
 	}
@@ -112,26 +108,31 @@ func updateStatus(log *gslog.GitSourceLogger, gitSource *v1alpha1.GitSource) (is
 		gitSource.Status.State = v1alpha1.Initializing
 	}
 
-	endpoint, err := gittransport.NewEndpoint(gitSource.Spec.URL)
-	if err != nil {
-		gitSource.Status.Connection = NewConnection("unable to parse the URL: "+err.Error(), v1alpha1.Failed)
-	} else {
-		if gitSource.Spec.SecretRef == nil {
-			ok, err := repository.IsReachableWithBranch(log, gitSource.Spec.Ref, endpoint)
-
-			if ok {
-				gitSource.Status.Connection = NewConnection("", v1alpha1.OK)
-			} else {
-				gitSource.Status.Connection = NewConnection(err.Error(), v1alpha1.Failed)
-			}
-		}
-	}
+	gitSource.Status.Connection = getConnectionStatus(log, gitSource)
 	return true
 }
 
-func NewConnection(errorMsg string, state v1alpha1.ConnectionState) v1alpha1.Connection {
+func getConnectionStatus(log *gslog.GitSourceLogger, gitSource *v1alpha1.GitSource) v1alpha1.Connection {
+	if gitSource.Spec.SecretRef == nil {
+		if validationError := connection.ValidateGitSource(log, gitSource); validationError != nil {
+			return NewFailedConnection(validationError)
+		}
+	}
+	return NewConnection("", "", v1alpha1.OK)
+}
+
+func NewFailedConnection(validationError *connection.ValidationError) v1alpha1.Connection {
 	return v1alpha1.Connection{
-		Error: errorMsg,
-		State: state,
+		Error:  validationError.Message,
+		State:  v1alpha1.Failed,
+		Reason: validationError.Reason,
+	}
+}
+
+func NewConnection(errorMsg string, reason v1alpha1.ConnectionFailureReason, state v1alpha1.ConnectionState) v1alpha1.Connection {
+	return v1alpha1.Connection{
+		Error:  errorMsg,
+		State:  state,
+		Reason: reason,
 	}
 }
