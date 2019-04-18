@@ -102,8 +102,14 @@ func newBuildConfig(cr *devconsoleapi.Component, builder *imagev1.ImageStream, g
 	}
 }
 
-func newDeploymentConfig(cr *devconsoleapi.Component, output *imagev1.ImageStream) *v1.DeploymentConfig {
+func newDeploymentConfig(cr *devconsoleapi.Component, output *imagev1.ImageStream, containerPorts []corev1.ContainerPort) *v1.DeploymentConfig {
 	labels := resource.GetLabelsForCR(cr)
+	if containerPorts == nil {
+		containerPorts = []corev1.ContainerPort{{
+			ContainerPort: 8080,
+			Protocol:      corev1.ProtocolTCP,
+		}}
+	}
 	return &v1.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Name,
@@ -126,11 +132,7 @@ func newDeploymentConfig(cr *devconsoleapi.Component, output *imagev1.ImageStrea
 					Containers: []corev1.Container{{
 						Name:  output.Name,
 						Image: output.Name + ":latest",
-						Ports: []corev1.ContainerPort{{ // do we plan to have several ports exposed?
-							ContainerPort: 8080,
-							Protocol:      corev1.ProtocolTCP,
-						},
-						},
+						Ports: containerPorts,
 					},
 					},
 				},

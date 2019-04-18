@@ -32,6 +32,7 @@ rules:
   - image.openshift.io
   resources:
   - imagestreams
+  - imagestreamimages
   verbs:
   - create
   - get

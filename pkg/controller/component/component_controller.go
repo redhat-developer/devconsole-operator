@@ -4,10 +4,12 @@ import (
 	"context"
 	e "errors"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	imageclientset "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -35,7 +37,9 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileComponent{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	config := mgr.GetConfig()
+	cl, _ := imageclientset.NewForConfig(config)
+	return &ReconcileComponent{client: mgr.GetClient(), scheme: mgr.GetScheme(), imageClient: cl}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -88,8 +92,9 @@ var (
 type ReconcileComponent struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client      client.Client
+	imageClient imageclientset.ImageV1Interface
+	scheme      *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a Component object and makes changes based on the state read
@@ -159,11 +164,15 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	_, err = r.CreateDeploymentConfig(instance, outputIS)
+	ports, err := r.GetExposedPorts(instance, "latest", builderIS)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	_, err = r.CreateService(instance)
+	_, err = r.CreateDeploymentConfig(instance, outputIS, ports)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	_, err = r.CreateService(instance, ports)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -293,6 +302,48 @@ func (r *ReconcileComponent) GetGitSource(cr *devconsoleapi.Component) (*devcons
 	return gitSource, nil
 }
 
+// GetExposedPorts returns either the provided port in the component's spec or search for the builder image for exposed port.
+func (r *ReconcileComponent) GetExposedPorts(cr *devconsoleapi.Component, imageTag string, is *imagev1.ImageStream) ([]corev1.ContainerPort, error) {
+	if cr.Spec.Port != 0 { // port in component's spec overrides exposed port
+		containerPorts := []corev1.ContainerPort{{
+			ContainerPort: cr.Spec.Port,
+			Protocol:      corev1.ProtocolTCP,
+		}}
+		return containerPorts, nil
+	}
+	// otherwise extract port from builder docker image.
+	isi, err := r.GetBuilderImageStreamImage(cr, "latest", is)
+	if err != nil {
+		return nil, err
+	}
+	ports, err := getExposedPortsFromImageStreamImage(isi)
+	if err != nil {
+		return nil, err
+	}
+	return ports, nil
+}
+
+// GetBuilderImageStreamImage retrieves exposed port from builder's imagestreamimage.
+func (r *ReconcileComponent) GetBuilderImageStreamImage(cr *devconsoleapi.Component, imageTag string, is *imagev1.ImageStream) (*imagev1.ImageStreamImage, error) {
+	for _, tag := range is.Status.Tags {
+		// look for matching tag
+		if tag.Tag == imageTag {
+			if len(tag.Items) > 0 {
+				tagDigest := tag.Items[0].Image
+				imageStreamImageName := fmt.Sprintf("%s@%s", is.Name, tagDigest)
+				imageStreamImage, err := r.imageClient.ImageStreamImages(is.Namespace).Get(imageStreamImageName, metav1.GetOptions{})
+				if err != nil {
+					return nil, err
+				}
+				log.Info(fmt.Sprintf("** Found Builder ImageStreamImage %s **", imageStreamImageName))
+				return imageStreamImage, nil
+			}
+			return nil, fmt.Errorf("unable to find tag %s for image %s", imageTag, is.Name)
+		}
+	}
+	return nil, fmt.Errorf("unable to find tag %s for image %s", imageTag, is.Name)
+}
+
 // CreateRoute creates a route to expose the service if CRD's exposed field is true.
 func (r *ReconcileComponent) CreateRoute(cr *devconsoleapi.Component) (*routev1.Route, error) {
 	route := newRoute(cr)
@@ -319,11 +370,8 @@ func (r *ReconcileComponent) CreateRoute(cr *devconsoleapi.Component) (*routev1.
 }
 
 // CreateService creates a service resource to expose the component S2I deployed image.
-func (r *ReconcileComponent) CreateService(cr *devconsoleapi.Component) (*corev1.Service, error) {
-	port := int32(8080) // default port to 8080
-	if cr.Spec.Port != 0 {
-		port = cr.Spec.Port
-	}
+func (r *ReconcileComponent) CreateService(cr *devconsoleapi.Component, containerPorts []corev1.ContainerPort) (*corev1.Service, error) {
+	var port = containerPorts[0].ContainerPort
 	svc, err := newService(cr, port)
 	if err != nil {
 		log.Info("** CreateService: Port is not valid")
@@ -352,8 +400,8 @@ func (r *ReconcileComponent) CreateService(cr *devconsoleapi.Component) (*corev1
 }
 
 // CreateDeploymentConfig creates a DeploymentConfig OpenShift resource used in S2I.
-func (r *ReconcileComponent) CreateDeploymentConfig(cr *devconsoleapi.Component, outputIS *imagev1.ImageStream) (*v1.DeploymentConfig, error) {
-	dc := newDeploymentConfig(cr, outputIS)
+func (r *ReconcileComponent) CreateDeploymentConfig(cr *devconsoleapi.Component, outputIS *imagev1.ImageStream, containerPorts []corev1.ContainerPort) (*v1.DeploymentConfig, error) {
+	dc := newDeploymentConfig(cr, outputIS, containerPorts)
 	if err := controllerutil.SetControllerReference(cr, dc, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
 		return nil, err
@@ -369,7 +417,6 @@ func (r *ReconcileComponent) CreateDeploymentConfig(cr *devconsoleapi.Component,
 		err := r.client.Create(context.TODO(), dc)
 		if err != nil && !errors.IsAlreadyExists(err) {
 			log.Error(err, "** DeploymentConfig creation fails **")
-			//r.UpdateStatus(cr, componentsv1alpha1.PhaseError)
 			return nil, err
 		}
 		return dc, nil
@@ -430,30 +477,39 @@ func (r *ReconcileComponent) CreateOutputImageStream(cr *devconsoleapi.Component
 
 // CreateBuilderImageStream either creates an builder image stream fetch from Docker hub or reuse an existing
 // image stream in OpenShift namespace.
-func (r *ReconcileComponent) CreateBuilderImageStream(cr *devconsoleapi.Component) (*imagev1.ImageStream, error) {
+func (r *ReconcileComponent) CreateBuilderImageStream(instance *devconsoleapi.Component) (*imagev1.ImageStream, error) {
 	var newImageForBuilder *imagev1.ImageStream
 	found := &imagev1.ImageStream{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: cr.Spec.BuildType, Namespace: openshiftNamespace}, found)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Spec.BuildType, Namespace: openshiftNamespace}, found)
 	if err == nil {
 		log.Info("** Skip Creating builder ImageStream: an OpenShift image already exist", "ImageStream.Namespace", found.Namespace, "ImageStream.Name", found.Name)
 		return found, nil
 	}
 	if errors.IsNotFound(err) { // OpenShift builder image is not present, fallback to create one.
-		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, cr.Spec.BuildType))
-		newImageForBuilder = newImageStreamFromDocker(cr)
+		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, instance.Spec.BuildType))
+		newImageForBuilder = newImageStreamFromDocker(instance)
 		if newImageForBuilder == nil {
-			log.Error(err, "** Creating new builder image fails **")
+			log.Error(err, "** Creating new BUILDER image fails **")
 			return nil, errors.NewNotFound(schema.GroupResource{Resource: "ImageStream"}, "builder image for build not found")
 		}
-		log.Info("💡💡  Creating a new builder ImageStream 💡💡")
-		err = r.client.Create(context.TODO(), newImageForBuilder)
-		if err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "** Creating new builder image fails **")
-			return nil, err
+		foundBuilderIS := &imagev1.ImageStream{}
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: newImageForBuilder.Name, Namespace: newImageForBuilder.Namespace}, foundBuilderIS)
+		if err == nil {
+			log.Info("** Skip Creating builder ImageStream: Already exist", "ImageStream.Namespace", foundBuilderIS.Namespace, "ImageStream.Name", foundBuilderIS.Name)
+			return foundBuilderIS, nil
 		}
-		if err := controllerutil.SetControllerReference(cr, newImageForBuilder, r.scheme); err != nil {
-			log.Error(err, "** Setting owner reference fails **")
-			return nil, err
+		if errors.IsNotFound(err) {
+			log.Info("** 💡💡 Creating a new builder ImageStream 💡💡", "ImageStream.Namespace", newImageForBuilder.Namespace, "ImageStream.Name", newImageForBuilder.Name)
+			err := r.client.Create(context.TODO(), newImageForBuilder)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				log.Error(err, "** builder ImageStream creation fails **")
+				return nil, err
+			}
+			if err := controllerutil.SetControllerReference(instance, newImageForBuilder, r.scheme); err != nil {
+				log.Error(err, "** Setting owner reference fails **")
+				return nil, err
+			}
+			return foundBuilderIS, nil
 		}
 	}
 	return newImageForBuilder, nil
