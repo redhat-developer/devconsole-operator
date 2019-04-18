@@ -195,7 +195,7 @@ func TestReconcileGitSourceAnalysisFromLocalRepoWithSshKey(t *testing.T) {
 
 		//then
 		require.NoError(t, err)
-		assertGitSourceAnalysis(t, client, "", test.S("Java", "Go", "XML"), buildType(build.Maven, "pom.xml"))
+		assertGitSourceAnalysis(t, client, "", test.S())
 	}
 }
 
@@ -226,7 +226,7 @@ func TestReconcileGitSourceAnalysisFromLocalRepoWithSshKeyWithPassphrase(t *test
 
 		//then
 		require.NoError(t, err)
-		assertGitSourceAnalysis(t, client, "", test.S("Java", "Go", "XML"), buildType(build.Maven, "pom.xml"))
+		assertGitSourceAnalysis(t, client, "", test.S(),)
 	}
 }
 

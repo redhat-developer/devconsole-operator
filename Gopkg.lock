@@ -18,7 +18,7 @@
   version = "v0.4.12"
 
 [[projects]]
-  digest = "1:f158a84a0f99ebb8874631473a2dc353d525f9fc8976eba0badad191f8e860c3"
+  digest = "1:14f0a1264c1013e381bf771317cfd382c60c663b72053e27e050690c19ee004d"
   name = "github.com/Azure/go-autorest"
   packages = [
     "autorest",
@@ -29,8 +29,8 @@
     "tracing",
   ]
   pruneopts = "NT"
-  revision = "d10011c9c6fd34ca45f1e15ee330e3af8ed8b96a"
-  version = "v11.7.1"
+  revision = "fe1ebaab71ae2a2ab8a55f62ebe54cffd842acc2"
+  version = "v12.0.0"
 
 [[projects]]
   digest = "1:75d2b55b13298745ec068057251d05d65bbae0a668201fe45ad6986551a55601"
@@ -307,12 +307,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:bc1fa2ec9377b068953334639550e7d8ff8e7658a687d9b862253c60cb0cd6f4"
+  digest = "1:c37d9d96de085f7a82451b6f62352d32f92f93663373535a8f429ea1981e4a00"
   name = "github.com/google/go-github"
   packages = ["github"]
   pruneopts = "NT"
-  revision = "7462feb2032c2da9e3b85e9b04e6853a6e9e14ca"
-  version = "v24.0.1"
+  revision = "b041e285fc4f7a936a81027c21c810cbaac2dc13"
+  version = "v25.0.0"
 
 [[projects]]
   digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
@@ -352,7 +352,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7cb4af98300e997743955442f497da80ced116767cbed6fcafd5645748d58a50"
+  digest = "1:f2001f00154e95650b38a99443ae686d1b22903e9263958079f2f2dbabe5c43c"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
@@ -364,7 +364,7 @@
     "pagination",
   ]
   pruneopts = "NT"
-  revision = "2c55d17f707cc8333ca4f49690cb2970d12a25f6"
+  revision = "1d93848c29c42ba3ebb1dbdff7a192a70d112003"
 
 [[projects]]
   branch = "master"
@@ -652,18 +652,18 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8e59d9dd0179ce9c41a7838f66c5499c569b232a5bad164d88c525ede9f14c22"
+  digest = "1:22f2b1db5bf1d36b7b622aa2c726ee4179cdd5e8bfc78791c1aff93533358358"
   name = "github.com/redhat-developer/devconsole-api"
   packages = [
     "pkg/apis",
     "pkg/apis/devconsole/v1alpha1",
   ]
   pruneopts = "NT"
-  revision = "f0048c161851b1da4913718808a97679912b82a4"
+  revision = "36791a68b58dd10ed2ead21974bb9101b4ebe51e"
 
 [[projects]]
   branch = "master"
-  digest = "1:8cb541044846389e2acb1ed0f5504fd61be6b7d3efec1083b2b3348d634c652a"
+  digest = "1:0fbdf34d35778de1e1c58f23c87fe527f65a8116521a1544301be7737c77d466"
   name = "github.com/redhat-developer/devconsole-git"
   packages = [
     "pkg/git",
@@ -671,14 +671,13 @@
     "pkg/git/detector/build",
     "pkg/git/repository",
     "pkg/git/repository/bitbucket",
-    "pkg/git/repository/generic",
     "pkg/git/repository/github",
     "pkg/git/repository/gitlab",
     "pkg/log",
     "pkg/test",
   ]
   pruneopts = "T"
-  revision = "e093f25f2b0082f11a3907c075dae960a452c3d1"
+  revision = "05a26628a1a0a8703727825994a3539a50d93783"
 
 [[projects]]
   digest = "1:a4644e85e1f29f9825a4e61dcdd8244fe7c4db02eead3f508d5a5bdf7924dbbd"
@@ -749,14 +748,6 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:1e756bf46ac38206112db9743c8960d0eb7a56ea8e6f4c4feb523436c8b6e59a"
-  name = "github.com/src-d/go-oniguruma"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "788303971318a98ac6d485136e6ae95d155c0876"
-  version = "v1.0.0"
-
-[[projects]]
   digest = "1:8e8fc2cb42cfa0a18fda0c9c4034092faa7aac773da5efdde8828eb4b96c001d"
   name = "github.com/stretchr/testify"
   packages = [
@@ -766,14 +757,6 @@
   pruneopts = "NT"
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
   version = "v1.3.0"
-
-[[projects]]
-  digest = "1:00dde67969c6b5ac2d7bfe189a394095d7be3adff2bb915909235cb697e05d13"
-  name = "github.com/toqueteos/trie"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "683ae57f27ac5c2afec902631ed8b9cda1d0f481"
-  version = "v1.0.0"
 
 [[projects]]
   digest = "1:660578a0b729bd1a8b7896a8b390979659000400f4007c659c77165ae48da445"
@@ -851,7 +834,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:98aa4a4a4f424cde92614ade7dac45f66c898e2acb8973f809cf9a424ec625e9"
+  digest = "1:f8cb3167bd2a33ac306e159a8d88534dbf973569e848cb5f34de94d9bad552e8"
   name = "golang.org/x/crypto"
   packages = [
     "cast5",
@@ -874,7 +857,7 @@
     "ssh/terminal",
   ]
   pruneopts = "NT"
-  revision = "88737f569e3a9c7ab309cdc09a07fe7fc87233c3"
+  revision = "f416ebab96af27ca70b6e5c23d6a0747530da626"
 
 [[projects]]
   branch = "master"
@@ -961,7 +944,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b2970bf435c7977009f5cb26226cb418287aef82b6cfb662504c300b4a3d6fad"
+  digest = "1:3176402f98ede82da36c998ab557f60da76a1e95b9347bf00ac5336581a65b87"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -977,7 +960,7 @@
     "internal/semver",
   ]
   pruneopts = "NT"
-  revision = "4ca4b55e2050cfa75f1a1f72ae10825e80b052a0"
+  revision = "a5870b40385977769b3e1d711864fcd2d82bb9fd"
 
 [[projects]]
   digest = "1:568f70cf0f1cacd5fc9b9ad58aed1a42cf5348b001080dc0be69832f78819c9b"
@@ -1076,27 +1059,12 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:7be7e5ed23e03578ea7df71495d2c907790fb05391cfafc21254bc384938b8e8"
-  name = "gopkg.in/src-d/enry.v1"
-  packages = [
-    ".",
-    "data",
-    "data/rule",
-    "internal/tokenizer",
-    "regex",
-  ]
-  pruneopts = "NT"
-  revision = "ab3c26b46dfaf8281bf78f2e998111e6a40829bf"
-  version = "v1.7.3"
-
-[[projects]]
   digest = "1:82cf9aa44a5f9fadfbce07a95aff7865752b868d0753c78f2b3a57bb330de241"
   name = "gopkg.in/src-d/go-billy.v4"
   packages = [
     ".",
     "helper/chroot",
     "helper/polyfill",
-    "memfs",
     "osfs",
     "util",
   ]
@@ -1105,7 +1073,7 @@
   version = "v4.3.0"
 
 [[projects]]
-  digest = "1:5de95ff35f1babd4bac13b12195c2026426cb0ef3d8c18c15718c09a5104e282"
+  digest = "1:d6e9d7ee9c059679655cd78d236e12dea9e1f1a5a61273a0061a74ad741cd178"
   name = "gopkg.in/src-d/go-git.v4"
   packages = [
     ".",
@@ -1151,16 +1119,8 @@
     "utils/merkletrie/noder",
   ]
   pruneopts = "NT"
-  revision = "db6c41c156481962abf9a55a324858674c25ab08"
-  version = "v4.10.0"
-
-[[projects]]
-  digest = "1:20d5d24cfd1dac53cbf730d5c9861c0792c68ae547e67fc16fa0ed0660481b0a"
-  name = "gopkg.in/toqueteos/substring.v1"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "c5f61671513240ddf5563635cc4a90e9f3ae4710"
-  version = "v1.0.2"
+  revision = "aa6f288c256ff8baf8a7745546a9752323dc0d89"
+  version = "v4.11.0"
 
 [[projects]]
   digest = "1:b233ad4ec87ac916e7bf5e678e98a2cb9e8b52f6de6ad3e11834fc7a71b8e3bf"
@@ -1526,7 +1486,6 @@
   input-imports = [
     "github.com/go-logr/logr",
     "github.com/golang/protobuf/proto",
-    "github.com/go-openapi/spec",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
     "github.com/openshift/api/image/v1",
@@ -1551,6 +1510,7 @@
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/types",
