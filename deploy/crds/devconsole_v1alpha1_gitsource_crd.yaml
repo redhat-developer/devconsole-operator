@@ -89,6 +89,7 @@ spec:
                 reason:
                   description: Reason is a short predefined string representing
                     a reason for the connection failure
+                    Possible values are [RepoNotReachable, BranchNotFound, BadCredentials, InternalFailure]
                   type: string
               required:
                 - state
