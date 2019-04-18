@@ -75,6 +75,11 @@ spec:
             error:
               description: Error contains an error message in case the build environment detection fails. Optional
               type: string
+            reason:
+              description: Reason is a short predefined string representing
+                a reason for the build type detection failure.
+                Possible values are [NotSupportedType, DetectionFailed, InternalFailure]
+              type: string
   version: v1alpha1
   versions:
     - name: v1alpha1

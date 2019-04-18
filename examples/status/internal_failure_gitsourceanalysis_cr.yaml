@@ -1,0 +1,15 @@
+#
+# example with internal error while fetching secret object
+#
+apiVersion: devconsole.openshift.io/v1alpha1
+kind: GitSourceAnalysis
+metadata:
+  name: example-gitsource-analysis
+spec:
+  spec:
+    gitSourceRef:
+      name: example-gitsource
+status:
+  analyzed: true
+  error: failed to fetch the secret object
+  reason: InternalFailure
