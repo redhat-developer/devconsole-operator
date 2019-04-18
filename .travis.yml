@@ -1,0 +1,47 @@
+go_import_path: github.com/redhat-developer/devconsole-operator
+sudo: required
+dist: xenial
+language: go
+
+go:
+- 1.11.x
+
+env:
+  global:
+    - CHANGE_MINIKUBE_NONE_USER=true
+    - MINIKUBE_WANTUPDATENOTIFICATION=false
+    - MINIKUBE_WANTREPORTERRORPROMPT=false
+    - MINIKUBE_HOME=$HOME
+    - CHANGE_MINIKUBE_NONE_USER=true
+    - KUBECONFIG=$HOME/.kube/config
+    - DEP_VERSION="0.5.1"
+    - SDK_VERSION="0.7.0"
+    - MINIKUBE_VERSION="1.0.0"
+    - KUBE_VERSION="1.14.1"
+
+before_install:
+# Download Dep
+- curl -Lo dep https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 && chmod +x dep && mv dep $GOPATH/bin/
+# Download Operator SDK
+- curl -Lo operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/v${SDK_VERSION}/operator-sdk-v0.7.0-x86_64-linux-gnu && chmod +x operator-sdk && mv operator-sdk $GOPATH/bin/
+# Download kubectl
+- curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+# Download Minikube
+- curl -Lo minikube https://storage.googleapis.com/minikube/releases/v${MINIKUBE_VERSION}/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+# Create empty KUBECONFIG & Docker configuration files
+- mkdir -p $HOME/.kube $HOME/.minikube $HOME/.docker && touch $KUBECONFIG && echo "{}" > $HOME/.docker/config.json
+# Start Minikube
+- sudo minikube start --vm-driver=none --kubernetes-version=v${KUBE_VERSION} --memory=5120
+- "sudo chown -R travis: /home/travis/.minikube/"
+
+install:
+# Download Go package dependencies
+- dep ensure -v -vendor-only
+
+before_script:
+# Create a namespace for the operator testing
+- kubectl create namespace operator-test
+
+script:
+# Run e2e tests
+- operator-sdk test local ./test/e2e --namespace=operator-test --up-local --go-test-flags "-v"
