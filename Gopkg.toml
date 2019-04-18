@@ -75,6 +75,10 @@ required = [
     name = "k8s.io/gengo"
     non-go = false
 
+  [[prune.project]]
+    name = "github.com/redhat-developer/devconsole-git"
+    non-go = false
+
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.3.0"
