@@ -10,18 +10,18 @@ include ./make/go.mk
 ## Runs linters on Go code files and YAML files
 lint: lint-go-code lint-yaml courier
 
-YAML_FILES := $(shell find . -type f -regex ".*y[a]ml" | grep -v vendor)
+YAML_FILES := $(shell find . -path ./vendor -prune -o -type f -regex ".*y[a]ml" -print)
 .PHONY: lint-yaml
 ## runs yamllint on all yaml files
 lint-yaml: ./vendor ${YAML_FILES}
-	$(Q)yamllint -c .yamllint $^
+	$(Q)yamllint -c .yamllint $(YAML_FILES)
 
 .PHONY: lint-go-code
 ## Checks the code with golangci-lint
 lint-go-code: ./vendor $(GOLANGCI_LINT_BIN)
 	# This is required for OpenShift CI enviroment
 	# Ref: https://github.com/openshift/release/pull/3438#issuecomment-482053250
-	$(Q)GOCACHE=$(shell pwd)/out/gocache ./out/golangci-lint ${V_FLAG} run
+	$(Q)GOCACHE=$(shell pwd)/out/gocache ./out/golangci-lint ${V_FLAG} run --deadline=10m
 
 $(GOLANGCI_LINT_BIN):
 	$(Q)curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./out v1.16.0

@@ -56,6 +56,13 @@ func TestComponentController(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      Name,
 			Namespace: Namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/part-of":   "application-1",
+				"app.kubernetes.io/name":      Name,
+				"app.kubernetes.io/component": "backend",
+				"app.kubernetes.io/instance":  "mycomp-1",
+				"app.kubernetes.io/version":   "1.0",
+			},
 		},
 		Spec: devconsoleapi.ComponentSpec{
 			BuildType:    "nodejs",
@@ -135,10 +142,15 @@ func TestComponentController(t *testing.T) {
 		isBuilder := &imagev1.ImageStream{}
 		errGetBuilderImage := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: cp.Spec.BuildType}, isBuilder)
 		require.NoError(t, errGetBuilderImage, "builder imagestream is not created")
-		require.Equal(t, cp.Spec.BuildType, isBuilder.ObjectMeta.Name, "imagestream builder shoul be named after component's buildtype")
+		require.Equal(t, cp.Spec.BuildType, isBuilder.ObjectMeta.Name, "imagestream builder should be named after component's buildtype")
 		require.Equal(t, Namespace, isBuilder.ObjectMeta.Namespace, "")
-		require.Equal(t, 1, len(isBuilder.Labels), "imagestream builder should contain one label")
-		require.Equal(t, Name, isBuilder.Labels["app"], "imagestream builder should have one label with name of CR.")
+		require.Equal(t, 6, len(isBuilder.Labels), "imagestream builder should contain six labels")
+		require.Equal(t, Name, isBuilder.Labels["app"], "imagestream builder should have a label with app of CR")
+		require.Equal(t, "application-1", isBuilder.Labels["app.kubernetes.io/part-of"], "isBuilder builder should have a label for part-of of CR")
+		require.Equal(t, "MyComp", isBuilder.Labels["app.kubernetes.io/name"], "isBuilder builder should have a label with name of CR")
+		require.Equal(t, "backend", isBuilder.Labels["app.kubernetes.io/component"], "isBuilder builder should have a label with component of CR")
+		require.Equal(t, "mycomp-1", isBuilder.Labels["app.kubernetes.io/instance"], "isBuilder builder should have a label with instance of CR")
+		require.Equal(t, "1.0", isBuilder.Labels["app.kubernetes.io/version"], "isBuilder builder should have a label with version of CR")
 		require.Equal(t, 1, len(isBuilder.Spec.Tags), "imagestream builder should have a tag specified when")
 		require.Equal(t, "latest", isBuilder.Spec.Tags[0].Name, "imagestream builder should take latest version")
 		require.Equal(t, "DockerImage", isBuilder.Spec.Tags[0].From.Kind, "imagestream builder should be taken from docker when not found in cluster")
@@ -151,8 +163,13 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, 2, len(bc.Spec.Triggers), "build config contains 2 triggers")
 		require.Equal(t, buildv1.ConfigChangeBuildTriggerType, bc.Spec.Triggers[0].Type, "build config should be triggered on config change")
 		require.Equal(t, buildv1.ImageChangeBuildTriggerType, bc.Spec.Triggers[1].Type, "build config should be triggered on image change")
-		require.Equal(t, 1, len(bc.Labels), "bc should contain one label")
-		require.Equal(t, Name, bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
+		require.Equal(t, 6, len(bc.Labels), "bc should contain six labels")
+		require.Equal(t, Name, bc.ObjectMeta.Labels["app"], "bc builder should have a label with app of CR")
+		require.Equal(t, "application-1", bc.ObjectMeta.Labels["app.kubernetes.io/part-of"], "bc builder should have a label with part-of of CR")
+		require.Equal(t, "MyComp", bc.ObjectMeta.Labels["app.kubernetes.io/name"], "bc builder should have a label with name of CR")
+		require.Equal(t, "backend", bc.ObjectMeta.Labels["app.kubernetes.io/component"], "bc builder should have a label with component of CR")
+		require.Equal(t, "mycomp-1", bc.ObjectMeta.Labels["app.kubernetes.io/instance"], "bc builder should have a label with instance of CR")
+		require.Equal(t, "1.0", bc.ObjectMeta.Labels["app.kubernetes.io/version"], "bc builder should have a label with version of CR")
 
 		dc := &appsv1.DeploymentConfig{}
 		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
@@ -161,8 +178,20 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, appsv1.DeploymentTriggerOnConfigChange, dc.Spec.Triggers[0].Type, "deployment config should be triggered by DeploymentTriggerOnConfigChange")
 		require.Equal(t, appsv1.DeploymentTriggerOnImageChange, dc.Spec.Triggers[1].Type, "deployment config should be triggered by DeploymentTriggerOnImageChange")
 		require.Equal(t, Name+":latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
-		require.Equal(t, 1, len(dc.Labels), "dc should contain one label")
-		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have one label with name of CR.")
+		require.Equal(t, 6, len(dc.Labels), "dc should contain six labels")
+		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have a label with app of CR")
+		require.Equal(t, "application-1", dc.ObjectMeta.Labels["app.kubernetes.io/part-of"], "dc builder should have a label with part-of of CR")
+		require.Equal(t, "MyComp", dc.ObjectMeta.Labels["app.kubernetes.io/name"], "dc builder should have a label with name of CR")
+		require.Equal(t, "backend", dc.ObjectMeta.Labels["app.kubernetes.io/component"], "dc builder should have a label with component of CR")
+		require.Equal(t, "mycomp-1", dc.ObjectMeta.Labels["app.kubernetes.io/instance"], "dc builder should have a label with instance of CR")
+		require.Equal(t, "1.0", dc.ObjectMeta.Labels["app.kubernetes.io/version"], "dc builder should have a label with version of CR")
+		require.Equal(t, 6, len(dc.Spec.Selector), "dc should contain six selectors")
+		require.Equal(t, Name, dc.Spec.Selector["app"], "dc should have a selector with app of CR")
+		require.Equal(t, "application-1", dc.Spec.Selector["app.kubernetes.io/part-of"], "dc builder should have a selector with part-of of CR")
+		require.Equal(t, "MyComp", dc.Spec.Selector["app.kubernetes.io/name"], "dc builder should have a selector with name of CR")
+		require.Equal(t, "backend", dc.Spec.Selector["app.kubernetes.io/component"], "dc builder should have a selector with component of CR")
+		require.Equal(t, "mycomp-1", dc.Spec.Selector["app.kubernetes.io/instance"], "dc builder should have a selector with instance of CR")
+		require.Equal(t, "1.0", dc.Spec.Selector["app.kubernetes.io/version"], "dc builder should have a selector with version of CR")
 
 		svc := &corev1.Service{}
 		errGetSvc := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, svc)
@@ -323,8 +352,13 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, buildv1.ImageChangeBuildTriggerType, bc.Spec.Triggers[1].Type, "build config should be triggered on image change")
 		require.Equal(t, "openshift", bc.Spec.CommonSpec.Strategy.SourceStrategy.From.Namespace, "builder image used in build config should be taken from openshift namespace")
 		require.Equal(t, "nodejs:latest", bc.Spec.CommonSpec.Strategy.SourceStrategy.From.Name, "builder image used in build config should be taken from openshift's nodejs image")
-		require.Equal(t, 1, len(bc.Labels), "bc should contain one label")
-		require.Equal(t, Name, bc.ObjectMeta.Labels["app"], "bc builder should have one label with name of CR.")
+		require.Equal(t, 6, len(bc.Labels), "bc should contain six labels")
+		require.Equal(t, Name, bc.ObjectMeta.Labels["app"], "bc builder should have a label with app of CR")
+		require.Equal(t, "application-1", bc.ObjectMeta.Labels["app.kubernetes.io/part-of"], "bc builder should have a label with part-of of CR")
+		require.Equal(t, "MyComp", bc.ObjectMeta.Labels["app.kubernetes.io/name"], "bc builder should have a label with name of CR")
+		require.Equal(t, "backend", bc.ObjectMeta.Labels["app.kubernetes.io/component"], "bc builder should have a label with component of CR")
+		require.Equal(t, "mycomp-1", bc.ObjectMeta.Labels["app.kubernetes.io/instance"], "bc builder should have a label with instance of CR")
+		require.Equal(t, "1.0", bc.ObjectMeta.Labels["app.kubernetes.io/version"], "bc builder should have a label with version of CR")
 
 		dc := &appsv1.DeploymentConfig{}
 		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
@@ -333,8 +367,20 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, appsv1.DeploymentTriggerOnConfigChange, dc.Spec.Triggers[0].Type, "deployment config should be triggered by DeploymentTriggerOnConfigChange")
 		require.Equal(t, appsv1.DeploymentTriggerOnImageChange, dc.Spec.Triggers[1].Type, "deployment config should be triggered by DeploymentTriggerOnImageChange")
 		require.Equal(t, Name+":latest", dc.Spec.Triggers[1].ImageChangeParams.From.Name, "deployment config should be triggered by DeploymentTriggerOnImageChange from bc-output")
-		require.Equal(t, 1, len(dc.Labels), "dc should contain one label")
-		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have one label with name of CR.")
+		require.Equal(t, 6, len(dc.Labels), "dc should contain six labels")
+		require.Equal(t, Name, dc.ObjectMeta.Labels["app"], "dc should have a label with app of CR")
+		require.Equal(t, "application-1", dc.ObjectMeta.Labels["app.kubernetes.io/part-of"], "dc builder should have a label with part-of of CR")
+		require.Equal(t, "MyComp", dc.ObjectMeta.Labels["app.kubernetes.io/name"], "dc builder should have a label with name of CR")
+		require.Equal(t, "backend", dc.ObjectMeta.Labels["app.kubernetes.io/component"], "dc builder should have a label with component of CR")
+		require.Equal(t, "mycomp-1", dc.ObjectMeta.Labels["app.kubernetes.io/instance"], "dc builder should have a label with instance of CR")
+		require.Equal(t, "1.0", dc.ObjectMeta.Labels["app.kubernetes.io/version"], "dc builder should have a label with version of CR")
+		require.Equal(t, 6, len(dc.Spec.Selector), "dc should contain six selectors")
+		require.Equal(t, Name, dc.Spec.Selector["app"], "dc should have a selector with app of CR")
+		require.Equal(t, "application-1", dc.Spec.Selector["app.kubernetes.io/part-of"], "dc builder should have a selector with part-of of CR")
+		require.Equal(t, "MyComp", dc.Spec.Selector["app.kubernetes.io/name"], "dc builder should have a selector with name of CR")
+		require.Equal(t, "backend", dc.Spec.Selector["app.kubernetes.io/component"], "dc builder should have a selector with component of CR")
+		require.Equal(t, "mycomp-1", dc.Spec.Selector["app.kubernetes.io/instance"], "dc builder should have a selector with instance of CR")
+		require.Equal(t, "1.0", dc.Spec.Selector["app.kubernetes.io/version"], "dc builder should have a selector with version of CR")
 	})
 
 	t.Run("with secret defined in the GitSource", func(t *testing.T) {
@@ -516,5 +562,4 @@ func TestComponentController(t *testing.T) {
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
 		require.Error(t, errGetBC, "buildconfig should not have created")
 	})
-
 }
