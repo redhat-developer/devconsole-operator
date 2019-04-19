@@ -11,7 +11,6 @@ include ./make/git.mk
 include ./make/dev.mk
 include ./make/format.mk
 include ./make/lint.mk
-include ./make/deploy.mk
 include ./make/test.mk
 include ./make/docker.mk
 
