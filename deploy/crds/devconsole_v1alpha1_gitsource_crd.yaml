@@ -9,6 +9,8 @@ spec:
     listKind: GitSourceList
     plural: gitsources
     singular: gitsource
+    shortNames:
+      - src
   scope: Namespaced
   validation:
     openAPIV3Schema:
@@ -93,6 +95,10 @@ spec:
                   type: string
               required:
                 - state
+  additionalPrinterColumns:
+    - name: Status
+      type: string
+      JSONPath: .status.state
   version: v1alpha1
   versions:
     - name: v1alpha1
