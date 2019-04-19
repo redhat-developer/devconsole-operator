@@ -352,7 +352,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f2001f00154e95650b38a99443ae686d1b22903e9263958079f2f2dbabe5c43c"
+  digest = "1:f620c969301c9543b5a311a662615f69fbaeeb6864865df9e86a3eca560445e6"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
@@ -364,7 +364,7 @@
     "pagination",
   ]
   pruneopts = "NT"
-  revision = "1d93848c29c42ba3ebb1dbdff7a192a70d112003"
+  revision = "bb98932a7b3a106e1814e0c6b7f7d48c0a71a919"
 
 [[projects]]
   branch = "master"
@@ -525,7 +525,8 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:8bc8f43d2332d035857c92581df240f247c287629d5f60c751df609f9b6215c5"
+  branch = "rebase-1.13.4"
+  digest = "1:65f27352945521c648be4070c006062a990fd6987d536cdc275002f698e12f32"
   name = "github.com/openshift/api"
   packages = [
     "apps/v1",
@@ -536,8 +537,21 @@
     "route/v1",
   ]
   pruneopts = "NT"
-  revision = "0d921e363e951d89f583292c60d013c318df64dc"
-  version = "v3.9.0"
+  revision = "3a6077f1f910bfaec1f34ae9db3492a52e804ae0"
+
+[[projects]]
+  branch = "rebase-1.13.4"
+  digest = "1:a5aa6d074656d7cd97b9e1744f2c79244b8bc37ffb67cb31c47298010092c881"
+  name = "github.com/openshift/client-go"
+  packages = [
+    "image/clientset/versioned",
+    "image/clientset/versioned/fake",
+    "image/clientset/versioned/scheme",
+    "image/clientset/versioned/typed/image/v1",
+    "image/clientset/versioned/typed/image/v1/fake",
+  ]
+  pruneopts = "NT"
+  revision = "84c2b942258aea2462e675e03aeb8eb4cb5f3c29"
 
 [[projects]]
   digest = "1:674610d54812d3c36ab7861fc826176bf581a9426cc09abec0107414c17f89cd"
@@ -1247,6 +1261,7 @@
   packages = [
     "discovery",
     "discovery/cached",
+    "discovery/fake",
     "dynamic",
     "kubernetes",
     "kubernetes/scheme",
@@ -1488,8 +1503,11 @@
     "github.com/golang/protobuf/proto",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
+    "github.com/openshift/api/image/docker10",
     "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
+    "github.com/openshift/client-go/image/clientset/versioned/fake",
+    "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/ready",
