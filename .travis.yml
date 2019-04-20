@@ -23,7 +23,7 @@ before_install:
 # Download Dep
 - curl -Lo dep https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 && chmod +x dep && mv dep $GOPATH/bin/
 # Download Operator SDK
-- curl -Lo operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/v${SDK_VERSION}/operator-sdk-v0.7.0-x86_64-linux-gnu && chmod +x operator-sdk && mv operator-sdk $GOPATH/bin/
+- curl -Lo operator-sdk https://github.com/operator-framework/operator-sdk/releases/download/v${SDK_VERSION}/operator-sdk-v${SDK_VERSION}-x86_64-linux-gnu && chmod +x operator-sdk && mv operator-sdk $GOPATH/bin/
 # Download kubectl
 - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
 # Download Minikube
