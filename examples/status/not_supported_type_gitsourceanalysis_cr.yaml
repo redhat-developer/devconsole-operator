@@ -1,0 +1,15 @@
+#
+# example when no git implementation was found
+#
+apiVersion: devconsole.openshift.io/v1alpha1
+kind: GitSourceAnalysis
+metadata:
+  name: example-gitsource-analysis
+spec:
+  spec:
+    gitSourceRef:
+      name: example-gitsource
+status:
+  analyzed: true
+  error: no git implementation found
+  reason: NotSupportedType

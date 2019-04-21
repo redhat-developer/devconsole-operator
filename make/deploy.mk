@@ -26,6 +26,7 @@ deploy-rbac:
 deploy-crd:
 	$(Q)-oc apply -f deploy/crds/devconsole_v1alpha1_component_crd.yaml
 	$(Q)-oc apply -f deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
+	$(Q)-oc apply -f deploy/crds/devconsole_v1alpha1_gitsourceanalysis_crd.yaml
 
 .PHONY: deploy-operator
 ## Deploy Operator
