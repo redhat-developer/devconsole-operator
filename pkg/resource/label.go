@@ -10,7 +10,7 @@ type CRLabelGetter interface {
 	GetLabelVersion() string
 }
 
-// GetLabelsForCR retrieves labels for the custom resource
+// GetLabelsForCR retrieves labels for the custom resource.
 func GetLabelsForCR(cr CRLabelGetter) map[string]string {
 	labels := make(map[string]string)
 
