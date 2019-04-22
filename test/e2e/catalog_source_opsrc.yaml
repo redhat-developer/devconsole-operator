@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1
+kind: CatalogSourceConfig
+metadata:
+  name: installed-upstream-community-operators
+  namespace: openshift-marketplace
+spec:
+  targetNamespace: openshift-operator-lifecycle-manager
+  packages: devconsole
+  csDisplayName: "Upstream Community Operators"
+  csPublisher: "Red Hat"
