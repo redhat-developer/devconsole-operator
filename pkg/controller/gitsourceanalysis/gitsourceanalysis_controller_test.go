@@ -226,7 +226,7 @@ func TestReconcileGitSourceAnalysisFromLocalRepoWithSshKeyWithPassphrase(t *test
 
 		//then
 		require.NoError(t, err)
-		assertGitSourceAnalysis(t, client, "", test.S(),)
+		assertGitSourceAnalysis(t, client, "", test.S())
 	}
 }
 

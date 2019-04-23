@@ -103,7 +103,7 @@ make deploy-test
 ```
 * See the newly created resources
 ```
-oc get is,bc,svc,component.devconsole,build
+oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
 ```
 
 ### Deploy the operator with Deployment yaml
@@ -118,14 +118,11 @@ operator-sdk build $(minishift openshift registry)/devconsole/devconsole-operato
 > NOTE: In `operator.yaml` replace `imagePullPolicy: Always` with `imagePullPolicy: IfNotPresent` 
 for local dev to avoid pulling image and be able to use docker cached image instead.
  
-* deploy cr, role and rbac
+* deploy cr, role and rbac in `devconsole` namespace
 ```
-oc login -u system:admin
-oc apply -f deploy/crds/devconsole_v1alpha1_component_crd.yaml
-oc apply -f deploy/service_account.yaml
-oc apply -f deploy/role.yaml
-oc apply -f deploy/role_binding.yaml
-oc apply -f deploy/operator.yaml
+make deploy-rbac
+make deploy-crd
+make deploy-operator
 ```
 > NOTE: make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devconsole/devconsole-operator:latest`
 
@@ -134,14 +131,15 @@ oc apply -f deploy/operator.yaml
 oc logs pod/devconsole-operator-5b4bbc7d-89crs -f
 ```
 
-* in a different shell, test CR in different project
+* in a different shell, test CR in different project (`local-test`)
 ```
-oc new-project tina
-oc create -f examples/devconsole_v1alpha1_component_cr.yaml --namespace tina
+make deploy-test
 ```
+> Note: usee `make deploy-clean` to delete `local-test` project and start from fresh.
+
 * check if the resources are created
 ```
-oc get all,is,component,bc,build,deployment,pod
+oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
 ```
 ## Directory layout
 
