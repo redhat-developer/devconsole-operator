@@ -27,22 +27,19 @@ spec:
       displayName: Git Source Analysis
       description: Triggers analysis of a codebase defined as a GitSource.
   description: >
-    DevConsole operator enables a developer-focused view in OpenShift 4.
-    It provides a view switcher to transition between the traditional
-    Kubernetes cluster administration console referred to as
-    Administrator, to this new Developer perspective.
+    The operator that enables a developer-focused perspective in OpenShift 4. 
+    This enables a perspective (view) switcher to transition between the traditional 
+    Kubernetes and Cluster Administration console, referred to as Administrator, 
+    to this new perspective Developer perspective.
 
     This new Developer perspective provides a high-level abstraction over
     Kubernetes and OpenShift primitives to allow developers to focus on
     their application development.
-
-    ## Key Features
-
-    The Developer perspective is still under active development.  These
-    are the main features that are getting developed:
+    
+    Within the Developer perspective there are these main areas:
 
     * Add - The place to create and build the application using one of this method:
-
+    
       - Importing source code from Git
       - Deploying an existing image
       - Browse a catalog to deploy or connect application serves
