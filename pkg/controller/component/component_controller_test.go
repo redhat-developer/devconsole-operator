@@ -26,6 +26,10 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"fmt"
+	dockerapiv10 "github.com/openshift/api/image/docker10"
+	fakeimage "github.com/openshift/client-go/image/clientset/versioned/fake"
 )
 
 const (
@@ -63,9 +67,14 @@ func TestComponentController(t *testing.T) {
 				"app.kubernetes.io/instance":  "mycomp-1",
 				"app.kubernetes.io/version":   "1.0",
 			},
+			Annotations: map[string]string{
+				"app.openshift.io/vcs-uri": "https://github.com/test/example",
+				"app.openshift.io/vcs-ref": "master",
+			},
 		},
 		Spec: devconsoleapi.ComponentSpec{
 			BuildType:    "nodejs",
+			Port:         8080,
 			GitSourceRef: "my-git-source",
 		},
 	}
@@ -155,6 +164,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "latest", isBuilder.Spec.Tags[0].Name, "imagestream builder should take latest version")
 		require.Equal(t, "DockerImage", isBuilder.Spec.Tags[0].From.Kind, "imagestream builder should be taken from docker when not found in cluster")
 		require.Equal(t, "nodeshift/centos7-s2i-nodejs:10.x", isBuilder.Spec.Tags[0].From.Name, "imagestream builder should be taken from nodeshift/centos7-s2i-nodejs:10.x")
+		require.Equal(t, 2, len(isBuilder.Annotations), "imagestream builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", isBuilder.Annotations["app.openshift.io/vcs-uri"], "imagestream builder should have a annotation with vsc-uri of CR")
+		require.Equal(t, "master", isBuilder.Annotations["app.openshift.io/vcs-ref"], "imagestream builder should have an annotation with vcs-ref of CR")
 
 		bc := &buildv1.BuildConfig{}
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
@@ -170,6 +182,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "backend", bc.ObjectMeta.Labels["app.kubernetes.io/component"], "bc builder should have a label with component of CR")
 		require.Equal(t, "mycomp-1", bc.ObjectMeta.Labels["app.kubernetes.io/instance"], "bc builder should have a label with instance of CR")
 		require.Equal(t, "1.0", bc.ObjectMeta.Labels["app.kubernetes.io/version"], "bc builder should have a label with version of CR")
+		require.Equal(t, 2, len(bc.Annotations), "bc builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", bc.ObjectMeta.Annotations["app.openshift.io/vcs-uri"], "bc builder should have an annotation with vcs-uri of CR")
+		require.Equal(t, "master", bc.ObjectMeta.Annotations["app.openshift.io/vcs-ref"], "bc builder should have an annotation with vcs-ref of CR")
 
 		dc := &appsv1.DeploymentConfig{}
 		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
@@ -192,6 +207,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "backend", dc.Spec.Selector["app.kubernetes.io/component"], "dc builder should have a selector with component of CR")
 		require.Equal(t, "mycomp-1", dc.Spec.Selector["app.kubernetes.io/instance"], "dc builder should have a selector with instance of CR")
 		require.Equal(t, "1.0", dc.Spec.Selector["app.kubernetes.io/version"], "dc builder should have a selector with version of CR")
+		require.Equal(t, 2, len(dc.Annotations), "dc builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", dc.ObjectMeta.Annotations["app.openshift.io/vcs-uri"], "dc builder should have an annotation with vcs-uri of CR")
+		require.Equal(t, "master", dc.ObjectMeta.Annotations["app.openshift.io/vcs-ref"], "dc builder should have an annotation with vcs-ref of CR")
 
 		svc := &corev1.Service{}
 		errGetSvc := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, svc)
@@ -359,6 +377,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "backend", bc.ObjectMeta.Labels["app.kubernetes.io/component"], "bc builder should have a label with component of CR")
 		require.Equal(t, "mycomp-1", bc.ObjectMeta.Labels["app.kubernetes.io/instance"], "bc builder should have a label with instance of CR")
 		require.Equal(t, "1.0", bc.ObjectMeta.Labels["app.kubernetes.io/version"], "bc builder should have a label with version of CR")
+		require.Equal(t, 2, len(bc.Annotations), "bc builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", bc.ObjectMeta.Annotations["app.openshift.io/vcs-uri"], "bc builder should have an annotation with vcs-uri of CR")
+		require.Equal(t, "master", bc.ObjectMeta.Annotations["app.openshift.io/vcs-ref"], "bc builder should have an annotation with vcs-ref of CR")
 
 		dc := &appsv1.DeploymentConfig{}
 		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
@@ -381,6 +402,9 @@ func TestComponentController(t *testing.T) {
 		require.Equal(t, "backend", dc.Spec.Selector["app.kubernetes.io/component"], "dc builder should have a selector with component of CR")
 		require.Equal(t, "mycomp-1", dc.Spec.Selector["app.kubernetes.io/instance"], "dc builder should have a selector with instance of CR")
 		require.Equal(t, "1.0", dc.Spec.Selector["app.kubernetes.io/version"], "dc builder should have a selector with version of CR")
+		require.Equal(t, 2, len(dc.Annotations), "dc builder should contain two annotations")
+		require.Equal(t, "https://github.com/test/example", dc.ObjectMeta.Annotations["app.openshift.io/vcs-uri"], "dc builder should have an annotation with vcs-uri of CR")
+		require.Equal(t, "master", dc.ObjectMeta.Annotations["app.openshift.io/vcs-ref"], "dc builder should have an annotation with vcs-ref of CR")
 	})
 
 	t.Run("with secret defined in the GitSource", func(t *testing.T) {
@@ -562,4 +586,94 @@ func TestComponentController(t *testing.T) {
 		errGetBC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, bc)
 		require.Error(t, errGetBC, "buildconfig should not have created")
 	})
+	t.Run("with ReconcileComponent CR checking for imagestream builder exposed port", func(t *testing.T) {
+		//given
+		cpWithoutPort := &devconsoleapi.Component{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+			Spec: devconsoleapi.ComponentSpec{
+				BuildType:    "nodejs",
+				GitSourceRef: "my-git-source",
+			},
+		}
+		isNodejs := &imagev1.ImageStream{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "nodejs",
+				Namespace: "openshift",
+			},
+			Spec: imagev1.ImageStreamSpec{},
+			Status: imagev1.ImageStreamStatus{
+				Tags: []imagev1.NamedTagEventList{{
+					Tag: "latest",
+					Items: []imagev1.TagEvent{{
+						Image: "sha256:9579a93ee",
+					}},
+				}},
+			},
+		}
+		isi := fakeImageStreamImage("nodejs", []string{"8080/tcp"}, "")
+		objs := []runtime.Object{
+			gs,
+			cpWithoutPort,
+			isNodejs,
+		}
+		objs2 := []runtime.Object{
+			isi,
+		}
+		// Create a fake client to mock API calls.
+		cl := fake.NewFakeClient(objs...)
+		clImage := fakeimage.NewSimpleClientset(objs2...)
+
+		// Create a ReconcileComponent object with the scheme and fake client.
+		r := &ReconcileComponent{client: cl, scheme: s, imageClient: clImage.ImageV1()}
+		req := reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      Name,
+				Namespace: Namespace,
+			},
+		}
+
+		//when
+		_, err := r.Reconcile(req)
+
+		require.NoError(t, err)
+		dc := &appsv1.DeploymentConfig{}
+		errGetDC := cl.Get(context.Background(), types.NamespacedName{Namespace: Namespace, Name: Name}, dc)
+		require.NoError(t, errGetDC)
+		require.Equal(t, dc.Spec.Template.Spec.Containers[0].Ports[0].Name, "8080-tcp")
+
+	})
+}
+
+func fakeImageStreamImage(imageName string, ports []string, containerConfig string) *imagev1.ImageStreamImage {
+	exposedPorts := make(map[string]struct{})
+	var s struct{}
+	for _, port := range ports {
+		exposedPorts[port] = s
+	}
+	builderImage := &imagev1.ImageStreamImage{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s@sha256:9579a93ee", imageName),
+			Namespace: "openshift",
+		},
+		Image: imagev1.Image{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sha256:9579a93ee",
+			},
+			DockerImageMetadata: runtime.RawExtension{
+				Object: &dockerapiv10.DockerImage{
+					ContainerConfig: dockerapiv10.DockerConfig{
+						ExposedPorts: exposedPorts,
+					},
+				},
+			},
+			DockerImageReference: fmt.Sprintf("docker.io/centos/%s-36-centos7@sha256:9579a93ee", imageName),
+		},
+	}
+	if containerConfig != "" {
+		(*builderImage).Image.DockerImageMetadata.Raw = []byte(containerConfig)
+	}
+	return builderImage
 }

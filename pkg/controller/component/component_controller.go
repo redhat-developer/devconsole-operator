@@ -8,9 +8,11 @@ import (
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
+	imageclientset "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -35,7 +37,9 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileComponent{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	config := mgr.GetConfig()
+	cl, _ := imageclientset.NewForConfig(config)
+	return &ReconcileComponent{client: mgr.GetClient(), scheme: mgr.GetScheme(), imageClient: cl}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -88,8 +92,9 @@ var (
 type ReconcileComponent struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client      client.Client
+	imageClient imageclientset.ImageV1Interface
+	scheme      *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a Component object and makes changes based on the state read
@@ -99,8 +104,8 @@ type ReconcileComponent struct {
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the Component instance
-	instance := &devconsoleapi.Component{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	cp := &devconsoleapi.Component{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, cp)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -114,68 +119,72 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// Checking and logging secondary resource lifecycle
 	dcList := &v1.DeploymentConfigList{}
-	err = r.ObserveDeploymentConfig(instance, dcList)
+	err = r.ObserveDeploymentConfig(cp, dcList)
 	if err != nil {
 		return reconcile.Result{}, nil
 	}
 	bcList := &buildv1.BuildConfigList{}
-	err = r.ObserveBuildConfig(instance, bcList)
+	err = r.ObserveBuildConfig(cp, bcList)
 	if err != nil {
 		return reconcile.Result{}, nil
 	}
 
 	log.Info("============================================================")
 	log.Info(fmt.Sprintf("✨✨ Reconciling Component %s, namespace %s ✨✨", request.Name, request.Namespace))
-	log.Info(fmt.Sprintf("** Creation time: %s", instance.ObjectMeta.CreationTimestamp))
-	log.Info(fmt.Sprintf("** Resource version: %s", instance.ObjectMeta.ResourceVersion))
-	log.Info(fmt.Sprintf("** Generation version: %d", instance.ObjectMeta.Generation))
-	log.Info(fmt.Sprintf("** Deletion time: %s", instance.ObjectMeta.DeletionTimestamp))
+	log.Info(fmt.Sprintf("** Creation time: %s", cp.ObjectMeta.CreationTimestamp))
+	log.Info(fmt.Sprintf("** Resource version: %s", cp.ObjectMeta.ResourceVersion))
+	log.Info(fmt.Sprintf("** Generation version: %d", cp.ObjectMeta.Generation))
+	log.Info(fmt.Sprintf("** Deletion time: %s", cp.ObjectMeta.DeletionTimestamp))
 	log.Info("============================================================")
 
 	// Assign the generated ResourceVersion to the resource status.
-	if instance.Status.RevNumber == "" {
-		instance.Status.RevNumber = instance.ObjectMeta.ResourceVersion
+	if cp.Status.RevNumber == "" {
+		cp.Status.RevNumber = cp.ObjectMeta.ResourceVersion
 	}
 
-	if !instance.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !cp.ObjectMeta.DeletionTimestamp.IsZero() {
 		log.Info("👻👻 Deleting component CR 👻👻")
 		return reconcile.Result{}, nil
 	}
 
-	gitSource, err := r.GetGitSource(instance)
+	gitSource, err := r.GetGitSource(cp)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	outputIS, err := r.CreateOutputImageStream(instance)
+	outputIS, err := r.CreateOutputImageStream(cp)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	builderIS, err := r.CreateBuilderImageStream(instance)
+	builderIS, err := r.CreateBuilderImageStream(cp)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	secret, _ := r.GetSourceSecret(instance, gitSource)
-	_, err = r.CreateBuildConfig(instance, builderIS, gitSource, secret)
+	secret, _ := r.GetSourceSecret(cp, gitSource)
+	_, err = r.CreateBuildConfig(cp, builderIS, gitSource, secret)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	_, err = r.CreateDeploymentConfig(instance, outputIS)
+	ports, err := r.GetExposedPorts(cp, "latest", builderIS)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	_, err = r.CreateService(instance)
+	_, err = r.CreateDeploymentConfig(cp, outputIS, ports)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	_, err = r.CreateService(cp, ports)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 	var route *routev1.Route
-	if instance.Spec.Exposed {
-		route, err = r.CreateRoute(instance)
+	if cp.Spec.Exposed {
+		route, err = r.CreateRoute(cp)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 	}
-	if instance.Status.RevNumber == instance.ObjectMeta.ResourceVersion {
-		log.Info(fmt.Sprintf("🎉🎉  Component %s has been successfully created!  🎉🎉 ", instance.Name))
+	if cp.Status.RevNumber == cp.ObjectMeta.ResourceVersion {
+		log.Info(fmt.Sprintf("🎉🎉  Component %s has been successfully created!  🎉🎉 ", cp.Name))
 		if route != nil {
 			log.Info(fmt.Sprintf("🎉🎉  Go to http://%s:%d  🎉🎉 ", route.Spec.Host, route.Spec.Port.TargetPort.IntVal))
 		}
@@ -185,12 +194,12 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 }
 
 // ObserveBuildConfig watches for secondary resource BuildConfig.
-func (r *ReconcileComponent) ObserveBuildConfig(cr *devconsoleapi.Component, bcList *buildv1.BuildConfigList) error {
+func (r *ReconcileComponent) ObserveBuildConfig(cp *devconsoleapi.Component, bcList *buildv1.BuildConfigList) error {
 	lbls := map[string]string{
-		"app": cr.Name,
+		"app": cp.Name,
 	}
 	opts := client.ListOptions{
-		Namespace:     cr.Namespace,
+		Namespace:     cp.Namespace,
 		LabelSelector: labels.SelectorFromSet(lbls),
 	}
 	err := r.client.List(context.TODO(),
@@ -204,19 +213,19 @@ func (r *ReconcileComponent) ObserveBuildConfig(cr *devconsoleapi.Component, bcL
 	for _, bc := range bcList.Items {
 		if bc.Status.LastVersion == 0 {
 			log.Info(fmt.Sprintf("👻👻  Scaling down BuildConfig %s 👻👻", bc.Name))
-			return r.UpdateStatus(cr, devconsoleapi.PhaseBuilding)
+			return r.UpdateStatus(cp, devconsoleapi.PhaseBuilding)
 		}
 	}
 	return nil
 }
 
 // ObserveDeploymentConfig watches for secondary resource DeploymentConfig.
-func (r *ReconcileComponent) ObserveDeploymentConfig(cr *devconsoleapi.Component, dcList *v1.DeploymentConfigList) error {
+func (r *ReconcileComponent) ObserveDeploymentConfig(cp *devconsoleapi.Component, dcList *v1.DeploymentConfigList) error {
 	lbls := map[string]string{
-		"app": cr.Name,
+		"app": cp.Name,
 	}
 	opts := client.ListOptions{
-		Namespace:     cr.Namespace,
+		Namespace:     cp.Namespace,
 		LabelSelector: labels.SelectorFromSet(lbls),
 	}
 	err := r.client.List(context.TODO(),
@@ -230,20 +239,20 @@ func (r *ReconcileComponent) ObserveDeploymentConfig(cr *devconsoleapi.Component
 	for _, dc := range dcList.Items {
 		if dc.Status.Replicas < dc.Spec.Replicas {
 			log.Info(fmt.Sprintf("👻👻  Scaling up DeploymentConfig %s 👻👻", dc.Name))
-			return r.UpdateStatus(cr, devconsoleapi.PhaseDeploying)
+			return r.UpdateStatus(cp, devconsoleapi.PhaseDeploying)
 		} else {
 			log.Info(fmt.Sprintf("✨✨ Stable DeploymentConfig %s ✨✨", dc.Name))
-			return r.UpdateStatus(cr, devconsoleapi.PhaseDeployed)
+			return r.UpdateStatus(cp, devconsoleapi.PhaseDeployed)
 		}
 	}
 	return nil
 }
 
 // Update status of component
-func (r *ReconcileComponent) UpdateStatus(cr *devconsoleapi.Component, status string) error {
-	if cr.Status.Phase != status {
-		cr.Status.Phase = status
-		err := r.client.Update(context.TODO(), cr)
+func (r *ReconcileComponent) UpdateStatus(cp *devconsoleapi.Component, status string) error {
+	if cp.Status.Phase != status {
+		cp.Status.Phase = status
+		err := r.client.Update(context.TODO(), cp)
 		if err != nil {
 			log.Error(err, "** failed to update component status **")
 			return err
@@ -253,10 +262,10 @@ func (r *ReconcileComponent) UpdateStatus(cr *devconsoleapi.Component, status st
 }
 
 // GetGitSource return the GitSource associated to Component CR.
-func (r *ReconcileComponent) GetSourceSecret(cr *devconsoleapi.Component, gitSource *devconsoleapi.GitSource) (*corev1.Secret, error) {
+func (r *ReconcileComponent) GetSourceSecret(cp *devconsoleapi.Component, gitSource *devconsoleapi.GitSource) (*corev1.Secret, error) {
 	// Check if secrets provided exist or not
 	if gitSource.Spec.SecretRef != nil && gitSource.Spec.SecretRef.Name != "" {
-		secret := newSecret(cr, gitSource)
+		secret := newSecret(cp, gitSource)
 		foundSecret := &corev1.Secret{}
 		err := r.client.Get(context.TODO(), types.NamespacedName{Name: secret.Name, Namespace: secret.Namespace}, foundSecret)
 		if err == nil {
@@ -273,9 +282,9 @@ func (r *ReconcileComponent) GetSourceSecret(cr *devconsoleapi.Component, gitSou
 }
 
 // GetGitSource return the GitSource associated to Component CR.
-func (r *ReconcileComponent) GetGitSource(cr *devconsoleapi.Component) (*devconsoleapi.GitSource, error) {
+func (r *ReconcileComponent) GetGitSource(cp *devconsoleapi.Component) (*devconsoleapi.GitSource, error) {
 	// Validate if codebase is present since this is mandatory field
-	if cr.Spec.GitSourceRef == "" {
+	if cp.Spec.GitSourceRef == "" {
 		err := e.New("GitSource reference is not provided")
 		log.Error(err, "** failed to get gitsource **")
 		return nil, err
@@ -283,8 +292,8 @@ func (r *ReconcileComponent) GetGitSource(cr *devconsoleapi.Component) (*devcons
 	// Get gitsource referenced in component
 	gitSource := &devconsoleapi.GitSource{}
 	err := r.client.Get(context.TODO(), client.ObjectKey{
-		Namespace: cr.Namespace,
-		Name:      cr.Spec.GitSourceRef,
+		Namespace: cp.Namespace,
+		Name:      cp.Spec.GitSourceRef,
 	}, gitSource)
 	if err != nil {
 		log.Error(err, "** failed to get gitsource **")
@@ -293,10 +302,51 @@ func (r *ReconcileComponent) GetGitSource(cr *devconsoleapi.Component) (*devcons
 	return gitSource, nil
 }
 
+// GetExposedPorts returns either the provided port in the component's spec or search for the builder image for exposed port.
+func (r *ReconcileComponent) GetExposedPorts(cr *devconsoleapi.Component, imageTag string, is *imagev1.ImageStream) ([]corev1.ContainerPort, error) {
+	if cr.Spec.Port != 0 { // port in component's spec overrides exposed port
+		containerPorts := []corev1.ContainerPort{{
+			ContainerPort: cr.Spec.Port,
+			Protocol:      corev1.ProtocolTCP,
+		}}
+		return containerPorts, nil
+	}
+	// otherwise extract port from builder docker image.
+	isi, err := r.GetBuilderImageStreamImage("latest", is)
+	if err != nil {
+		return nil, err
+	}
+	ports, err := getExposedPortsFromImageStreamImage(isi)
+	if err != nil {
+		return nil, err
+	}
+	return ports, nil
+}
+
+// GetBuilderImageStreamImage retrieves exposed port from builder's imagestreamimage.
+func (r *ReconcileComponent) GetBuilderImageStreamImage(imageTag string, is *imagev1.ImageStream) (*imagev1.ImageStreamImage, error) {
+	for _, tag := range is.Status.Tags {
+		if tag.Tag == imageTag {
+			if len(tag.Items) > 0 {
+				tagDigest := tag.Items[0].Image
+				imageStreamImageName := fmt.Sprintf("%s@%s", is.Name, tagDigest)
+				imageStreamImage, err := r.imageClient.ImageStreamImages(is.Namespace).Get(imageStreamImageName, metav1.GetOptions{})
+				if err != nil {
+					return nil, err
+				}
+				log.Info(fmt.Sprintf("** Found Builder ImageStreamImage %s **", imageStreamImageName))
+				return imageStreamImage, nil
+			}
+			return nil, fmt.Errorf("unable to find tag %s for image %s", imageTag, is.Name)
+		}
+	}
+	return nil, fmt.Errorf("unable to find tag %s for image %s", imageTag, is.Name)
+}
+
 // CreateRoute creates a route to expose the service if CRD's exposed field is true.
-func (r *ReconcileComponent) CreateRoute(cr *devconsoleapi.Component) (*routev1.Route, error) {
-	route := newRoute(cr)
-	if err := controllerutil.SetControllerReference(cr, route, r.scheme); err != nil {
+func (r *ReconcileComponent) CreateRoute(cp *devconsoleapi.Component) (*routev1.Route, error) {
+	route := newRoute(cp)
+	if err := controllerutil.SetControllerReference(cp, route, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
 		return nil, err
 	}
@@ -319,17 +369,14 @@ func (r *ReconcileComponent) CreateRoute(cr *devconsoleapi.Component) (*routev1.
 }
 
 // CreateService creates a service resource to expose the component S2I deployed image.
-func (r *ReconcileComponent) CreateService(cr *devconsoleapi.Component) (*corev1.Service, error) {
-	port := int32(8080) // default port to 8080
-	if cr.Spec.Port != 0 {
-		port = cr.Spec.Port
-	}
-	svc, err := newService(cr, port)
+func (r *ReconcileComponent) CreateService(cp *devconsoleapi.Component, containerPorts []corev1.ContainerPort) (*corev1.Service, error) {
+	var port = containerPorts[0].ContainerPort
+	svc, err := newService(cp, port)
 	if err != nil {
 		log.Info("** CreateService: Port is not valid")
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(cr, svc, r.scheme); err != nil {
+	if err := controllerutil.SetControllerReference(cp, svc, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
 		return nil, err
 	}
@@ -352,9 +399,9 @@ func (r *ReconcileComponent) CreateService(cr *devconsoleapi.Component) (*corev1
 }
 
 // CreateDeploymentConfig creates a DeploymentConfig OpenShift resource used in S2I.
-func (r *ReconcileComponent) CreateDeploymentConfig(cr *devconsoleapi.Component, outputIS *imagev1.ImageStream) (*v1.DeploymentConfig, error) {
-	dc := newDeploymentConfig(cr, outputIS)
-	if err := controllerutil.SetControllerReference(cr, dc, r.scheme); err != nil {
+func (r *ReconcileComponent) CreateDeploymentConfig(cp *devconsoleapi.Component, outputIS *imagev1.ImageStream, containerPorts []corev1.ContainerPort) (*v1.DeploymentConfig, error) {
+	dc := newDeploymentConfig(cp, outputIS, containerPorts)
+	if err := controllerutil.SetControllerReference(cp, dc, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
 		return nil, err
 	}
@@ -369,7 +416,6 @@ func (r *ReconcileComponent) CreateDeploymentConfig(cr *devconsoleapi.Component,
 		err := r.client.Create(context.TODO(), dc)
 		if err != nil && !errors.IsAlreadyExists(err) {
 			log.Error(err, "** DeploymentConfig creation fails **")
-			//r.UpdateStatus(cr, componentsv1alpha1.PhaseError)
 			return nil, err
 		}
 		return dc, nil
@@ -403,9 +449,9 @@ func (r *ReconcileComponent) CreateBuildConfig(cr *devconsoleapi.Component, buil
 }
 
 // CreateOutputImageStream creates an empty image name that holds the source code of the component to build and deploy.
-func (r *ReconcileComponent) CreateOutputImageStream(cr *devconsoleapi.Component) (*imagev1.ImageStream, error) {
-	outputIS := newOutputImageStream(cr)
-	if err := controllerutil.SetControllerReference(cr, outputIS, r.scheme); err != nil {
+func (r *ReconcileComponent) CreateOutputImageStream(cp *devconsoleapi.Component) (*imagev1.ImageStream, error) {
+	outputIS := newOutputImageStream(cp)
+	if err := controllerutil.SetControllerReference(cp, outputIS, r.scheme); err != nil {
 		log.Error(err, "** Setting owner reference fails **")
 		return nil, err
 	}
@@ -430,30 +476,39 @@ func (r *ReconcileComponent) CreateOutputImageStream(cr *devconsoleapi.Component
 
 // CreateBuilderImageStream either creates an builder image stream fetch from Docker hub or reuse an existing
 // image stream in OpenShift namespace.
-func (r *ReconcileComponent) CreateBuilderImageStream(cr *devconsoleapi.Component) (*imagev1.ImageStream, error) {
+func (r *ReconcileComponent) CreateBuilderImageStream(cp *devconsoleapi.Component) (*imagev1.ImageStream, error) {
 	var newImageForBuilder *imagev1.ImageStream
 	found := &imagev1.ImageStream{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: cr.Spec.BuildType, Namespace: openshiftNamespace}, found)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: cp.Spec.BuildType, Namespace: openshiftNamespace}, found)
 	if err == nil {
 		log.Info("** Skip Creating builder ImageStream: an OpenShift image already exist", "ImageStream.Namespace", found.Namespace, "ImageStream.Name", found.Name)
 		return found, nil
 	}
 	if errors.IsNotFound(err) { // OpenShift builder image is not present, fallback to create one.
-		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, cr.Spec.BuildType))
-		newImageForBuilder = newImageStreamFromDocker(cr)
+		log.Info(fmt.Sprintf("** Searching in namespace %s imagestream %s fails **", openshiftNamespace, cp.Spec.BuildType))
+		newImageForBuilder = newImageStreamFromDocker(cp)
 		if newImageForBuilder == nil {
-			log.Error(err, "** Creating new builder image fails **")
+			log.Error(err, "** Creating new BUILDER image fails **")
 			return nil, errors.NewNotFound(schema.GroupResource{Resource: "ImageStream"}, "builder image for build not found")
 		}
-		log.Info("💡💡  Creating a new builder ImageStream 💡💡")
-		err = r.client.Create(context.TODO(), newImageForBuilder)
-		if err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "** Creating new builder image fails **")
-			return nil, err
+		foundBuilderIS := &imagev1.ImageStream{}
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: newImageForBuilder.Name, Namespace: newImageForBuilder.Namespace}, foundBuilderIS)
+		if err == nil {
+			log.Info("** Skip Creating builder ImageStream: Already exist", "ImageStream.Namespace", foundBuilderIS.Namespace, "ImageStream.Name", foundBuilderIS.Name)
+			return foundBuilderIS, nil
 		}
-		if err := controllerutil.SetControllerReference(cr, newImageForBuilder, r.scheme); err != nil {
-			log.Error(err, "** Setting owner reference fails **")
-			return nil, err
+		if errors.IsNotFound(err) {
+			log.Info("** 💡💡 Creating a new builder ImageStream 💡💡", "ImageStream.Namespace", newImageForBuilder.Namespace, "ImageStream.Name", newImageForBuilder.Name)
+			err := r.client.Create(context.TODO(), newImageForBuilder)
+			if err != nil && !errors.IsAlreadyExists(err) {
+				log.Error(err, "** builder ImageStream creation fails **")
+				return nil, err
+			}
+			if err := controllerutil.SetControllerReference(cp, newImageForBuilder, r.scheme); err != nil {
+				log.Error(err, "** Setting owner reference fails **")
+				return nil, err
+			}
+			return foundBuilderIS, nil
 		}
 	}
 	return newImageForBuilder, nil

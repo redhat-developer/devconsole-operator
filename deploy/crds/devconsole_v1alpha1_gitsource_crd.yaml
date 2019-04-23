@@ -9,6 +9,8 @@ spec:
     listKind: GitSourceList
     plural: gitsources
     singular: gitsource
+    shortNames:
+      - gs
   scope: Namespaced
   validation:
     openAPIV3Schema:
@@ -86,8 +88,17 @@ spec:
                   description: Error has the error message if the attempt to
                     reach a GitSource failed
                   type: string
+                reason:
+                  description: Reason is a short predefined string representing
+                    a reason for the connection failure
+                    Possible values are [RepoNotReachable, BranchNotFound, BadCredentials, InternalFailure]
+                  type: string
               required:
                 - state
+  additionalPrinterColumns:
+    - name: Status
+      type: string
+      JSONPath: .status.state
   version: v1alpha1
   versions:
     - name: v1alpha1
