@@ -45,6 +45,7 @@ deploy-test:
 	$(Q)-oc new-project $(LOCAL_TEST_NAMESPACE)
 	$(Q)-oc apply -f examples/devconsole_v1alpha1_gitsource_cr.yaml
 	$(Q)-oc apply -f examples/devconsole_v1alpha1_component_cr.yaml
+	$(Q)-oc apply -f examples/devconsole_v1alpha1_gitsourceanalysis_cr.yaml
 
 endif
 
