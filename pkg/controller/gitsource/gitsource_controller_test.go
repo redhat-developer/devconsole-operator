@@ -2,11 +2,14 @@ package gitsource
 
 import (
 	"context"
+	"fmt"
 	"github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
+	"github.com/redhat-developer/devconsole-git/pkg/git/repository"
 	"github.com/redhat-developer/devconsole-git/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/h2non/gock.v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -73,6 +76,129 @@ func TestReconcileGitSourceConnectionSkip(t *testing.T) {
 	assertGitSource(t, client, "", v1alpha1.OK, v1alpha1.ConnectionInternalFailure)
 }
 
+func TestValidateGitHubInvalidSecret(t *testing.T) {
+	// given
+	defer gock.OffAll()
+	gock.New("https://api.github.com").
+		Get("/user").
+		Reply(401)
+
+	secret := test.NewSecret(corev1.SecretTypeOpaque, map[string][]byte{"password": []byte("some-token")})
+	gs := test.NewGitSource(test.WithURL(repoGitHubURL))
+	gs.Spec.SecretRef = &v1alpha1.SecretRef{Name: test.SecretName}
+	reconciler, request, client := PrepareClient(test.GitSourceName,
+		test.RegisterGvkObject(v1alpha1.SchemeGroupVersion, gs),
+		test.RegisterGvkObject(corev1.SchemeGroupVersion, secret))
+
+	//when
+	_, err := reconciler.Reconcile(request)
+
+	// then
+	require.NoError(t, err)
+	assertGitSource(t, client, v1alpha1.Initializing, v1alpha1.Failed, v1alpha1.BadCredentials)
+}
+
+func TestValidateGitLabSecretAndUnavailableRepo(t *testing.T) {
+	// given
+	defer gock.OffAll()
+	gock.New("https://gitlab.com/").
+		Get("/api/v4/user").
+		Reply(200).
+		BodyString("{}")
+	gock.New("https://gitlab.com/").
+		Get(fmt.Sprintf("/api/v4/projects/%s", repoIdentifier)).
+		Reply(404)
+
+	secret := test.NewSecret(corev1.SecretTypeOpaque, map[string][]byte{"password": []byte("some-token")})
+	gs := test.NewGitSource(test.WithURL("https://gitlab.com/" + repoIdentifier))
+	gs.Spec.SecretRef = &v1alpha1.SecretRef{Name: test.SecretName}
+	reconciler, request, client := PrepareClient(test.GitSourceName,
+		test.RegisterGvkObject(v1alpha1.SchemeGroupVersion, gs),
+		test.RegisterGvkObject(corev1.SchemeGroupVersion, secret))
+
+	//when
+	_, err := reconciler.Reconcile(request)
+
+	// then
+	require.NoError(t, err)
+	assertGitSource(t, client, v1alpha1.Initializing, v1alpha1.Failed, v1alpha1.RepoNotReachable)
+}
+
+func TestValidateGitHubSecretAndAvailableRepoWithWrongBranch(t *testing.T) {
+	// given
+	defer gock.OffAll()
+	gock.New("https://api.github.com").
+		Get("/user").
+		Reply(200)
+	gock.New("https://api.github.com").
+		Get(fmt.Sprintf("repos/%s", repoIdentifier)).
+		Reply(200)
+	gock.New("https://api.github.com").
+		Get(fmt.Sprintf("repos/%s/branches/any", repoIdentifier)).
+		Reply(404)
+
+	secret := test.NewSecret(corev1.SecretTypeOpaque, map[string][]byte{
+		"username": []byte("username"),
+		"password": []byte("password")})
+	gs := test.NewGitSource(test.WithURL(repoGitHubURL), test.WithRef("any"))
+	gs.Spec.SecretRef = &v1alpha1.SecretRef{Name: test.SecretName}
+	reconciler, request, client := PrepareClient(test.GitSourceName,
+		test.RegisterGvkObject(v1alpha1.SchemeGroupVersion, gs),
+		test.RegisterGvkObject(corev1.SchemeGroupVersion, secret))
+
+	//when
+	_, err := reconciler.Reconcile(request)
+
+	// then
+	require.NoError(t, err)
+	assertGitSource(t, client, v1alpha1.Initializing, v1alpha1.Failed, v1alpha1.BranchNotFound)
+}
+
+func TestValidateBitBucketWithCorrectData(t *testing.T) {
+	// given
+	defer gock.OffAll()
+	gock.New("https://api.bitbucket.org/").
+		Get("/2.0/.*").
+		Times(3).
+		Reply(200)
+
+	secret := test.NewSecret(corev1.SecretTypeOpaque, map[string][]byte{"password": []byte("some-token")})
+	gs := test.NewGitSource(test.WithURL("https://bitbucket.org/" + repoIdentifier))
+	gs.Spec.SecretRef = &v1alpha1.SecretRef{Name: test.SecretName}
+	reconciler, request, client := PrepareClient(test.GitSourceName,
+		test.RegisterGvkObject(v1alpha1.SchemeGroupVersion, gs),
+		test.RegisterGvkObject(corev1.SchemeGroupVersion, secret))
+
+	// when
+	_, err := reconciler.Reconcile(request)
+
+	// then
+	require.NoError(t, err)
+	assertGitSource(t, client, v1alpha1.Initializing, v1alpha1.OK, "")
+}
+
+func TestValidateGenericGit(t *testing.T) {
+	//given
+	reset := test.RunBasicSshServer(t, "super-secret")
+	defer reset()
+
+	dummyRepo := test.NewDummyGitRepo(t, repository.Master)
+	dummyRepo.Commit("main.go")
+	secret := test.NewSecret(corev1.SecretTypeOpaque, map[string][]byte{"password": []byte("super-secret")})
+	gs := test.NewGitSource(test.WithURL("ssh://git@localhost:2222" + dummyRepo.Path))
+	gs.Spec.SecretRef = &v1alpha1.SecretRef{Name: test.SecretName}
+	reconciler, request, client := PrepareClient(test.GitSourceName,
+		test.RegisterGvkObject(v1alpha1.SchemeGroupVersion, gs),
+		test.RegisterGvkObject(corev1.SchemeGroupVersion, secret))
+
+	// when
+	_, err := reconciler.Reconcile(request)
+
+	// then
+	require.NoError(t, err)
+	assertGitSource(t, client, v1alpha1.Initializing, v1alpha1.OK, "")
+}
+
 func PrepareClient(name string, gvkObjects ...test.GvkObject) (*ReconcileGitSource, reconcile.Request, client.Client) {
 	// Create a fake client to mock API calls.
 	cl, s := test.PrepareClient(gvkObjects...)
@@ -93,7 +219,7 @@ func assertGitSource(t *testing.T, client client.Client, gsState v1alpha1.State,
 
 	require.NotNil(t, gitSource.Status.Connection)
 	if reason != "" {
-		assert.Contains(t, gitSource.Status.Connection.Reason, reason)
+		assert.Equal(t, gitSource.Status.Connection.Reason, reason)
 		assert.NotEmpty(t, gitSource.Status.Connection.Error)
 	} else {
 		assert.Empty(t, gitSource.Status.Connection.Error)

@@ -3,6 +3,7 @@ package gitsource
 import (
 	"context"
 	"github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
+	"github.com/redhat-developer/devconsole-git/pkg/git"
 	"github.com/redhat-developer/devconsole-git/pkg/git/connection"
 	gslog "github.com/redhat-developer/devconsole-git/pkg/log"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -81,7 +82,7 @@ func (r *ReconcileGitSource) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 	gitSourceLogger := gslog.LogWithGSValues(reqLogger, gitSource)
 
-	isDirty := updateStatus(gitSourceLogger, gitSource)
+	isDirty := updateStatus(gitSourceLogger, r.client, request.Namespace, gitSource)
 
 	if isDirty {
 		err = r.client.Update(context.TODO(), gitSource)
@@ -100,7 +101,7 @@ func (r *ReconcileGitSource) Reconcile(request reconcile.Request) (reconcile.Res
 	return reconcile.Result{}, nil
 }
 
-func updateStatus(log *gslog.GitSourceLogger, gitSource *v1alpha1.GitSource) (isDirty bool) {
+func updateStatus(log *gslog.GitSourceLogger, client client.Client, namespace string, gitSource *v1alpha1.GitSource) (isDirty bool) {
 
 	if gitSource.Status.Connection.State != "" {
 		return false
@@ -109,15 +110,24 @@ func updateStatus(log *gslog.GitSourceLogger, gitSource *v1alpha1.GitSource) (is
 		gitSource.Status.State = v1alpha1.Initializing
 	}
 
-	gitSource.Status.Connection = getConnectionStatus(log, gitSource)
+	gitSource.Status.Connection = getConnectionStatus(log, client, namespace, gitSource)
 	return true
 }
 
-func getConnectionStatus(log *gslog.GitSourceLogger, gitSource *v1alpha1.GitSource) v1alpha1.Connection {
+func getConnectionStatus(log *gslog.GitSourceLogger, client client.Client, namespace string, gitSource *v1alpha1.GitSource) v1alpha1.Connection {
 	if gitSource.Spec.SecretRef == nil {
 		if validationError := connection.ValidateGitSource(log, gitSource); validationError != nil {
 			return NewFailedConnection(validationError)
 		}
+		return NewConnection("", "", v1alpha1.OK)
+	}
+	secret, err := git.NewGitSecret(client, namespace, gitSource)
+	if err != nil {
+		return NewConnection(err.Error(), v1alpha1.BadCredentials, v1alpha1.Failed)
+	}
+	validationError := connection.ValidateGitSourceWithSecret(log, gitSource, secret)
+	if validationError != nil {
+		return NewFailedConnection(validationError)
 	}
 	return NewConnection("", "", v1alpha1.OK)
 }
