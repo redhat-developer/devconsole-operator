@@ -673,7 +673,7 @@
     "pkg/apis/devconsole/v1alpha1",
   ]
   pruneopts = "NT"
-  revision = "36791a68b58dd10ed2ead21974bb9101b4ebe51e"
+  revision = "95209de5775c1b22c48a40af8a8f68dad49fc04c"
 
 [[projects]]
   branch = "master"

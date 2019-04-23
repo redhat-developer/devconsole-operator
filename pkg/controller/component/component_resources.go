@@ -20,14 +20,16 @@ import (
 
 func newImageStreamFromDocker(cp *devconsoleapi.Component) *imagev1.ImageStream {
 	labels := resource.GetLabelsForCR(cp)
+	annotations := resource.GetAnnotationsForCR(cp)
 
 	if _, ok := buildTypeImages[cp.Spec.BuildType]; !ok {
 		return nil
 	}
 	return &imagev1.ImageStream{ObjectMeta: metav1.ObjectMeta{
-		Name:      cp.Spec.BuildType,
-		Namespace: cp.Namespace,
-		Labels:    labels,
+		Name:        cp.Spec.BuildType,
+		Namespace:   cp.Namespace,
+		Labels:      labels,
+		Annotations: annotations,
 	}, Spec: imagev1.ImageStreamSpec{
 		LookupPolicy: imagev1.ImageLookupPolicy{
 			Local: false,
@@ -46,15 +48,18 @@ func newImageStreamFromDocker(cp *devconsoleapi.Component) *imagev1.ImageStream 
 
 func newOutputImageStream(cp *devconsoleapi.Component) *imagev1.ImageStream {
 	labels := resource.GetLabelsForCR(cp)
+	annotations := resource.GetAnnotationsForCR(cp)
 	return &imagev1.ImageStream{ObjectMeta: metav1.ObjectMeta{
-		Name:      cp.Name,
-		Namespace: cp.Namespace,
-		Labels:    labels,
+		Name:        cp.Name,
+		Namespace:   cp.Namespace,
+		Labels:      labels,
+		Annotations: annotations,
 	}}
 }
 
 func newBuildConfig(cp *devconsoleapi.Component, builder *imagev1.ImageStream, gitSource *devconsoleapi.GitSource, secret *corev1.Secret) *buildv1.BuildConfig {
 	labels := resource.GetLabelsForCR(cp)
+	annotations := resource.GetAnnotationsForCR(cp)
 	buildSource := buildv1.BuildSource{
 		Git: &buildv1.GitBuildSource{
 			URI: gitSource.Spec.URL,
@@ -69,7 +74,7 @@ func newBuildConfig(cp *devconsoleapi.Component, builder *imagev1.ImageStream, g
 	}
 	incremental := true
 	return &buildv1.BuildConfig{
-		ObjectMeta: metav1.ObjectMeta{Name: cp.Name, Namespace: cp.Namespace, Labels: labels},
+		ObjectMeta: metav1.ObjectMeta{Name: cp.Name, Namespace: cp.Namespace, Labels: labels, Annotations: annotations},
 		Spec: buildv1.BuildConfigSpec{
 			CommonSpec: buildv1.CommonSpec{
 				Output: buildv1.BuildOutput{
@@ -104,6 +109,7 @@ func newBuildConfig(cp *devconsoleapi.Component, builder *imagev1.ImageStream, g
 
 func newDeploymentConfig(cp *devconsoleapi.Component, output *imagev1.ImageStream, containerPorts []corev1.ContainerPort) *v1.DeploymentConfig {
 	labels := resource.GetLabelsForCR(cp)
+	annotations := resource.GetAnnotationsForCR(cp)
 	if containerPorts == nil {
 		containerPorts = []corev1.ContainerPort{{
 			ContainerPort: 8080,
@@ -112,9 +118,10 @@ func newDeploymentConfig(cp *devconsoleapi.Component, output *imagev1.ImageStrea
 	}
 	return &v1.DeploymentConfig{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cp.Name,
-			Namespace: cp.Namespace,
-			Labels:    labels,
+			Name:        cp.Name,
+			Namespace:   cp.Namespace,
+			Labels:      labels,
+			Annotations: annotations,
 		},
 		Spec: v1.DeploymentConfigSpec{
 			Strategy: v1.DeploymentStrategy{
@@ -124,9 +131,10 @@ func newDeploymentConfig(cp *devconsoleapi.Component, output *imagev1.ImageStrea
 			Selector: labels,
 			Template: &corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      cp.Name,
-					Namespace: cp.Namespace,
-					Labels:    labels,
+					Name:        cp.Name,
+					Namespace:   cp.Namespace,
+					Labels:      labels,
+					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
@@ -159,6 +167,7 @@ func newDeploymentConfig(cp *devconsoleapi.Component, output *imagev1.ImageStrea
 
 func newService(cp *devconsoleapi.Component, port int32) (*corev1.Service, error) {
 	labels := resource.GetLabelsForCR(cp)
+	annotations := resource.GetAnnotationsForCR(cp)
 	if port > 65536 || port < 1024 {
 		return nil, fmt.Errorf("port %d is out of range [1024-65535]", port)
 	}
@@ -172,9 +181,10 @@ func newService(cp *devconsoleapi.Component, port int32) (*corev1.Service, error
 	svcPorts = append(svcPorts, svcPort)
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cp.Name,
-			Namespace: cp.Namespace,
-			Labels:    labels,
+			Name:        cp.Name,
+			Namespace:   cp.Namespace,
+			Labels:      labels,
+			Annotations: annotations,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: svcPorts,
@@ -188,12 +198,13 @@ func newService(cp *devconsoleapi.Component, port int32) (*corev1.Service, error
 
 func newRoute(cp *devconsoleapi.Component) *routev1.Route {
 	labels := resource.GetLabelsForCR(cp)
-
+	annotations := resource.GetAnnotationsForCR(cp)
 	route := &routev1.Route{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cp.Name,
-			Namespace: cp.Namespace,
-			Labels:    labels,
+			Name:        cp.Name,
+			Namespace:   cp.Namespace,
+			Labels:      labels,
+			Annotations: annotations,
 		},
 		Spec: routev1.RouteSpec{
 			To: routev1.RouteTargetReference{
@@ -208,11 +219,11 @@ func newRoute(cp *devconsoleapi.Component) *routev1.Route {
 	return route
 }
 
-func newSecret(cr *devconsoleapi.Component, gitSource *devconsoleapi.GitSource) *corev1.Secret {
+func newSecret(cp *devconsoleapi.Component, gitSource *devconsoleapi.GitSource) *corev1.Secret {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      gitSource.Spec.SecretRef.Name,
-			Namespace: cr.Namespace,
+			Namespace: cp.Namespace,
 		},
 	}
 	return secret
