@@ -58,4 +58,3 @@ spec:
       - name: config
         configMap:
           name: console-operator-config
-
