@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console-operator
+  namespace: openshift-console-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: console-operator
+  template:
+    metadata:
+      labels:
+        name: console-operator
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      priorityClassName: system-cluster-critical
+      serviceAccountName: console-operator
+      containers:
+      - name: console-operator
+        image: docker.io/openshift/origin-console-operator:latest
+        ports:
+        - containerPort: 60000
+          name: metrics
+        command:
+        - console
+        - operator
+        args:
+        - "-v=4"
+        - "--create-default-console=true"
+        # 04-config.yaml provides this config for the operator
+        - "--config=/var/run/configmaps/config/controller-config.yaml"
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /var/run/configmaps/config
+          name: config
+        env:
+        - name: IMAGE
+          value: quay.io/redhat-developer/console:master-next
+        - name: RELEASE_VERSION
+          value: "0.0.1-snapshot"
+        - name: OPERATOR_NAME
+          value: "console-operator"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "10m"
+      volumes:
+      - name: config
+        configMap:
+          name: console-operator-config
