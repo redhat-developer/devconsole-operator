@@ -3,6 +3,7 @@ package gitsource
 import (
 	"context"
 	"github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
+	"github.com/redhat-developer/devconsole-git/pkg/git/connection"
 	gslog "github.com/redhat-developer/devconsole-git/pkg/log"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"

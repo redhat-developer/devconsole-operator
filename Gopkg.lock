@@ -677,7 +677,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "0:"
+  digest = "1:8e26da08e029d2bbf9b81341c8677424333dfc569b159c60127cb1113ca950d9"
   name = "github.com/redhat-developer/devconsole-git"
   packages = [
     "pkg/git",
