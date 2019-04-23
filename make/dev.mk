@@ -51,7 +51,6 @@ deploy-clean:
 .PHONY: deploy-test
 ## Deploy a CR as test
 deploy-test:
-deploy-test:
 	$(Q)-oc new-project $(LOCAL_TEST_NAMESPACE)
 	$(Q)-oc apply -f examples/devconsole_v1alpha1_gitsource_cr.yaml
 	$(Q)-oc apply -f examples/devconsole_v1alpha1_component_cr.yaml
@@ -94,7 +93,7 @@ clean-resources:
 	@oc delete -f ./deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml || true
 
 .PHONY: deploy-operator
-deploy-operator: build build-image deploy-operator-only
+deploy-operator: build build-operator-image deploy-operator-only
 
 .PHONY: minishift-start
 minishift-start:
@@ -102,6 +101,6 @@ minishift-start:
 	-eval `minishift docker-env` && oc login -u system:admin
 
 .PHONY: deploy-all
-deploy-all: clean-resources create-resources deps prebuild-check deploy-operator create-cr
+deploy-all: clean-resources deploy-operator
 
 endif
