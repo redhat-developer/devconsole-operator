@@ -10,7 +10,7 @@ spec:
     plural: gitsourceanalyses
     singular: gitsourceanalysis
     shortNames:
-      - srcan
+      - gsa
   scope: Namespaced
   validation:
     openAPIV3Schema:

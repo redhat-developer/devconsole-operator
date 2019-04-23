@@ -10,7 +10,7 @@ spec:
     plural: gitsources
     singular: gitsource
     shortNames:
-      - src
+      - gs
   scope: Namespaced
   validation:
     openAPIV3Schema:
