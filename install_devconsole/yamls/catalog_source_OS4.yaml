@@ -9,3 +9,4 @@ spec:
   image: quay.io/redhat-developer/operator-registry:latest
   displayName: Community Operators
   publisher: Red Hat
+

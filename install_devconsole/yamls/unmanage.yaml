@@ -8,4 +8,5 @@ spec:
   - kind: Deployment
     name: console-operator
     namespace: openshift-console-operator
-    unmanaged: true           
+    unmanaged: true
+
