@@ -5,12 +5,13 @@ oc login -u ${OC_LOGIN_USERNAME} -p ${OC_LOGIN_PASSWORD}
 
 oc apply -f ./yamls/unmanage.yaml
 oc scale --replicas 0 deployment console-operator --namespace openshift-console-operator
-sleep 20s
 oc scale --replicas 0 deployment console --namespace openshift-console
-sleep 20s
 oc apply -f ./yamls/redeploy-console-operator.yaml
-sleep 25s
+#It takes time to get the pod in running state
+while [ "$(oc get pods --field-selector=status.phase=Running -n openshift-console-operator)" == "No resources found." ]
+do
+    sleep 1s
+done
 oc scale --replicas 1 deployment console --namespace openshift-console
-sleep 10s
 sh ./devconsole.sh
 sh ./create_user.sh
