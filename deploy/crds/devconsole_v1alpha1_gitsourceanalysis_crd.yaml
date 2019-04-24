@@ -9,6 +9,8 @@ spec:
     listKind: GitSourceAnalysisList
     plural: gitsourceanalyses
     singular: gitsourceanalysis
+    shortNames:
+      - gsa
   scope: Namespaced
   validation:
     openAPIV3Schema:
@@ -80,6 +82,10 @@ spec:
                 a reason for the build type detection failure.
                 Possible values are [NotSupportedType, DetectionFailed, InternalFailure]
               type: string
+  additionalPrinterColumns:
+    - name: Status
+      type: string
+      JSONPath: .status.analyzed
   version: v1alpha1
   versions:
     - name: v1alpha1
