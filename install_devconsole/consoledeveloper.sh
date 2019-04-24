@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set +x
 OC_LOGIN_USERNAME=kubeadmin
 oc login -u ${OC_LOGIN_USERNAME} -p ${OC_LOGIN_PASSWORD}
 
