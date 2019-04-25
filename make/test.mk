@@ -91,6 +91,11 @@ ifeq ($(OPENSHIFT_VERSION),4)
 endif
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
+.PHONY: test-e2e-olm
+test-e2e-olm:
+	$(eval OPENSHIFT_REGISTRY := registry.svc.ci.openshift.org)
+	docker pull $(OPENSHIFT_REGISTRY)/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator
+
 #-------------------------------------------------------------------------------
 # e2e test in dev mode
 #-------------------------------------------------------------------------------
