@@ -1,20 +1,53 @@
 
-# devconsole
 
-[![Build Status](https://ci.centos.org/buildStatus/icon?job=devtools-devconsole-operator)](https://ci.centos.org/job/devtools-devconsole-operator/)
+# DevConsole Operator
 
-This repository was initially bootstrapped using [CoreOS operator](https://github.com/operator-framework/operator-sdk). 
 
-## Build
+[![Go Report Card](https://goreportcard.com/badge/github.com/redhat-developer/devconsole-operator)](https://goreportcard.com/report/github.com/redhat-developer/devconsole-operator)
+[![Docker Repository on Quay](https://quay.io/repository/redhat-developer/devconsole-operator/status "Docker Repository on Quay")](https://quay.io/repository/redhat-developer/devconsole-operator)
+[![Docker Repository on Quay](https://quay.io/repository/redhat-developer/operator-registry/status "Docker Repository on Quay")](https://quay.io/repository/redhat-developer/operator-registry)
 
-### Pre-requisites
-- [operator-sdk v0.5.0](https://github.com/operator-framework/operator-sdk#quick-start) 
-- [dep][dep_tool] version v0.5.0+.
+DevConsole operator enables a developer-focused view in OpenShift 4.
+It provides a view switcher to transition between the traditional
+Kubernetes cluster administration console referred to as
+Administrator, to this new Developer perspective.
+
+This new Developer perspective provides a high-level abstraction over
+Kubernetes and OpenShift primitives to allow developers to focus on
+their application development.
+
+## Key Features
+
+The Developer perspective is still under active development.  These
+are the main features that are getting developed:
+
+* Add - The place to create and build the application using one of this method:
+
+	- Importing source code from Git
+	- Deploying an existing image
+	- Browse a catalog to deploy or connect application services
+	- Deploy quick-starters or samples
+
+* Topology - The landing page that shows application structure and
+  health in an easy-to-use diagram
+* Builds - Lists OpenShift BuildConfig resources for the selected
+  project
+* Pipelines - Lists Tekton Pipeline resources for the selected project
+
+## Development
+
+This repository was initially bootstrapped using the [Operator Framework SDK][operator-sdk].
+This project requires [Go] version 1.11 or above.
+
+Here is the complete list of pre-requisites:
+
+- [Operator SDK][operator-sdk] version 0.7.0
+- [dep][dep_tool] version 0.5.1
 - [git][git_tool]
-- [go][go_tool] version v1.10+.
-- [docker][docker_tool] version 17.03+.
+- [go][go_tool] version 1.11 or above
+- [docker][docker_tool] version 17.03+
 - [kubectl][kubectl_tool] version v1.11.0+ or [oc] version 3.11
-- Access to a kubernetes v.1.11.0+ cluster or openshift cluster version 3.11
+- Access to OpenShift 4 cluster
 
 ### Build
 ```
@@ -23,12 +56,12 @@ make build
 ### Test
 * run unit test:
 ```
-make test-unit
+make test
 ```
 * run e2e test:
 For running e2e tests, have minishift started.
 ```
-make e2e-local
+make test-e2e-local
 ```
 > Note: e2e test will deploy operator in project `devconsole-e2e-test`, if your tests timeout and you wan to debug:
 > - oc project devconsole-e2e-test
@@ -46,16 +79,9 @@ minishift profile set devconsole
 ```
 minishift addon enable admin-user
 ```
-* optionally, configure the VM 
-
-```
-minishift config set cpus 4
-minishift config set memory 8GB
-minishift config set vm-driver virtualbox
-```
 * start the instance
 ```
-minishift start
+make minishift-start
 ```
 > NOTE: this setup should be deprecated in favor of [OCP4 install]().
 
@@ -69,10 +95,7 @@ make local
 If a specific namespace is provided only that project will watched. 
 As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
 
-* Make sure minishift is running and use myproject
-```
-oc project myproject
-```
+* Make sure minishift is running 
 * Clean previously created resources
 ```
 make deploy-clean
@@ -83,19 +106,7 @@ make deploy-test
 ```
 * See the newly created resources
 ```
-oc get is,bc,svc,component.devconsole,build
-NAME                                           DOCKER REPO                               TAGS      UPDATED
-imagestream.image.openshift.io/myapp-output    172.30.1.1:5000/myproject/myapp-output
-imagestream.image.openshift.io/myapp-runtime   172.30.1.1:5000/myproject/myapp-runtime   latest    46 seconds ago
-
-NAME                                      TYPE      FROM         LATEST
-buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
-
-NAME                                         AGE
-component.devconsole.openshift.io/myapp   48s
-
-NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
-build.build.openshift.io/myapp-bc-1   Source    Git@85ac14e   Running   45 seconds ago
+oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
 ```
 
 ### Deploy the operator with Deployment yaml
@@ -110,14 +121,11 @@ operator-sdk build $(minishift openshift registry)/devconsole/devconsole-operato
 > NOTE: In `operator.yaml` replace `imagePullPolicy: Always` with `imagePullPolicy: IfNotPresent` 
 for local dev to avoid pulling image and be able to use docker cached image instead.
  
-* deploy cr, role and rbac
+* deploy cr, role and rbac in `devconsole` namespace
 ```
-oc login -u system:admin
-oc apply -f deploy/crds/devconsole_v1alpha1_component_crd.yaml
-oc apply -f deploy/service_account.yaml
-oc apply -f deploy/role.yaml
-oc apply -f deploy/role_binding.yaml
-oc apply -f deploy/operator.yaml
+make deploy-rbac
+make deploy-crd
+make deploy-operator
 ```
 > NOTE: make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devconsole/devconsole-operator:latest`
 
@@ -126,25 +134,15 @@ oc apply -f deploy/operator.yaml
 oc logs pod/devconsole-operator-5b4bbc7d-89crs -f
 ```
 
-* in a different shell, test CR in different project
+* in a different shell, test CR in different project (`local-test`)
 ```
-oc new-project tina
-oc create -f examples/devconsole_v1alpha1_component_cr.yaml --namespace tina
+make deploy-test
 ```
+> Note: usee `make deploy-clean` to delete `local-test` project and start from fresh.
+
 * check if the resources are created
 ```
-oc get all,is,component,bc,build,deployment,pod
-NAME                   READY     STATUS    RESTARTS   AGE
-pod/myapp-bc-1-build   1/1       Running   0          23s
-
-NAME                                      TYPE      FROM         LATEST
-buildconfig.build.openshift.io/myapp-bc   Source    Git@master   1
-
-NAME                                  TYPE      FROM          STATUS    STARTED          DURATION
-build.build.openshift.io/myapp-bc-1   Source    Git@afc0f38   Running   23 seconds ago
-
-NAME                                          DOCKER REPO                         TAGS      UPDATED
-imagestream.image.openshift.io/myapp-output   172.30.1.1:5000/tina/myapp-output
+oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
 ```
 ## Directory layout
 
@@ -161,8 +159,17 @@ Please consult [the documentation](https://github.com/operator-framework/operato
 | vendor | The golang [Vendor](https://golang.org/cmd/go/#hdr-Vendor_Directories) folder that contains the local copies of the external dependencies that satisfy the imports of this project. [dep](https://github.com/golang/dep) manages the vendor directly.|
 
 
-## Enabling the DevOps perspective in OpenShift
+## Enabling the Developer  perspective in OpenShift
 
-The frontend can check for the presence of the devconsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devconsole.openshift.io`.  If it exists, it will enable the DevOps perspective in the Openshift Console.
+The frontend can check for the presence of the devconsole CRDs using the Kubernetes API.  Check for [the existence of a Custom Resource Definitions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) with name as `gitsources.devconsole.openshift.io`.  If it exists, it will enable the Developer perspective in the Openshift Console.
 
 Refer to OLM test [README](test/README.md) to install the DevOps Console operator.
+
+[operator-sdk]: https://github.com/operator-framework/operator-sdk
+[dep_tool]: https://golang.github.io/dep/docs/installation.html
+[git_tool]: https://git-scm.com/downloads
+[kubectl_tool]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
+[oc]: https://www.okd.io/download.html
+[go_tool]: https://golang.org/dl/
+[docker_tool]: https://docs.docker.com/install/
+[Go]: https://golang.org

@@ -3,14 +3,16 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/operator-framework/operator-sdk/pkg/test/e2eutil"
 
+	devconsole "github.com/redhat-developer/devconsole-api/pkg/apis"
+	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1"
 	"github.com/redhat-developer/devconsole-operator/pkg/apis"
-	componentsv1alpha1 "github.com/redhat-developer/devconsole-operator/pkg/apis/devconsole/v1alpha1"
 
 	"github.com/stretchr/testify/require"
 
@@ -20,7 +22,7 @@ import (
 
 const (
 	retryInterval        = time.Second * 5
-	timeout              = time.Second * 60
+	timeout              = time.Minute * 15
 	cleanupRetryInterval = time.Second * 1
 	cleanupTimeout       = time.Second * 5
 )
@@ -29,13 +31,25 @@ const (
 // https://github.com/operator-framework/operator-sdk/blob/cc7b175/doc/test-framework/writing-e2e-tests.md
 func TestComponent(t *testing.T) {
 	var err error
+	gitSourceList := &devconsoleapi.GitSourceList{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GitSource",
+			APIVersion: "devconsole.openshift.io/v1alpha1",
+		},
+	}
 	// Register types with framework scheme
-	componentList := &componentsv1alpha1.ComponentList{
+	componentList := &devconsoleapi.ComponentList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
 			APIVersion: "devconsole.openshift.io/v1alpha1",
 		},
 	}
+
+	err = framework.AddToFrameworkScheme(devconsole.AddToScheme, gitSourceList)
+	if err != nil {
+		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
+	}
+
 	err = framework.AddToFrameworkScheme(apis.AddToScheme, componentList)
 	if err != nil {
 		t.Fatalf("failed to add custom resource scheme to framework: %v", err)
@@ -53,14 +67,33 @@ func TestComponent(t *testing.T) {
 	// get global framework variables
 	f := framework.Global
 	t.Log(fmt.Sprintf("namespace: %s", namespace))
+
 	// wait for component-operator to be ready
-	err = e2eutil.WaitForDeployment(t, f.KubeClient, "operators", "devconsole-operator", 1, retryInterval, timeout*2)
+	err = e2eutil.WaitForOperatorDeployment(t, f.KubeClient, os.Getenv("DEPLOYED_NAMESPACE"), "devconsole-operator", 1, retryInterval, timeout)
 	require.NoError(t, err, "failed while waiting for operator deployment")
 
-	t.Log("component-operator is ready and running state")
+	t.Log("component is ready and running")
+
+	gs := &devconsoleapi.GitSource{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GitSource",
+			APIVersion: "devconsole.openshift.io/v1alpha1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-git-source",
+			Namespace: namespace,
+		},
+		Spec: devconsoleapi.GitSourceSpec{
+			URL: "https://somegit.con/myrepo",
+			Ref: "master",
+		},
+	}
+	// use TestCtx's create helper to create the object and add a cleanup function for the new object
+	err = f.Client.Create(context.TODO(), gs, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	require.NoError(t, err, "failed to create custom resource of kind `GitSource`")
 
 	// create a Component custom resource
-	cr := &componentsv1alpha1.Component{
+	inputCR := &devconsoleapi.Component{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Component",
 			APIVersion: "devconsole.openshift.io/v1alpha1",
@@ -69,18 +102,18 @@ func TestComponent(t *testing.T) {
 			Name:      "mycomp",
 			Namespace: namespace,
 		},
-		Spec: componentsv1alpha1.ComponentSpec{
-			BuildType: "nodejs",
-			Codebase:  "https://github.com/nodeshift-starters/nodejs-rest-http-crud",
+		Spec: devconsoleapi.ComponentSpec{
+			BuildType:    "nodejs",
+			GitSourceRef: "my-git-source",
 		},
 	}
 	// use TestCtx's create helper to create the object and add a cleanup function for the new object
-	err = f.Client.Create(context.TODO(), cr, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
+	err = f.Client.Create(context.TODO(), inputCR, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	require.NoError(t, err, "failed to create custom resource of kind `Component`")
 
 	t.Run("retrieve component and verify related resources are created", func(t *testing.T) {
-		cr2 := &componentsv1alpha1.Component{}
-		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "mycomp", Namespace: namespace}, cr2)
+		outputCR := &devconsoleapi.Component{}
+		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "mycomp", Namespace: namespace}, outputCR)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `Component`")
 		// FIXME: Uncomment these lines after upgrading dependency versions
 		// The following (2) statements will fail due to
@@ -88,10 +121,10 @@ func TestComponent(t *testing.T) {
 		// This issue is resolved in controller-runtime 0.1.8
 		//require.Equal(t, "Component", cr2.TypeMeta.Kind)
 		//require.Equal(t, "devconsole.openshift.io/v1alpha1", cr2.TypeMeta.APIVersion)
-		require.Equal(t, "mycomp", cr2.ObjectMeta.Name)
-		require.Equal(t, namespace, cr2.ObjectMeta.Namespace)
-		require.Equal(t, "https://github.com/nodeshift-starters/nodejs-rest-http-crud", cr2.Spec.Codebase)
-		require.Equal(t, "nodejs", cr2.Spec.BuildType)
-		require.Equal(t, "", cr2.Status.RevNumber)
+		require.Equal(t, "mycomp", outputCR.ObjectMeta.Name)
+		require.Equal(t, namespace, outputCR.ObjectMeta.Namespace)
+		require.Equal(t, "my-git-source", outputCR.Spec.GitSourceRef)
+		require.Equal(t, "nodejs", outputCR.Spec.BuildType)
+		require.Equal(t, "", outputCR.Status.RevNumber)
 	})
 }

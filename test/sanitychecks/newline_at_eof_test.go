@@ -20,7 +20,7 @@ var (
 	includePaths = []string{".editorconfig", ".gitignore", "OWNERS", "make/gofmt_exclude"}
 
 	// relative to root directory
-	excludePaths = []string{"vendor", "build/_output", ".git"}
+	excludePaths = []string{"vendor", "build/_output", ".git", ".vendor-new"}
 )
 
 func TestNewlineAtEOF(t *testing.T) {
