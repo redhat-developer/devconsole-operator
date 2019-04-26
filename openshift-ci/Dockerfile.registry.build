@@ -6,9 +6,9 @@ COPY manifests manifests
 COPY deploy/crds/*.yaml manifests/devconsole/${version}/
 
 USER root
-RUN ls /bin && sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator," -i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
-RUN /bin/initializer
-
+RUN sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator," -i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
 USER 1001
+
+RUN ls -ltr /bin && /bin/initializer
 
 CMD ["registry-server", "--termination-log=log.txt"]
