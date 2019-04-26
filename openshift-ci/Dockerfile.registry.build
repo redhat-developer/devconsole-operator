@@ -1,6 +1,4 @@
 FROM quay.io/openshift/origin-operator-registry:latest
-FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:latest
-
 
 ARG version=0.1.0
 
