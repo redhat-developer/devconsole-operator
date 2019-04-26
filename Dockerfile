@@ -18,6 +18,7 @@ RUN yum install epel-release -y \
     bc \
     kubectl \
     yamllint \
+    python36-virtualenv \
     && yum clean all
 
 # install dep
@@ -42,10 +43,10 @@ RUN curl -L -s https://github.com/openshift/origin/releases/download/v3.11.0/ope
     && rm -rf ./openshift* \
     && oc version
 
-# install operator-sdk (from git with no history and only the master branch)
+# install operator-sdk (from git with no history and only the tag)
 RUN mkdir -p $GOPATH/src/github.com/operator-framework \
     && cd $GOPATH/src/github.com/operator-framework \
-    && git clone --depth 1 -b master https://github.com/operator-framework/operator-sdk \
+    && git clone --depth 1 -b v0.7.0 https://github.com/operator-framework/operator-sdk \
     && cd operator-sdk \
     && make dep \
     && make install
@@ -66,21 +67,18 @@ RUN make VERBOSE=${VERBOSE} test
 
 #--------------------------------------------------------------------
 
-FROM centos:7 as deploy
+FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:latest
+LABEL com.redhat.delivery.appregistry=true
+
 LABEL maintainer "Devtools <devtools@redhat.com>"
-LABEL author "Konrad Kleine <kkleine@redhat.com>"
+LABEL author "Devtools <devtools@redhat.com>"
 ENV LANG=en_US.utf8
 
 ENV GOPATH=/tmp/go
 ARG GO_PACKAGE_PATH=github.com/redhat-developer/devconsole-operator
 
-# Create a non-root user and a group with the same name: "devconsole-operator"
-ENV OPERATOR_USER_NAME=devconsole-operator
-RUN useradd --no-create-home -s /bin/bash ${OPERATOR_USER_NAME}
-
 COPY --from=builder ${GOPATH}/src/${GO_PACKAGE_PATH}/out/operator /usr/local/bin/devconsole-operator
 
-# From here onwards, any RUN, CMD, or ENTRYPOINT will be run under the following user
-USER ${OPERATOR_USER_NAME}
+USER 10001
 
 ENTRYPOINT [ "/usr/local/bin/devconsole-operator" ]

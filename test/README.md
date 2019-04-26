@@ -2,27 +2,13 @@
 
 ### How to Run
 
-#### TL;DR
+#### Test e2e in dev mode
 
 ```
 make minishift-start
 eval $(minishift docker-env)
-make test-e2e
+make test-e2e-local
 ```
-
-Make sure that you have minishift running. you can check it using `minishift status`. If not then start it using `make minishift-start` target.
-
-After successfully starting minishift, configure your shell to use docker daemon from minishift using `eval $(minishift docker-env)`.
-
-Now it's time to run E2E tests for `devconsole-operator` which will create it's required resources from `deploy/test/` on OpenShift use following command:
-
-```
-make test-e2e
-```
-
-This make target is building new docker image `$(DOCKER_REPO)/$(IMAGE_NAME):test`(e.g. `quay.io/openshiftio/devconsole-operator:test`) which is used in the operator's deployment manifests in e2e tests.
-
-Also remember that it uses the `system:admin` account for creating all required resources from `deploy/test` directory.
 
 ## Steps to verify operator registry
 
@@ -61,10 +47,10 @@ Inside the file look for `image: REPLACE_IMAGE` and specify the image location.
 
 ### 4. Build the operator registry image
 
-Now you are going to build the operator image using `test/olm/Dockerfile.registry`
+Now you are going to build the operator image using `Dockerfile.registry`
 
 ```
-docker build -f test/olm/Dockerfile.registry . -t quay.io/<username>/operator-registry:0.1.0 \
+docker build -f Dockerfile.registry . -t quay.io/<username>/operator-registry:0.1.0 \
 	--build-arg image=quay.io/<username>/devconsole-operator --build-arg version=0.1.0
 docker push quay.io/<username>/operator-registry:0.1.0
 ```

@@ -3,7 +3,7 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     capabilities: Full Lifecycle
-    description: Enables the DevOps perspective in OpenShift 4.x
+    description: The operator that enables a developer-focused perspective in OpenShift 4
     categories: "Developer Tools"
   name: devconsole-operator.v0.1.0
   namespace: placeholder
@@ -15,14 +15,43 @@ spec:
       name: components.devconsole.openshift.io
       version: v1alpha1
       displayName: Component
-      description: Component
+      description: Describes how an application component is built and deployed.
     - kind: GitSource
       name: gitsources.devconsole.openshift.io
       version: v1alpha1
       displayName: Git Source
       description: Describes a Git repository to be used as a codebase.
-  description: The operator that enables the DevOps perspective in OpenShift 4.x
-  displayName: OpenShift DevOps Console
+    - kind: GitSourceAnalysis
+      version: v1alpha1
+      name: gitsourceanalyses.devconsole.openshift.io
+      displayName: Git Source Analysis
+      description: Triggers analysis of a codebase defined as a GitSource.
+  description: >
+    The operator that enables a developer-focused perspective in OpenShift 4.
+    This enables a perspective (view) switcher to transition between the
+    traditional Kubernetes and Cluster Administration console, referred to as
+    Administrator, to this new perspective Developer perspective.
+
+    This new Developer perspective provides a high-level abstraction over
+    Kubernetes and OpenShift primitives to allow developers to focus on
+    their application development.
+
+    Within the Developer perspective there are these main areas:
+
+    * Add - The place to create and build the application using one of this method:
+
+      - Importing source code from Git
+      - Deploying an existing image
+      - Browse a catalog to deploy or connect application services
+      - Deploy quick-starters or samples
+
+    * Topology - The landing page that shows application structure and
+      health in an easy-to-use diagram
+    * Builds - Lists OpenShift BuildConfig resources for the selected
+      project
+    * Pipelines - Lists Tekton Pipeline resources for the selected project
+
+  displayName: Developer Console
   install:
     spec:
       deployments:
@@ -133,6 +162,15 @@ spec:
           verbs:
           - create
           - get
+          - list
+          - watch
+        - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes
+          verbs:
+          - get
+          - create
           - list
           - watch
         serviceAccountName: devconsole-operator

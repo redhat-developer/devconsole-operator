@@ -1,0 +1,15 @@
+#
+# example where the detection failed
+#
+apiVersion: devconsole.openshift.io/v1alpha1
+kind: GitSourceAnalysis
+metadata:
+  name: example-gitsource-analysis
+spec:
+  spec:
+    gitSourceRef:
+      name: example-gitsource
+status:
+  analyzed: true
+  error: failed while getting list of languages
+  reason: DetectionFailed

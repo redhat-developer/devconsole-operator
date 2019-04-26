@@ -11,7 +11,6 @@ include ./make/git.mk
 include ./make/dev.mk
 include ./make/format.mk
 include ./make/lint.mk
-include ./make/deploy.mk
 include ./make/test.mk
 include ./make/docker.mk
 
@@ -35,3 +34,10 @@ clean:
 		-ldflags "-X ${GO_PACKAGE_PATH}/cmd/manager.Commit=${GIT_COMMIT_ID} -X ${GO_PACKAGE_PATH}/cmd/manager.BuildTime=${BUILD_TIME}" \
 		-o ./out/operator \
 		cmd/manager/main.go
+
+.PHONY: copy-crds
+## Copy CRD files to latest OLM manifests directory
+copy-crds:
+	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
+	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
