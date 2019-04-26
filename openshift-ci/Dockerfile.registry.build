@@ -1,0 +1,16 @@
+FROM quay.io/openshift/origin-operator-registry:latest
+FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:latest
+
+
+ARG version=0.1.0
+
+COPY manifests manifests
+COPY deploy/crds/*.yaml manifests/devconsole/${version}/
+
+USER root
+RUN ls /bin && sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/$(OPENSHIFT_BUILD_NAMESPACE)/stable:devconsole-operator," -i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
+RUN /bin/initializer
+
+USER 1001
+
+CMD ["registry-server", "--termination-log=log.txt"]
