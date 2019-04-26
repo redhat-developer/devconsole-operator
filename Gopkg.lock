@@ -65,14 +65,6 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
-  branch = "master"
-  digest = "1:4d3dc52be088499ee1b86a009bf217aa398f3337121584fee4763989862f063b"
-  name = "github.com/anmitsu/go-shlex"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "648efa622239a2f6ff949fed78ee37b48d499ba4"
-
-[[projects]]
   digest = "1:680b63a131506e668818d630d3ca36123ff290afa0afc9f4be21940adca3f27d"
   name = "github.com/appscode/jsonpatch"
   packages = ["."]
@@ -168,14 +160,6 @@
   pruneopts = "NT"
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
-
-[[projects]]
-  digest = "1:9d66f1a0ee277ad5297c8f83116e0729aa65dba42f9a23c7ec7d84b265badde4"
-  name = "github.com/gliderlabs/ssh"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "4b72c663cfb315ecfb9f6be5c106c0c693ce196b"
-  version = "v0.1.3"
 
 [[projects]]
   digest = "1:d421af4c4fe51d399667d573982d663fe1fa67020a88d3ae43466ebfe8e2b5c9"
@@ -388,14 +372,6 @@
   pruneopts = "NT"
   revision = "20f268a412e5b342ebfb1a0eef7c3b7bd6c260ea"
   version = "v1.8.5"
-
-[[projects]]
-  digest = "1:7313d6b9095eb86581402557bbf3871620cf82adf41853c5b9bee04b894290c7"
-  name = "github.com/h2non/parth"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "b4df798d65426f8c8ab5ca5f9987aec5575d26c9"
-  version = "v2.0.1"
 
 [[projects]]
   digest = "1:52094d0f8bdf831d1a2401e9b6fee5795fdc0b2a2d1f8bb1980834c289e79129"
@@ -665,8 +641,7 @@
   revision = "8368d24ba045f26503eb745b624d930cbe214c79"
 
 [[projects]]
-  branch = "master"
-  digest = "1:22f2b1db5bf1d36b7b622aa2c726ee4179cdd5e8bfc78791c1aff93533358358"
+  digest = "1:16678f9916ec29322beba0678d0e1564082261e7fdc4b9ae8cb97c39e053627b"
   name = "github.com/redhat-developer/devconsole-api"
   packages = [
     "pkg/apis",
@@ -677,21 +652,24 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8e26da08e029d2bbf9b81341c8677424333dfc569b159c60127cb1113ca950d9"
+  digest = "1:38cd7170ec1cf3b851012b9c71a0e42543b0983b06604929829c1ab6b8fb98de"
   name = "github.com/redhat-developer/devconsole-git"
   packages = [
+    "pkg/controller/gitsource",
+    "pkg/controller/gitsourceanalysis",
     "pkg/git",
+    "pkg/git/connection",
     "pkg/git/detector",
     "pkg/git/detector/build",
     "pkg/git/repository",
     "pkg/git/repository/bitbucket",
+    "pkg/git/repository/generic",
     "pkg/git/repository/github",
     "pkg/git/repository/gitlab",
     "pkg/log",
-    "pkg/test",
   ]
-  pruneopts = "T"
-  revision = "3a6b6924d3b66d4d0f6837027d0d3424516de0c1"
+  pruneopts = "NT"
+  revision = "e6043276a7e959284edfd7840c3d20fe84c02576"
 
 [[projects]]
   digest = "1:a4644e85e1f29f9825a4e61dcdd8244fe7c4db02eead3f508d5a5bdf7924dbbd"
@@ -762,6 +740,14 @@
   version = "v1.4.0"
 
 [[projects]]
+  digest = "1:1e756bf46ac38206112db9743c8960d0eb7a56ea8e6f4c4feb523436c8b6e59a"
+  name = "github.com/src-d/go-oniguruma"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "788303971318a98ac6d485136e6ae95d155c0876"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:8e8fc2cb42cfa0a18fda0c9c4034092faa7aac773da5efdde8828eb4b96c001d"
   name = "github.com/stretchr/testify"
   packages = [
@@ -771,6 +757,14 @@
   pruneopts = "NT"
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
   version = "v1.3.0"
+
+[[projects]]
+  digest = "1:00dde67969c6b5ac2d7bfe189a394095d7be3adff2bb915909235cb697e05d13"
+  name = "github.com/toqueteos/trie"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "683ae57f27ac5c2afec902631ed8b9cda1d0f481"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:660578a0b729bd1a8b7896a8b390979659000400f4007c659c77165ae48da445"
@@ -1057,14 +1051,6 @@
   version = "v1.20.0"
 
 [[projects]]
-  digest = "1:251c1da75fcb42b706777dcf405e5c6f5b167a1f6563ab29997f654bf9a36729"
-  name = "gopkg.in/h2non/gock.v1"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "ba88c4862a27596539531ce469478a91bc5a0511"
-  version = "v1.0.14"
-
-[[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
   name = "gopkg.in/inf.v0"
   packages = ["."]
@@ -1073,12 +1059,27 @@
   version = "v0.9.1"
 
 [[projects]]
+  digest = "1:7be7e5ed23e03578ea7df71495d2c907790fb05391cfafc21254bc384938b8e8"
+  name = "gopkg.in/src-d/enry.v1"
+  packages = [
+    ".",
+    "data",
+    "data/rule",
+    "internal/tokenizer",
+    "regex",
+  ]
+  pruneopts = "NT"
+  revision = "ab3c26b46dfaf8281bf78f2e998111e6a40829bf"
+  version = "v1.7.3"
+
+[[projects]]
   digest = "1:82cf9aa44a5f9fadfbce07a95aff7865752b868d0753c78f2b3a57bb330de241"
   name = "gopkg.in/src-d/go-billy.v4"
   packages = [
     ".",
     "helper/chroot",
     "helper/polyfill",
+    "memfs",
     "osfs",
     "util",
   ]
@@ -1135,6 +1136,14 @@
   pruneopts = "NT"
   revision = "aa6f288c256ff8baf8a7745546a9752323dc0d89"
   version = "v4.11.0"
+
+[[projects]]
+  digest = "1:20d5d24cfd1dac53cbf730d5c9861c0792c68ae547e67fc16fa0ed0660481b0a"
+  name = "gopkg.in/toqueteos/substring.v1"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "c5f61671513240ddf5563635cc4a90e9f3ae4710"
+  version = "v1.0.2"
 
 [[projects]]
   digest = "1:b233ad4ec87ac916e7bf5e678e98a2cb9e8b52f6de6ad3e11834fc7a71b8e3bf"
@@ -1499,7 +1508,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/go-logr/logr",
     "github.com/golang/protobuf/proto",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
@@ -1516,15 +1524,10 @@
     "github.com/operator-framework/operator-sdk/version",
     "github.com/redhat-developer/devconsole-api/pkg/apis",
     "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1",
-    "github.com/redhat-developer/devconsole-git/pkg/git",
-    "github.com/redhat-developer/devconsole-git/pkg/git/detector",
-    "github.com/redhat-developer/devconsole-git/pkg/git/detector/build",
-    "github.com/redhat-developer/devconsole-git/pkg/git/repository",
-    "github.com/redhat-developer/devconsole-git/pkg/log",
-    "github.com/redhat-developer/devconsole-git/pkg/test",
+    "github.com/redhat-developer/devconsole-git/pkg/controller/gitsource",
+    "github.com/redhat-developer/devconsole-git/pkg/controller/gitsourceanalysis",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
-    "gopkg.in/h2non/gock.v1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
