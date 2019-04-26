@@ -54,6 +54,11 @@ RUN mkdir -p $GOPATH/src/github.com/operator-framework \
     && make dep \
     && make install
 
+COPY --from=quay.io/openshift/origin-operator-registry:latest /bin/initializer /bin/initializer
+COPY --from=quay.io/openshift/origin-operator-registry:latest /bin/registry-server /bin/registry-server
+COPY --from=quay.io/openshift/origin-operator-registry:latest /bin/configmap-server /bin/configmap-server
+COPY --from=quay.io/openshift/origin-operator-registry:latest /bin/appregistry-server /bin/appregistry-server
+
 RUN mkdir -p ${GOPATH}/src/${GO_PACKAGE_PATH}/
 
 WORKDIR ${GOPATH}/src/${GO_PACKAGE_PATH}
