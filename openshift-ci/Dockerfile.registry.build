@@ -9,6 +9,6 @@ USER root
 RUN sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator," -i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
 USER 1001
 
-RUN ls -ltr /bin && /bin/initializer
+RUN initializer
 
 CMD ["registry-server", "--termination-log=log.txt"]
