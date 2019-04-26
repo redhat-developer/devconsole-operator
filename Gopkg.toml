@@ -102,8 +102,8 @@ required = [
 
 [[constraint]]
   name = "github.com/redhat-developer/devconsole-api"
+  revision = "e9de16b0f6bbc760546eb19e3cec6e043855f8fa"
   packages = [
     "pkg/apis",
     "pkg/apis/devconsole/v1alpha1",
   ]
-

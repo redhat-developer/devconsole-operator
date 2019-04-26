@@ -673,11 +673,11 @@
     "pkg/apis/devconsole/v1alpha1",
   ]
   pruneopts = "NT"
-  revision = "95209de5775c1b22c48a40af8a8f68dad49fc04c"
+  revision = "e9de16b0f6bbc760546eb19e3cec6e043855f8fa"
 
 [[projects]]
   branch = "master"
-  digest = "1:0fbdf34d35778de1e1c58f23c87fe527f65a8116521a1544301be7737c77d466"
+  digest = "1:8e26da08e029d2bbf9b81341c8677424333dfc569b159c60127cb1113ca950d9"
   name = "github.com/redhat-developer/devconsole-git"
   packages = [
     "pkg/git",
@@ -691,7 +691,7 @@
     "pkg/test",
   ]
   pruneopts = "T"
-  revision = "05a26628a1a0a8703727825994a3539a50d93783"
+  revision = "3a6b6924d3b66d4d0f6837027d0d3424516de0c1"
 
 [[projects]]
   digest = "1:a4644e85e1f29f9825a4e61dcdd8244fe7c4db02eead3f508d5a5bdf7924dbbd"

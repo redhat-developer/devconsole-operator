@@ -22,7 +22,7 @@ are the main features that are getting developed:
 
 	- Importing source code from Git
 	- Deploying an existing image
-	- Browse a catalog to deploy or connect application serves
+	- Browse a catalog to deploy or connect application services
 	- Deploy quick-starters or samples
 
 * Topology - The landing page that shows application structure and
