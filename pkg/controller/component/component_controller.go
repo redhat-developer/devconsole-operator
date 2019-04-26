@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -116,7 +115,6 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 		// Error reading the object - requeue the request/*  */.
 		return reconcile.Result{}, err
 	}
-
 	// Checking and logging secondary resource lifecycle
 	dcList := &v1.DeploymentConfigList{}
 	err = r.ObserveDeploymentConfig(cp, dcList)
@@ -196,15 +194,9 @@ func (r *ReconcileComponent) Reconcile(request reconcile.Request) (reconcile.Res
 // ObserveBuildConfig watches for secondary resource BuildConfig.
 func (r *ReconcileComponent) ObserveBuildConfig(cp *devconsoleapi.Component, bcList *buildv1.BuildConfigList) error {
 	lbls := map[string]string{
-		"app": cp.Name,
+		"app.kubernetes.io/instance": cp.Name,
 	}
-	opts := client.ListOptions{
-		Namespace:     cp.Namespace,
-		LabelSelector: labels.SelectorFromSet(lbls),
-	}
-	err := r.client.List(context.TODO(),
-		&opts,
-		bcList)
+	err := r.client.List(context.TODO(), bcList, client.InNamespace(cp.Namespace), client.MatchingLabels(lbls))
 	if err != nil {
 		log.Error(err, "failed to list existing BuildConfig")
 		return err
@@ -222,15 +214,9 @@ func (r *ReconcileComponent) ObserveBuildConfig(cp *devconsoleapi.Component, bcL
 // ObserveDeploymentConfig watches for secondary resource DeploymentConfig.
 func (r *ReconcileComponent) ObserveDeploymentConfig(cp *devconsoleapi.Component, dcList *v1.DeploymentConfigList) error {
 	lbls := map[string]string{
-		"app": cp.Name,
+		"app.kubernetes.io/instance": cp.Name,
 	}
-	opts := client.ListOptions{
-		Namespace:     cp.Namespace,
-		LabelSelector: labels.SelectorFromSet(lbls),
-	}
-	err := r.client.List(context.TODO(),
-		&opts,
-		dcList)
+	err := r.client.List(context.TODO(), dcList, client.InNamespace(cp.Namespace), client.MatchingLabels(lbls))
 	if err != nil {
 		log.Error(err, "failed to list existing DeploymentConfig")
 		return err
@@ -252,7 +238,7 @@ func (r *ReconcileComponent) ObserveDeploymentConfig(cp *devconsoleapi.Component
 func (r *ReconcileComponent) UpdateStatus(cp *devconsoleapi.Component, status string) error {
 	if cp.Status.Phase != status {
 		cp.Status.Phase = status
-		err := r.client.Update(context.TODO(), cp)
+		err := r.client.Status().Update(context.TODO(), cp)
 		if err != nil {
 			log.Error(err, "** failed to update component status **")
 			return err
