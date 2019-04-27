@@ -98,7 +98,7 @@ required = [
 
 [[constraint]]
   name = "github.com/redhat-developer/devconsole-git"
-  revision = "e6043276a7e959284edfd7840c3d20fe84c02576"
+  revision = "b5ac7c18ca5de088b4b00c7220c0f97896b4400a"
 
 [[constraint]]
   name = "github.com/redhat-developer/devconsole-api"
