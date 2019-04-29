@@ -18,4 +18,5 @@ USER 1001
 
 RUN initializer
 
+EXPOSE 50051
 CMD ["registry-server", "--termination-log=log.txt"]
