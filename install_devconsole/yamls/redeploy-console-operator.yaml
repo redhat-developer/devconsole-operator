@@ -42,6 +42,7 @@ spec:
         env:
         - name: IMAGE
           value: quay.io/redhat-developer/console:master-next
+          imagePullPolicy: Always
         - name: RELEASE_VERSION
           value: "0.0.1-snapshot"
         - name: OPERATOR_NAME
