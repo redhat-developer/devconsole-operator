@@ -162,12 +162,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:ba38cf214bac25c2aa3ae9a007cc6f6586a2476840118cfbf4621e8d250dbc3b"
-  name = "github.com/gliderlabs/ssh"
+  digest = "1:d421af4c4fe51d399667d573982d663fe1fa67020a88d3ae43466ebfe8e2b5c9"
+  name = "github.com/go-logr/logr"
   packages = ["."]
   pruneopts = "NT"
-  revision = "a9daacccc9f1368e52f390591d908470cee477d2"
-  version = "v0.1.4"
+  revision = "9fb12b3b21c5415d16ac18dc5cd42c1cfdd40c4e"
+  version = "v0.1.0"
 
 [[projects]]
   digest = "1:340497a512995aa69c0add901d79a2096b3449d35a44a6f1f1115091a9f8c687"
@@ -643,6 +643,7 @@
 
 [[projects]]
   branch = "update.version.runtime-controller"
+  digest = "1:4e7e746fb11821543e9616e1bdb6c91f6b8a7b3324cd4bdeffba0b678836882c"
   name = "github.com/redhat-developer/devconsole-api"
   packages = [
     "pkg/apis",
@@ -653,8 +654,7 @@
   source = "github.com/corinnekrych/devconsole-api"
 
 [[projects]]
-  branch = "master"
-  digest = "1:2940a30bb088a6caeef0f7f4271b4fffb0fce5d574377c497fd2745bb0d8a0f2"
+  digest = "1:f0988454715cc92c944f7c82089ea62de7b89e33a26233ea5acd3ef27a90989d"
   name = "github.com/redhat-developer/devconsole-git"
   packages = [
     "pkg/controller/gitsource",
@@ -670,7 +670,7 @@
     "pkg/git/repository/gitlab",
     "pkg/log",
   ]
-  pruneopts = "T"
+  pruneopts = "NT"
   revision = "b5ac7c18ca5de088b4b00c7220c0f97896b4400a"
 
 [[projects]]
@@ -1535,13 +1535,6 @@
     "github.com/operator-framework/operator-sdk/version",
     "github.com/redhat-developer/devconsole-api/pkg/apis",
     "github.com/redhat-developer/devconsole-api/pkg/apis/devconsole/v1alpha1",
-    "github.com/redhat-developer/devconsole-git/pkg/git",
-    "github.com/redhat-developer/devconsole-git/pkg/git/connection",
-    "github.com/redhat-developer/devconsole-git/pkg/git/detector",
-    "github.com/redhat-developer/devconsole-git/pkg/git/detector/build",
-    "github.com/redhat-developer/devconsole-git/pkg/git/repository",
-    "github.com/redhat-developer/devconsole-git/pkg/log",
-    "github.com/redhat-developer/devconsole-git/pkg/test",
     "github.com/redhat-developer/devconsole-git/pkg/controller/gitsource",
     "github.com/redhat-developer/devconsole-git/pkg/controller/gitsourceanalysis",
     "github.com/stretchr/testify/assert",
