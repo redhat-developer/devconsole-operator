@@ -4,8 +4,15 @@ ARG version=0.1.0
 
 COPY manifests manifests
 COPY deploy/crds/*.yaml manifests/devconsole/${version}/
+RUN curl -L -s https://github.com/devconsole-operator-test-deps/operator-registry-binaries/releases/download/v0.1.0/appregistry-server -o /bin/appregistry-server \
+  && chmod +x /bin/appregistry-server
+RUN curl -L -s https://github.com/devconsole-operator-test-deps/operator-registry-binaries/releases/download/v0.1.0/configmap-server -o /bin/configmap-server \
+  && chmod +x /bin/configmap-server
+RUN curl -L -s https://github.com/devconsole-operator-test-deps/operator-registry-binaries/releases/download/v0.1.0/registry-server -o /bin/registry-server \
+  && chmod +x /bin/registry-server
+RUN curl -L -s https://github.com/devconsole-operator-test-deps/operator-registry-binaries/releases/download/v0.1.0/initializer -o /bin/initializer \
+  && chmod +x /bin/initializer
 
-USER root
 RUN sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator," -i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
 USER 1001
 
