@@ -1,7 +1,5 @@
 #!/bin/bash
 set +x
-OC_LOGIN_USERNAME=kubeadmin
-oc login -u ${OC_LOGIN_USERNAME} -p ${OC_LOGIN_PASSWORD}
 
 oc apply -f ./yamls/unmanage.yaml
 oc scale --replicas 0 deployment console-operator --namespace openshift-console-operator
