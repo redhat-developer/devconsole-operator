@@ -106,7 +106,7 @@ test-e2e-ci: get-test-namespace ./vendor
 	$(Q)-oc apply -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)sed -e 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml | oc apply -f -
 	$(Q)sed -e 's|REPLACE_IMAGE|registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator|g' ./deploy/test/operator_test.yaml  | oc apply -f - --namespace $(TEST_NAMESPACE)
-	$(eval DEPLOYED_NAMESPACE := openshift-operators)
+	$(eval DEPLOYED_NAMESPACE := $(TEST_NAMESPACE))
 	$(Q)operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup --go-test-flags "-v -timeout=15m"
 
 #-------------------------------------------------------------------------------
