@@ -352,7 +352,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:eddd972c10fd51f998a000feff11ceb7df0b327c2d907f88e97f150a95543f8b"
+  digest = "1:36e1d8cbdf6853c7abf45742d49d38948e8d5d02b7c18ebf0dd07c59b233ec23"
   name = "github.com/gophercloud/gophercloud"
   packages = [
     ".",
@@ -364,7 +364,7 @@
     "pagination",
   ]
   pruneopts = "NT"
-  revision = "b9b92a82580638d091517faa0a8a9655657ed263"
+  revision = "60507118a582789eaa9c8dcefc1374c7f5431b9b"
 
 [[projects]]
   branch = "master"
@@ -554,7 +554,8 @@
   revision = "84c2b942258aea2462e675e03aeb8eb4cb5f3c29"
 
 [[projects]]
-  digest = "1:674610d54812d3c36ab7861fc826176bf581a9426cc09abec0107414c17f89cd"
+  branch = "controller-runtime-0.2.0-alpha0-vendor"
+  digest = "1:e36c3a2b15891f2b517400bf85f7c0d7efa07588ecfe9101535068777bbad4ae"
   name = "github.com/operator-framework/operator-sdk"
   packages = [
     "internal/pkg/scaffold",
@@ -573,8 +574,8 @@
     "version",
   ]
   pruneopts = "NT"
-  revision = "7e07b20c9e22560fb22a3295b612eae7652b8b14"
-  version = "v0.7.0"
+  revision = "74bb44b203f4f70e9ed8b9a084806fd6d5fd96e8"
+  source = "github.com/corinnekrych/operator-sdk"
 
 [[projects]]
   digest = "1:93b1d84c5fa6d1ea52f4114c37714cddd84d5b78f151b62bb101128dd51399bf"
@@ -678,7 +679,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ffac7f9e4afb5d98b4fbb061e87ddd6ce5d1a578b6fdec9c7f7e6acad2dc4958"
+  digest = "1:2940a30bb088a6caeef0f7f4271b4fffb0fce5d574377c497fd2745bb0d8a0f2"
   name = "github.com/redhat-developer/devconsole-git"
   packages = [
     "pkg/git",
@@ -694,7 +695,7 @@
     "pkg/test",
   ]
   pruneopts = "T"
-  revision = "e6043276a7e959284edfd7840c3d20fe84c02576"
+  revision = "b5ac7c18ca5de088b4b00c7220c0f97896b4400a"
 
 [[projects]]
   digest = "1:a4644e85e1f29f9825a4e61dcdd8244fe7c4db02eead3f508d5a5bdf7924dbbd"
@@ -867,7 +868,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:42cb67b83ea6dcb5b096d4560704c05dc8e519cb85980f13a3f93bb022dbbd19"
+  digest = "1:5f92996be2964f7a413cc8c6b7ff02e88e02db6042371b7acadc06cd9dc5a658"
   name = "golang.org/x/crypto"
   packages = [
     "cast5",
@@ -890,7 +891,7 @@
     "ssh/terminal",
   ]
   pruneopts = "NT"
-  revision = "c05e17bb3b2dca130fc919668a96b4bec9eb9442"
+  revision = "a29dc8fdc73485234dbef99ebedb95d2eced08de"
 
 [[projects]]
   branch = "master"
@@ -933,7 +934,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:28d091370f89efd3071b5528dc5fd695b3dfb3653e02bac7490142bdeed6ce5b"
+  digest = "1:6b6dcecf1cf3271a2b8902cab8e2fd119b68eebaacf4eb06e709def6d51bbac7"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -941,7 +942,7 @@
     "windows",
   ]
   pruneopts = "NT"
-  revision = "16072639606ea9e22c7d86e4cbd6af6314f4193c"
+  revision = "2cc0cad0ac78f3ede1f4d2b6ca16ea3038641af4"
 
 [[projects]]
   digest = "1:348fa8283a7c60b5b71ce04d27b37f7c0fce552d4d0b463b5b3ebbd1840d3f1a"
@@ -979,7 +980,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:58678e71ecf52ec3d576b5932a52d2578a879ba3f690fa0d2fecde168d214274"
+  digest = "1:10bc5604a6f43dde4d6609ddf58820f77f1c0f99a4b6bb559a6c2a98abc3505f"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -995,7 +996,7 @@
     "internal/semver",
   ]
   pruneopts = "NT"
-  revision = "ad9eeb80039afa52dec461f6814f3f79c5b45c39"
+  revision = "550556f78a900afacb9e8b22219f5e5b5c6106db"
 
 [[projects]]
   digest = "1:81d407dcb2347a544350b7fb394e0eb065a34c75dc235fd4c6061ea72024a485"
