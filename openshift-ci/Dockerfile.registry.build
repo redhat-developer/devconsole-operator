@@ -12,6 +12,8 @@ RUN curl -L -s https://github.com/devconsole-operator-test-deps/operator-registr
   && chmod +x /bin/registry-server
 RUN curl -L -s https://github.com/devconsole-operator-test-deps/operator-registry-binaries/releases/download/v0.1.0/initializer -o /bin/initializer \
   && chmod +x /bin/initializer
+RUN curl -L -s https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.2.2/grpc_health_probe-linux-amd64 -o /bin/grpc_health_probe \
+  && chmod +x /bin/grpc_health_probe
 
 RUN sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator," -i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
 
@@ -19,4 +21,4 @@ RUN initializer
 USER 1001
 
 EXPOSE 50051
-CMD ["registry-server", "--termination-log=log.txt"]
+CMD ["registry-server"]
