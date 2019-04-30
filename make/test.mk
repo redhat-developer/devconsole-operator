@@ -94,8 +94,8 @@ endif
 .PHONY: test-e2e-olm-ci
 test-e2e-olm-ci: get-test-namespace ./vendor
 	$(Q)oc new-project $(TEST_NAMESPACE)
-	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator-registry," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
-	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
+	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator-registry," ./test/e2e/catalog_source_OS4.yaml | oc apply -f - --namespace $(TEST_NAMESPACE)
+	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml --namespace $(TEST_NAMESPACE)
 	$(eval DEPLOYED_NAMESPACE := openshift-operators)
 	$(Q)operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup --go-test-flags "-v -timeout=15m"
 
