@@ -71,7 +71,7 @@ func TestGitsourceAnalysis(t *testing.T) {
 			APIVersion: "devconsole.openshift.io/v1alpha1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "my-git-source-analysis",
+			Name:      "my-git-source",
 			Namespace: namespace,
 		},
 		Spec: devconsoleapi.GitSourceSpec{
@@ -91,7 +91,7 @@ func TestGitsourceAnalysis(t *testing.T) {
 		},
 		Spec: devconsoleapi.GitSourceAnalysisSpec{
 			GitSourceRef: devconsoleapi.GitSourceRef{
-				Name: "my-git-source-analysis",
+				Name: "my-git-source",
 			},
 		},
 	}
@@ -106,9 +106,9 @@ func TestGitsourceAnalysis(t *testing.T) {
 
 	t.Run("retrieve component and verify related resources are created", func(t *testing.T) {
 		outputCR := &devconsoleapi.GitSource{}
-		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "my-git-source-2", Namespace: namespace}, outputCR)
+		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "my-git-source", Namespace: namespace}, outputCR)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `GitSource`")
-		require.Equal(t, "my-git-source-2", outputCR.ObjectMeta.Name)
+		require.Equal(t, "my-git-source", outputCR.ObjectMeta.Name)
 		require.Equal(t, namespace, outputCR.ObjectMeta.Namespace)
 	})
 
