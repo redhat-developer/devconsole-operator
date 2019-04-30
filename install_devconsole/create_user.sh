@@ -35,6 +35,7 @@ EOF
 
 sleep 10s
 oc create clusterrolebinding ${USERNAME}_role --clusterrole=self-provisioner --user=${USERNAME}
+oc adm policy add-role-to-user view ${USERNAME}
 sleep 15s
 echo -e "\n\e[1;35m User consoledeveloper created with the password developer. Type the below\e[0m \n"
 echo -e "\n\e[1;32m oc login -u\e[3m \e[1;36mconsoledeveloper\e[0m \e[1;32m-p\e[3m \e[1;36mdeveloper\e[0m \n"
