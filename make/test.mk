@@ -91,8 +91,8 @@ ifeq ($(OPENSHIFT_VERSION),4)
 endif
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
-.PHONY: test-e2e-olm
-test-e2e-olm: get-test-namespace ./vendor
+.PHONY: test-e2e-olm-ci
+test-e2e-olm-ci: get-test-namespace ./vendor
 	$(Q)oc new-project $(TEST_NAMESPACE)
 	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator-registry," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
