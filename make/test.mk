@@ -91,10 +91,26 @@ ifeq ($(OPENSHIFT_VERSION),4)
 endif
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
-.PHONY: test-e2e-olm
-test-e2e-olm:
-	$(eval OPENSHIFT_REGISTRY := registry.svc.ci.openshift.org)
-	docker pull $(OPENSHIFT_REGISTRY)/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator
+.PHONY: test-e2e-olm-ci
+test-e2e-olm-ci: ./vendor
+	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator-registry," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
+	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
+	$(eval DEPLOYED_NAMESPACE := openshift-operators)
+	$(Q)./hack/check-crds.sh
+	$(Q)operator-sdk test local ./test/e2e --no-setup --go-test-flags "-v -timeout=15m"
+
+.PHONY: test-e2e-ci
+test-e2e-ci: get-test-namespace ./vendor
+	$(Q)oc new-project $(TEST_NAMESPACE)
+	$(Q)-oc apply -f ./deploy/crds/devconsole_v1alpha1_component_crd.yaml
+	$(Q)-oc apply -f ./deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
+	$(Q)-oc apply -f ./deploy/crds/devconsole_v1alpha1_gitsourceanalysis_crd.yaml
+	$(Q)-oc apply -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
+	$(Q)-oc apply -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
+	$(Q)sed -e 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml | oc apply -f -
+	$(Q)sed -e 's|REPLACE_IMAGE|registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator|g' ./deploy/test/operator_test.yaml  | oc apply -f - --namespace $(TEST_NAMESPACE)
+	$(eval DEPLOYED_NAMESPACE := $(TEST_NAMESPACE))
+	$(Q)operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup --go-test-flags "-v -timeout=15m"
 
 #-------------------------------------------------------------------------------
 # e2e test in dev mode
