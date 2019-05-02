@@ -75,7 +75,7 @@ func TestGitsourceAnalysis(t *testing.T) {
 			Namespace: namespace,
 		},
 		Spec: devconsoleapi.GitSourceSpec{
-			URL: "https://somegit.con/myrepo",
+			URL: "https://github.com/fabric8-services/build-tool-detector",
 			Ref: "master",
 		},
 	}
@@ -104,9 +104,15 @@ func TestGitsourceAnalysis(t *testing.T) {
 	err = f.Client.Create(context.TODO(), gsa, &framework.CleanupOptions{TestContext: ctx, Timeout: cleanupTimeout, RetryInterval: cleanupRetryInterval})
 	require.NoError(t, err, "failed to create custom resource of kind `GitSourceAnalysis`")
 
+	err = WaitUntilGitSourceReconcile(f, types.NamespacedName{Name: "my-git-source", Namespace: namespace})
+	if err != nil {
+		t.Log("Failed to wait for gitsource reconciel")
+	}
+
 	t.Run("retrieve component and verify related resources are created", func(t *testing.T) {
 		outputCR := &devconsoleapi.GitSource{}
 		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "my-git-source", Namespace: namespace}, outputCR)
+		t.Logf("gitsource %+v", outputCR)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `GitSource`")
 		require.Equal(t, "my-git-source", outputCR.ObjectMeta.Name)
 		require.Equal(t, namespace, outputCR.ObjectMeta.Namespace)
