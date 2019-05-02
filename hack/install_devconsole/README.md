@@ -11,7 +11,7 @@ Run the script consoledeveloper.sh
 It does the following:
 1)Replaces the existing openshift console with the talamer console
 2)Installs the operator. (Prompts if it already exists)
-3)Creates a non-admin user consoledeveloper with the password as developer with the suitable rolebinding(roleinding being used here is self-provisioner)
+3)Creates a non-admin user consoledeveloper with the password as developer with the suitable rolebinding(rolebinding being used here is self-provisioner and view)
 
 Steps to test this
 
