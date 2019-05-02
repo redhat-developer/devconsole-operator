@@ -1,7 +1,7 @@
 #!/bin/bash
 function check_crds() {
 	local crd_name=$1
-	for i in {1..12}
+	for i in {1..120}
 	do
 		oc get crds | grep $crd_name
 		if [ $? == 0 ]
