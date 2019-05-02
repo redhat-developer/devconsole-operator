@@ -5,6 +5,11 @@ UNAME_S := $(shell uname -s)
 include ./make/verbose.mk
 include ./make/out.mk
 
+# Quay App Registry
+DEVCONSOLE_APPR_NAMESPACE ?= odcqe
+DEVCONSOLE_APPR_REPOSITORY ?= devconsole
+DEVCONSOLE_OPERATOR_VERSION ?= 0.1.0
+
 export DEPLOYED_NAMESPACE:=
 
 .PHONY: test
@@ -77,6 +82,15 @@ endif
 .PHONY: olm-integration-setup
 olm-integration-setup: olm-integration-cleanup
 	$(Q)oc new-project $(TEST_NAMESPACE)
+
+.PHONY: push-operator-app-registry
+push-operator-app-registry: push-operator-image
+	$(Q)operator-courier flatten manifests/devconsole/ tmp/manifests/$(TAG)
+	$(Q)cp -vf deploy/crds/* tmp/manifests/$(TAG)
+	$(Q)sed -i -e 's,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG),' tmp/manifests/$(TAG)/devconsole-operator.v$(DEVCONSOLE_OPERATOR_VERSION).clusterserviceversion-v$(DEVCONSOLE_OPERATOR_VERSION).yaml
+	$(Q)operator-courier verify tmp/manifests/$(TAG)
+	$(eval QUAY_API_TOKEN := $(shell curl -sH "Content-Type: application/json" -XPOST https://quay.io/cnr/api/v1/users/login -d '{"user":{"username":"'${QUAY_USERNAME}'","password":"'${QUAY_PASSWORD}'"}}' | jq -r '.token'))
+	$(Q)operator-courier push "tmp/manifests/$(TAG)" "$(DEVCONSOLE_APPR_NAMESPACE)" "$(DEVCONSOLE_APPR_REPOSITORY)" "$(DEVCONSOLE_OPERATOR_VERSION)-$(TAG)" "$(QUAY_API_TOKEN)"
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
