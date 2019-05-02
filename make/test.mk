@@ -85,12 +85,13 @@ olm-integration-setup: olm-integration-cleanup
 
 .PHONY: push-operator-app-registry
 push-operator-app-registry: push-operator-image
-	$(Q)operator-courier flatten manifests/devconsole/ tmp/manifests/$(TAG)
-	$(Q)cp -vf deploy/crds/* tmp/manifests/$(TAG)
-	$(Q)sed -i -e 's,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG),' tmp/manifests/$(TAG)/devconsole-operator.v$(DEVCONSOLE_OPERATOR_VERSION).clusterserviceversion-v$(DEVCONSOLE_OPERATOR_VERSION).yaml
-	$(Q)operator-courier verify tmp/manifests/$(TAG)
+	$(eval OPERATOR_MANIFESTS := tmp/manifests/$(TAG))
+	$(Q)operator-courier flatten manifests/devconsole/ $(OPERATOR_MANIFESTS)
+	$(Q)cp -vf deploy/crds/* $(OPERATOR_MANIFESTS)
+	$(Q)sed -i -e 's,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG),' $(OPERATOR_MANIFESTS)/devconsole-operator.v$(DEVCONSOLE_OPERATOR_VERSION).clusterserviceversion-v$(DEVCONSOLE_OPERATOR_VERSION).yaml
+	$(Q)operator-courier verify $(OPERATOR_MANIFESTS)
 	$(eval QUAY_API_TOKEN := $(shell curl -sH "Content-Type: application/json" -XPOST https://quay.io/cnr/api/v1/users/login -d '{"user":{"username":"'${QUAY_USERNAME}'","password":"'${QUAY_PASSWORD}'"}}' | jq -r '.token'))
-	$(Q)operator-courier push "tmp/manifests/$(TAG)" "$(DEVCONSOLE_APPR_NAMESPACE)" "$(DEVCONSOLE_APPR_REPOSITORY)" "$(DEVCONSOLE_OPERATOR_VERSION)-$(TAG)" "$(QUAY_API_TOKEN)"
+	$(Q)operator-courier push $(OPERATOR_MANIFESTS) $(DEVCONSOLE_APPR_NAMESPACE) $(DEVCONSOLE_APPR_REPOSITORY) $(DEVCONSOLE_OPERATOR_VERSION)-$(TAG) "$(QUAY_API_TOKEN)"
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
