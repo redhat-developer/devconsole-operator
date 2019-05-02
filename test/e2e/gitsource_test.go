@@ -114,5 +114,4 @@ func TestGitsource(t *testing.T) {
 		require.Equal(t, devconsoleapi.Failed, outputGS.Status.Connection.State)
 		require.Equal(t, namespace, outputGS.ObjectMeta.Namespace)
 	})
-
 }

@@ -24,3 +24,17 @@ func WaitUntilGitSourceReconcile(t *test.Framework, nsd types.NamespacedName) er
 	})
 	return err
 }
+
+// WaitUntilGitSourceAnalyzeReconcile waits execution until controller finishes reconciling.
+func WaitUntilGitSourceAnalyzeReconcile(t *test.Framework, nsd types.NamespacedName) error {
+	var err error
+	err = wait.Poll(time.Second*5, time.Minute*1, func() (bool, error) {
+		var gitSourceAnalysis devconsoleapi.GitSourceAnalysis
+		err = t.Client.Get(goctx.TODO(), nsd, &gitSourceAnalysis)
+		if err != nil {
+			return false, err
+		}
+		return gitSourceAnalysis.Status.Analyzed, nil
+	})
+	return err
+}

@@ -106,21 +106,31 @@ func TestGitsourceAnalysis(t *testing.T) {
 
 	err = WaitUntilGitSourceReconcile(f, types.NamespacedName{Name: "my-git-source", Namespace: namespace})
 	if err != nil {
-		t.Log("Failed to wait for gitsource reconciel")
+		t.Log("Failed to wait for gitsource reconcile")
+		t.Fail()
+	}
+
+	err = WaitUntilGitSourceAnalyzeReconcile(f, types.NamespacedName{Name: "gitsource-analysis", Namespace: namespace})
+	if err != nil {
+		t.Log("Failed to wait for gitsource analyze reconcile")
+		t.Fail()
 	}
 
 	t.Run("retrieve component and verify related resources are created", func(t *testing.T) {
 		outputCR := &devconsoleapi.GitSource{}
 		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "my-git-source", Namespace: namespace}, outputCR)
-		t.Logf("gitsource %+v", outputCR)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `GitSource`")
 		require.Equal(t, "my-git-source", outputCR.ObjectMeta.Name)
 		require.Equal(t, namespace, outputCR.ObjectMeta.Namespace)
 	})
 
-	t.Run("check if gitsourceanalysis has referrence to gitsource", func(t *testing.T) {
+	t.Run("check if gitsourceanalysis has referrence to gitsource and if build env stats are correct", func(t *testing.T) {
 		outputGsa := &devconsoleapi.GitSourceAnalysis{}
 		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "gitsource-analysis", Namespace: namespace}, outputGsa)
 		require.NoError(t, err, "failed to retrieve custom resource of kind `GitSourceAnalysis`")
+		require.Equal(t, "my-git-source", outputGsa.Spec.GitSourceRef.Name)
+		require.Equal(t, true, outputGsa.Status.Analyzed)
+		require.NotZero(t, len(outputGsa.Status.BuildEnvStatistics.DetectedBuildTypes), "build type has not been detected")
+		require.Equal(t, "go", outputGsa.Status.BuildEnvStatistics.DetectedBuildTypes[0].Language)
 	})
 }
