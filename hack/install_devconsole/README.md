@@ -1,25 +1,39 @@
-##Non-admin user viewing the console with developer console perspective
+## Developer console for non-admin users
 
-Refers [https://jira.coreos.com/browse/ODC-347](https://jira.coreos.com/browse/ODC-347)
+You can use `consoledeveloper.sh` script available in this directory
+to enable developer console for a non-admin user.
 
-This PR provides a script to install
+Before running the script, ensure you have set `KUBECONFIG`
+environment variable pointing to the Kubernetes configuration file.
 
-the latest console with the developer perspective, and
-the devconsole operator needed to enable the perspective.
-The prerequisites for testing this are
-export KUBECONFIG=kubeconfig file
+    export KUBECONFIG=/path/to/kubeconfig
 
-Run the script consoledeveloper.sh
-It does the following:
-1. Replaces the existing openshift console with the talamer console
-2. Installs the operator. (Prompts if it already exists)
-3. Creates a non-admin user consoledeveloper with the password as developer with the suitable rolebinding(rolebinding being used here is self-provisioner and view)
+Also, ensure you have the latest `oc` command available in the `PATH`
+environment, so that the script can use it.
 
-Steps to test this
+You can invoke the script like this:
 
-`sh consoledeveloper.sh`
-oc login -u `consoledeveloper` -p `developer`
-Logging in as the consoledeveloper user, you can now create a new project and do oc get csvs in the suitable namespace to see the installed operator.
-Expected Output-
-On the UI you can now see a consoledeveloper user under the kubeadmin option.
-You can enter the username as consoledeveloper and the password as developer here.
+    ./consoledeveloper.sh
+
+The script does the following things:
+
+1. Replaces the existing OpenShift console with the with a temporary
+   fork (talamer) based console
+2. Installs the DevConsole operator. You can see a message if it
+   already exists.
+3. Creates a non-admin user named `consoledeveloper` with the password
+   as `developer`. The user creates appropriate role bindings
+   (self-provisioner and view).
+
+After the script completes execution, you can see the message to login
+as the `consoledeveloper` user:
+
+    oc login -u consoledeveloper -p developer
+
+After logged in as the `consoledeveloper` user, you can create a new
+project and run `oc get csvs` in to see the installed operators.
+
+When you open the UI, you can now see the `consoledeveloper` user
+along with `kubeadmin` user.  Select `consoledeveloper` user to
+proceed with login.  Enter the password as `developer`.  Now you
+should be able to view the Developer perspective.
