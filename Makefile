@@ -18,6 +18,14 @@ include ./make/docker.mk
 ## Build the operator
 build: ./out/operator
 
+.PHONY: ci-build
+ci-build: build
+	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
+	$(eval version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator," \
+		-i manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
+	$(Q)tar -zcvf ./out/csv.tar.gz manifests/devconsole/${version}/devconsole-operator.v${version}.clusterserviceversion.yaml
+
 .PHONY: clean
 clean:
 	$(Q)-rm -rf ${V_FLAG} ./out
