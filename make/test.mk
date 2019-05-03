@@ -8,7 +8,6 @@ include ./make/out.mk
 # Quay App Registry
 DEVCONSOLE_APPR_NAMESPACE ?= odcqe
 DEVCONSOLE_APPR_REPOSITORY ?= devconsole
-DEVCONSOLE_OPERATOR_VERSION ?= 0.1.0
 
 export DEPLOYED_NAMESPACE:=
 
@@ -33,6 +32,11 @@ test-coverage-html: ./vendor ./out/cover.out
 get-test-namespace: ./out/test-namespace
 	$(eval TEST_NAMESPACE := $(shell cat ./out/test-namespace))
 
+.PHONY: get-operator-version
+get-operator-version:
+	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
+	$(eval DEVCONSOLE_OPERATOR_VERSION := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+
 ./out/test-namespace:
 	@echo -n "test-namespace-$(shell uuidgen | tr '[:upper:]' '[:lower:]')" > ./out/test-namespace
 
@@ -56,25 +60,23 @@ e2e-cleanup: get-test-namespace
 
 .PHONY: test-olm-integration
 ## Runs the OLM integration tests without coverage
-test-olm-integration: push-operator-image olm-integration-setup
+test-olm-integration: push-operator-image olm-integration-setup get-operator-version
 	$(call log-info,"Running OLM integration test: $@")
 ifeq ($(OPENSHIFT_VERSION),3)
 	$(eval DEPLOYED_NAMESPACE := operators)
 	$(Q)oc apply -f https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/master/deploy/upstream/quickstart/olm.yaml
 endif
-	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
-	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
-	$(Q)docker build -f Dockerfile.registry . -t $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG) \
-		--build-arg image=$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG) --build-arg version=$(devconsole_version)
+	$(Q)docker build -f Dockerfile.registry . -t $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(DEVCONSOLE_OPERATOR_VERSION)-$(TAG) \
+		--build-arg image=$(DEVCONSOLE_OPERATOR_IMAGE):$(TAG) --build-arg version=$(DEVCONSOLE_OPERATOR_VERSION)
 	@docker login -u $(QUAY_USERNAME) -p $(QUAY_PASSWORD) $(REGISTRY_URI)
-	$(Q)docker push $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)
+	$(Q)docker push $(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(DEVCONSOLE_OPERATOR_VERSION)-$(TAG)
 ifeq ($(OPENSHIFT_VERSION),3)
-	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS3.yaml | oc apply -f -
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(DEVCONSOLE_OPERATOR_VERSION)-$(TAG)," ./test/e2e/catalog_source_OS3.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription_OS3.yaml
 endif
 ifeq ($(OPENSHIFT_VERSION),4)
 	$(eval DEPLOYED_NAMESPACE := openshift-operators)
-	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(devconsole_version)-$(TAG)," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
+	$(Q)sed -e "s,REPLACE_IMAGE,$(DEVCONSOLE_OPERATOR_REGISTRY_IMAGE):$(DEVCONSOLE_OPERATOR_VERSION)-$(TAG)," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
 endif
 	$(Q)operator-sdk test local ./test/e2e/ --no-setup --go-test-flags "-v -timeout=15m"
@@ -84,7 +86,7 @@ olm-integration-setup: olm-integration-cleanup
 	$(Q)oc new-project $(TEST_NAMESPACE)
 
 .PHONY: push-operator-app-registry
-push-operator-app-registry: push-operator-image
+push-operator-app-registry: push-operator-image get-operator-version
 	$(eval OPERATOR_MANIFESTS := tmp/manifests/$(TAG))
 	$(Q)operator-courier flatten manifests/devconsole/ $(OPERATOR_MANIFESTS)
 	$(Q)cp -vf deploy/crds/* $(OPERATOR_MANIFESTS)
