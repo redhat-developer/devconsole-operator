@@ -75,6 +75,7 @@ func TestGitsource(t *testing.T) {
 		err = WaitUntilGitSourceReconcile(f, types.NamespacedName{Name: "my-git-source-1", Namespace: namespace})
 		if err != nil {
 			t.Log("Failed to wait for gitsource reconcile")
+			require.NoError(t, err, "Failed to wait for gitsource reconcile")
 		}
 		outputGS := &devconsoleapi.GitSource{}
 		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "my-git-source-1", Namespace: namespace}, outputGS)
@@ -105,7 +106,8 @@ func TestGitsource(t *testing.T) {
 
 		err = WaitUntilGitSourceReconcile(f, types.NamespacedName{Name: "my-git-source-2", Namespace: namespace})
 		if err != nil {
-			t.Log("Failed to wait for gitsource reconcile")
+			t.Log("Failed to wait for gitsource reconcile ", err)
+			require.NoError(t, err, "Failed to wait for gitsource reconcile")
 		}
 		outputGS := &devconsoleapi.GitSource{}
 		err = f.Client.Get(context.TODO(), types.NamespacedName{Name: "my-git-source-2", Namespace: namespace}, outputGS)
