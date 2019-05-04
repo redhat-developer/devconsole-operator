@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/redhat-developer/devconsole-operator/pkg/controller/gitsource"
+	"github.com/redhat-developer/devconsole-git/pkg/controller/gitsource"
 )
 
 func init() {

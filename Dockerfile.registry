@@ -1,3 +1,4 @@
+FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:latest
 FROM quay.io/openshift/origin-operator-registry:latest
 
 ARG image=quay.io/redhat-developer/devconsole-operator
