@@ -9,7 +9,7 @@ function check_crds() {
 			echo "CRD exists: " $crd_name
 			return 0
 		fi
-		sleep 5s
+		sleep 10s
 	done
 	echo "CRD doesn't exist: " $crd_name
 	exit 1
