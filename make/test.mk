@@ -96,14 +96,14 @@ push-operator-app-registry: push-operator-image get-operator-version
 	$(Q)operator-courier push $(OPERATOR_MANIFESTS) $(DEVCONSOLE_APPR_NAMESPACE) $(DEVCONSOLE_APPR_REPOSITORY) $(DEVCONSOLE_OPERATOR_VERSION)-$(TAG) "$(QUAY_API_TOKEN)"
 
 .PHONY: test-operator-source
-test-operator-source: push-operator-image
+test-operator-source: push-operator-app-registry
 	$(eval OPSRC_NAME := devconsole-operators-$(TAG))
 	$(Q)oc project openshift-marketplace 
 	$(Q)sed -e "s,REPLACE_NAMESPACE,$(DEVCONSOLE_APPR_NAMESPACE)," ./test/e2e/devconsole.operatorsource.yaml | sed -e "s,REPLACE_OPERATOR_SOURCE_NAME,$(OPSRC_NAME)," | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/catalog_source_opsrc.yaml
 	$(Q)oc apply -f ./test/e2e/subscription_opsrc.yaml
-	$(Q)oc project openshift-operator-lifecycle-manager
-	$(Q)oc get subscriptions
+	$(Q)oc describe sub devconsole -n openshift-operators
+	$(Q)operator-sdk test local ./test/opsrc --namespace $(TEST_NAMESPACE) --up-local --go-test-flags "-v -timeout=15m"
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
