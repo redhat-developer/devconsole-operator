@@ -2,6 +2,7 @@ package e2e
 
 import (
 	goctx "context"
+	"fmt"
 	"time"
 
 	"github.com/operator-framework/operator-sdk/pkg/test"
@@ -14,9 +15,10 @@ import (
 // WaitUntilGitSourceReconcile waits execution until controller finishes reconciling.
 func WaitUntilGitSourceReconcile(t *test.Framework, nsd types.NamespacedName) error {
 	var err error
-	err = wait.Poll(time.Second*5, time.Minute*1, func() (bool, error) {
+	err = wait.Poll(time.Second*5, time.Minute*5, func() (bool, error) {
 		var gitSource devconsoleapi.GitSource
 		err = t.Client.Get(goctx.TODO(), nsd, &gitSource)
+		fmt.Printf("\nGitSource is %+v and error is %+v", gitSource, err)
 		if err != nil {
 			return false, err
 		}
@@ -28,9 +30,10 @@ func WaitUntilGitSourceReconcile(t *test.Framework, nsd types.NamespacedName) er
 // WaitUntilGitSourceAnalyzeReconcile waits execution until controller finishes reconciling.
 func WaitUntilGitSourceAnalyzeReconcile(t *test.Framework, nsd types.NamespacedName) error {
 	var err error
-	err = wait.Poll(time.Second*5, time.Minute*1, func() (bool, error) {
+	err = wait.Poll(time.Second*5, time.Minute*5, func() (bool, error) {
 		var gitSourceAnalysis devconsoleapi.GitSourceAnalysis
 		err = t.Client.Get(goctx.TODO(), nsd, &gitSourceAnalysis)
+		fmt.Printf("\nGitSource is %+v and error is %+v", gitSourceAnalysis, err)
 		if err != nil {
 			return false, err
 		}
