@@ -1,8 +1,9 @@
-# DevConsole Operator Continous Integration
+# DevConsole Operator Continuous Integration
 
 DevConsole operator uses [OpenShift CI][openshift-ci] for continuous
 integration.  The Openshift CI is built using
-[CI-Operator][ci-operator].
+[CI-Operator][ci-operator].  The configuration is located here:
+http://bit.ly/304kpIo
 
 As part of the continuous integration, there are several
 jobs configured to run against pull requests in GitHub.  The CI jobs
@@ -45,7 +46,7 @@ For lint and unit test, the schematic diagram is as follows:
 
 All the steps mentioned here is taking place inside a work namespace.
 When you click on the job details from your pull request, you can see
-the name of the work namepace at top.  The name is going start with
+the name of the work namespace at top.  The name is going start with
 `ci-op-`.  The images created here will be available under this
 namespace.  The namespace can be accessed through
 `OPENSHIFT_BUILD_NAMESPACE` environment variable.
@@ -82,7 +83,7 @@ This step runs the `build` Makefile target.  This step is taking place
 inside a container created from the `src` image created in the
 previous step.
 
-The `make build` produce operator binary image avaialable under
+The `make build` produce operator binary image available under
 `./out` directory.  Later, this binary is copied to
 `devconsole-operator` (see below).
 
@@ -93,7 +94,7 @@ created.
 ## images
 
 There are three container images that are built as part of this job.
-Before this step, a couple of base images are tagged from exising
+Before this step, a couple of base images are tagged from existing
 published images.  The first one is a CentOS 7 image referred as `os`
 in the CI configuration.  The other one is the operator registry image
 which contains all the binaries to run a gRPC based registry.  The
@@ -104,7 +105,7 @@ configuration.
 
 Thee CentOS 7 image (`os`) is used as the base image for creating
 `devconsole-operator` image.  The operator binary available inside
-`bin` conatainer image is copied over here.  The Dockerfile used is
+`bin` container image is copied over here.  The Dockerfile used is
 available here: `openshift-ci/Dockerfile.deploy`
 
 The image produced can be pulled from here:
@@ -114,7 +115,7 @@ The image produced can be pulled from here:
 
 The `operator-registry` is used as the base image for creating
 `operator-registry-base` image.  This is an intermediate image used to
-propogate value of `OPENSHIFT_BUILD_NAMESPACE` environment variable to
+propagate value of `OPENSHIFT_BUILD_NAMESPACE` environment variable to
 `devconsole-operator-registry` image build.  This intermediate image
 is going to be used as the base image for
 `devconsole-operator-registry`.  The original `operator-registry`
@@ -143,12 +144,12 @@ The image produced can be pulled from here:
 
 The lint runs the GolangCI Lint, YAML Lint and Operator Courier.
 GolangCI is a Go program, whereas the other two are written in Python.
-So, Python 3 is a prequisite to run lint.
+So, Python 3 is a perquisite to run lint.
 
 The GolangCI Lint program runs multiple Go lint tools against the
 repository.  GolangCI Lint is runs lint concurrently and complete
 execution in few seconds. But there is one caveat, it requires lots of
-memory.  The memory limit has been increased to 6GB to accomodate the
+memory.  The memory limit has been increased to 6GB to accommodate the
 requirement.  As of now there is no configuration provided to run
 GolangCI Lint.
 
@@ -170,7 +171,7 @@ unlike end-to-end tests.
 ### e2e
 
 The `e2e` run an end-to-end test against an operator running inside
-the CI cluster pod but connected to a freshly created temperory
+the CI cluster pod but connected to a freshly created temporary
 Openshift 4 cluster.  It makes use the `--up-local` option provided by
 the Operator SDK testing tool.  It runs `test-e2e` Makefile target.
 
@@ -185,7 +186,7 @@ This Makefile target is designed to run exclusively on CI environment.
 
 The e2e-ci runs the end-to-end test against operator running inside
 the freshly created OpenShift 4 cluster.  All the resources are
-created through operator lifecycle manager (OLM).  This Makefile
+created through Operator Lifecycle Manager (OLM).  This Makefile
 target is designed to run exclusively on CI environment.
 
 [openshift-ci]: https://github.com/openshift/release
