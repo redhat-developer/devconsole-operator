@@ -109,12 +109,12 @@ endif
 	$(Q)-oc delete project $(TEST_NAMESPACE)  --wait
 
 .PHONY: test-e2e-olm-ci
-test-e2e-olm-ci: ./vendor
+test-e2e-olm-ci: get-test-namespace ./vendor
 	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator-registry," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
 	$(eval DEPLOYED_NAMESPACE := openshift-operators)
 	$(Q)./hack/check-crds.sh
-	$(Q)operator-sdk test local ./test/e2e --no-setup --go-test-flags "-v -timeout=15m"
+	$(Q)operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --no-setup --go-test-flags "-v -timeout=15m"
 
 .PHONY: test-e2e-ci
 test-e2e-ci: get-test-namespace ./vendor
