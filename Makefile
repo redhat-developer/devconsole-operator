@@ -22,6 +22,7 @@ build: ./out/operator
 clean:
 	$(Q)-rm -rf ${V_FLAG} ./out
 	$(Q)-rm -rf ${V_FLAG} ./vendor
+	$(Q)-rm -rf ${V_FLAG} ./tmp
 	$(Q)go clean ${X_FLAG} ./...
 
 ./vendor: Gopkg.toml Gopkg.lock
