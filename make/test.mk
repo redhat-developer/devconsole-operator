@@ -103,7 +103,7 @@ test-operator-source: push-operator-app-registry
 	$(Q)oc apply -f ./test/opsrc/catalog_source.yaml
 	$(Q)oc apply -f ./test/opsrc/subscription.yaml
 	$(Q)oc get sub devconsole -n openshift-operators
-	$(eval INSTALL_PLAN := shell $(oc get sub devconsole -n openshift-operators -o jsonpath='{.status.installplan.name}'))
+	$(eval INSTALL_PLAN := $(shell oc get sub devconsole -n openshift-operators -o jsonpath='{.status.installplan.name}'))
 	$(Q)oc get installplan $(INSTALL_PLAN) -n openshift-operators
 	#$(Q)operator-sdk test local ./test/opsrc --namespace $(TEST_NAMESPACE) --up-local --go-test-flags "-v -timeout=15m"
 
