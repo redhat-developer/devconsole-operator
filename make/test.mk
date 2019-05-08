@@ -95,6 +95,15 @@ push-operator-app-registry: push-operator-image get-operator-version
 	$(eval QUAY_API_TOKEN := $(shell curl -sH "Content-Type: application/json" -XPOST https://quay.io/cnr/api/v1/users/login -d '{"user":{"username":"'${QUAY_USERNAME}'","password":"'${QUAY_PASSWORD}'"}}' | jq -r '.token'))
 	$(Q)operator-courier push $(OPERATOR_MANIFESTS) $(DEVCONSOLE_APPR_NAMESPACE) $(DEVCONSOLE_APPR_REPOSITORY) $(DEVCONSOLE_OPERATOR_VERSION)-$(TAG) "$(QUAY_API_TOKEN)"
 
+.PHONY: test-operator-source
+test-operator-source: push-operator-app-registry
+	$(eval OPSRC_NAME := devconsole-operators-$(TAG))
+	$(Q)oc project openshift-marketplace 
+	$(Q)sed -e "s,REPLACE_NAMESPACE,$(DEVCONSOLE_APPR_NAMESPACE)," ./test/opsrc/operator_source.yaml | sed -e "s,REPLACE_OPERATOR_SOURCE_NAME,$(OPSRC_NAME)," | oc apply -f -
+	$(Q)oc apply -f ./test/opsrc/catalog_source.yaml
+	$(Q)oc apply -f ./test/opsrc/subscription.yaml
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep /test/opsrc) -failfast
+
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
 ifeq ($(OPENSHIFT_VERSION),3)
