@@ -1,0 +1,5 @@
+    - kind: Upgrade
+      version: v1alpha1
+      name: upgrade.devconsole.openshift.io
+      displayName: Upgrade Dev Console
+      description: This is for testing the upgrade process.
