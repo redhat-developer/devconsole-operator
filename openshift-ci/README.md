@@ -143,9 +143,10 @@ The image produced can be pulled from here:
 
 ### lint
 
-The lint runs the GolangCI Lint, YAML Lint and Operator Courier.
-GolangCI is a Go program, whereas the other two are written in Python.
-So, Python 3 is a perquisite to run lint.
+The lint runs the [GolangCI Lint][golangci], [YAML Lint][yaml-lint]
+and [Operator Courier][operator-courier].  GolangCI is a Go program,
+whereas the other two are written in Python.  So, Python 3 is a
+perquisite to run lint.
 
 The GolangCI Lint program runs multiple Go lint tools against the
 repository.  GolangCI Lint runs lint concurrently and completes
@@ -193,3 +194,6 @@ target is designed to run exclusively on CI environment.
 
 [openshift-ci]: https://github.com/openshift/release
 [ci-operator]: https://github.com/openshift/release/tree/master/ci-operator
+[golangci]: https://github.com/golangci/golangci-lint
+[yaml-lint]: https://github.com/adrienverge/yamllint
+[operator-courier]: https://github.com/operator-framework/operator-courier
