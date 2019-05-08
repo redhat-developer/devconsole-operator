@@ -44,7 +44,7 @@ For lint and unit test, the schematic diagram is as follows:
 ```
 
 
-All the steps mentioned here is taking place inside a work namespace.
+All the steps mentioned here are taking place inside a work namespace.
 When you click on the job details from your pull request, you can see
 the name of the work namespace at top.  The name is going start with
 `ci-op-`.  The images created here will be available under this
@@ -63,7 +63,7 @@ The `root` image tag is created using this Dockerfile:
 
 ## src
 
-This step clone the pull request branch with latest changes.  The
+This step clones the pull request branch with latest changes.  The
 cloning is taking place inside a container created from the `root`
 image.  As a result of this step an image named `src` is going to be
 created.
@@ -74,7 +74,7 @@ In the CI configuration, there is a declaration like this:
 canonical_go_repository: github.com/redhat-developer/devconsole-operator
 ```
 
-The above line ensure the cloned source code goes into the specified
+The above line ensures the cloned source code goes into the specified
 path: `$GOPATH/src/<canonical_go_repository>`.
 
 ## bin
@@ -83,7 +83,7 @@ This step runs the `build` Makefile target.  This step is taking place
 inside a container created from the `src` image created in the
 previous step.
 
-The `make build` produce operator binary image available under
+The `make build` produces an operator binary image available under
 `./out` directory.  Later, this binary is copied to
 `devconsole-operator` (see below).
 
@@ -125,7 +125,8 @@ environment variable, which must be set when that image was built.
 The Dockerfile used is available here:
 `openshift-ci/Dockerfile.registry.intermediate` As you can see, the
 Dockerfile file has only one line with a `FROM` statement, which is
-going to replaced with `operator-registry` image during image build.
+going to be replaced with `operator-registry` image during image
+build.
 
 ### devconsole-operator-registry
 
@@ -147,7 +148,7 @@ GolangCI is a Go program, whereas the other two are written in Python.
 So, Python 3 is a perquisite to run lint.
 
 The GolangCI Lint program runs multiple Go lint tools against the
-repository.  GolangCI Lint is runs lint concurrently and complete
+repository.  GolangCI Lint runs lint concurrently and completes
 execution in few seconds. But there is one caveat, it requires lots of
 memory.  The memory limit has been increased to 6GB to accommodate the
 requirement.  As of now there is no configuration provided to run
@@ -164,23 +165,24 @@ files and CRDs.
 
 ### test
 
-The `test` target runs the unit tests.  Some of the test make use mock
-objects. The unit tests doesn't require a dedicated OpenShift cluster
-unlike end-to-end tests.
+The `test` target runs the unit tests.  Some of the test make use of
+mock objects. The unit tests doesn't require a dedicated OpenShift
+cluster unlike end-to-end tests.
 
 ### e2e
 
 The `e2e` run an end-to-end test against an operator running inside
 the CI cluster pod but connected to a freshly created temporary
-Openshift 4 cluster.  It makes use the `--up-local` option provided by
-the Operator SDK testing tool.  It runs `test-e2e` Makefile target.
+Openshift 4 cluster.  It makes use of the `--up-local` option provided
+by the Operator SDK testing tool.  It runs `test-e2e` Makefile target.
 
 ### e2e-ci
 
-The `e2e-ci` target runs the end-to-end test against operator running
-inside the freshly created OpenShift 4 cluster.  All the resources are
-created through scripts invoked from `test-e2e-ci` Makefile target.
-This Makefile target is designed to run exclusively on CI environment.
+The `e2e-ci` target runs the end-to-end test against an operator
+running inside the freshly created OpenShift 4 cluster.  All the
+resources are created through scripts invoked from `test-e2e-ci`
+Makefile target.  This Makefile target is designed to run exclusively
+on CI environment.
 
 ### e2e-olm-ci
 
