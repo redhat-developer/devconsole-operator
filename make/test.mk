@@ -102,10 +102,7 @@ test-operator-source: push-operator-app-registry
 	$(Q)sed -e "s,REPLACE_NAMESPACE,$(DEVCONSOLE_APPR_NAMESPACE)," ./test/opsrc/operator_source.yaml | sed -e "s,REPLACE_OPERATOR_SOURCE_NAME,$(OPSRC_NAME)," | oc apply -f -
 	$(Q)oc apply -f ./test/opsrc/catalog_source.yaml
 	$(Q)oc apply -f ./test/opsrc/subscription.yaml
-	$(Q)oc get sub devconsole -n openshift-operators
-	$(eval INSTALL_PLAN := $(shell oc get sub devconsole -n openshift-operators -o jsonpath='{.status.installplan.name}'))
-	$(Q)oc get installplan $(INSTALL_PLAN) -n openshift-operators
-	#$(Q)operator-sdk test local ./test/opsrc --namespace $(TEST_NAMESPACE) --up-local --go-test-flags "-v -timeout=15m"
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep /test/opsrc) -failfast
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
