@@ -193,7 +193,7 @@ endif
 endif
 
 .PHONY: test-upgrade-ci
-test-upgrade-ci:
+test-upgrade-ci: ./vendor
 	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator-registry," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
 	$(Q)oc apply -f ./test/e2e/subscription_OS4.yaml
 	$(eval DEPLOYED_NAMESPACE := openshift-operators)
