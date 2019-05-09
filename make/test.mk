@@ -102,6 +102,7 @@ test-operator-source: push-operator-app-registry
 	$(Q)sed -e "s,REPLACE_NAMESPACE,$(DEVCONSOLE_APPR_NAMESPACE)," ./test/opsrc/operator_source.yaml | sed -e "s,REPLACE_OPERATOR_SOURCE_NAME,$(OPSRC_NAME)," | oc apply -f -
 	$(Q)oc apply -f ./test/opsrc/catalog_source.yaml
 	$(Q)oc apply -f ./test/opsrc/subscription.yaml
+	$(Q)sleep 30
 	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep /test/opsrc) -failfast
 
 .PHONY: olm-integration-cleanup
