@@ -44,10 +44,13 @@ copy-crds:
 	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
 
 .PHONY: upgrade-build
-upgrade-build:
-	$(Q)python3 ./test/upgrade/upgrade.py
+upgrade-build: upgrade-csv-build
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
 	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
 	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
 	$(Q)cp ./test/upgrade/devconsole_v1alpha1_upgrade_crd.yaml ./manifests/devconsole/$(devconsole_version)/
 	$(Q)tar -zcvf ./out/manifests.tar.gz manifests/
+
+.PHONY: upgrade-csv-build
+upgrade-csv-build:
+	$(Q)python3 ./test/upgrade/upgrade.py
