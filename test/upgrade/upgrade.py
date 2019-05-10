@@ -36,7 +36,6 @@ def csv_upgrade(current_version, new_version):
         if line.strip() == "owned:":
             new_csv_content.append(line)
             new_csv_content.extend(upgrade_yaml_block)
-            new_csv_content.extend("\n")
         elif name_pattern.match(line):
             space = " " * (len(line) - len(line.lstrip()))
             new_line = space + "name: devconsole-operator.v" + new_version
