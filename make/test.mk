@@ -86,7 +86,11 @@ olm-integration-setup: olm-integration-cleanup
 	$(Q)oc new-project $(TEST_NAMESPACE)
 
 .PHONY: push-operator-app-registry
-push-operator-app-registry: push-operator-image get-operator-version
+ifdef DO_NOT_PUSH_OPERATOR_IMAGE
+push-operator-app-registry: get-operator-version 
+else
+push-operator-app-registry: get-operator-version push-operator-image
+endif
 	$(eval OPERATOR_MANIFESTS := tmp/manifests/$(TAG))
 	$(Q)operator-courier flatten manifests/devconsole/ $(OPERATOR_MANIFESTS)
 	$(Q)cp -vf deploy/crds/* $(OPERATOR_MANIFESTS)
