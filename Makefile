@@ -53,4 +53,7 @@ upgrade-build: upgrade-csv-build
 
 .PHONY: upgrade-csv-build
 upgrade-csv-build:
+	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
+	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
 	$(Q)python3 ./test/upgrade/upgrade.py

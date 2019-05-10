@@ -1,4 +1,5 @@
 import os
+import re
 
 def package_upgrade():
     package_yaml = "./manifests/devconsole/devconsole.package.yaml"
@@ -29,11 +30,21 @@ def csv_upgrade(current_version, new_version):
     upgrade_yaml_block = open("./test/upgrade/upgrade_csv_block.yaml.txt").readlines()
     current_csv_content = open(current_csv).readlines()
     new_csv_content = []
+    name_pattern = re.compile("\s+name:\s+devconsole-operator\.v\d+\.\d+\.\d+")
+    version_pattern = re.compile("\s+version:\s+\d+\.\d+\.\d+")
     for line in current_csv_content:
         if line.strip() == "owned:":
             new_csv_content.append(line)
             new_csv_content.extend(upgrade_yaml_block)
+        elif name_pattern.match(line):
+            space = " " * (len(line) - len(line.lstrip()))
+            new_line = space + "name: devconsole-operator.v" + new_version
+            new_csv_content.append(new_line)
             new_csv_content.extend("\n")
+        elif version_pattern.match(line):
+            space = " " * (len(line) - len(line.lstrip()))
+            new_line = space + "version: " + new_version
+            new_csv_content.append(new_line)
         else:
             new_csv_content.append(line)
     fd = open(new_csv, "w")
