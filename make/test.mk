@@ -205,6 +205,9 @@ test-upgrade-ci: ./vendor
 	$(eval DEPLOYED_NAMESPACE := openshift-operators)
 	$(Q)./hack/check-crds.sh
 	$(Q)operator-sdk test local ./test/e2e --no-setup --go-test-flags "-v -timeout=15m"
+	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
+	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(Q)sed -e "s,REPLACE_VERSION,${devconsole_version}," ./test/upgrade/installplan.yaml| oc apply -f -
 	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator-registry-next," ./test/e2e/catalog_source_OS4.yaml | oc apply -f -
 	$(Q)./hack/check-crds-upgrade.sh
 	$(Q)operator-sdk test local ./test/e2e --no-setup --go-test-flags "-v -timeout=15m"
