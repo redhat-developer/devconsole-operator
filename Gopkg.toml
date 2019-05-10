@@ -32,22 +32,22 @@ required = [
 [[override]]
   name = "k8s.io/api"
   # revision for tag "kubernetes-1.13.1"
-  revision = "05914d821849570fba9eacfb29466f2d8d3cd229"
+  version = "kubernetes-1.13.4"
 
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
   # revision for tag "kubernetes-1.13.1"
-  revision = "0fe22c71c47604641d9aa352c785b7912c200562"
+  version = "kubernetes-1.13.4"
 
 [[override]]
   name = "k8s.io/apimachinery"
   # revision for tag "kubernetes-1.13.1"
-  revision = "2b1284ed4c93a43499e781493253e2ac5959c4fd"
+  version = "kubernetes-1.13.4"
 
 [[override]]
   name = "k8s.io/client-go"
   # revision for tag "kubernetes-1.13.1"
-  revision = "8d9ed539ba3134352c586810e749e58df4e94e4f"
+  version = "kubernetes-1.13.4"
 
 [[override]]
   name = "github.com/coreos/prometheus-operator"
@@ -55,7 +55,7 @@ required = [
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"
-  version = "=v0.1.10"
+  version = "=v0.2.0-alpha.0"
 
 [[constraint]]
   name = "github.com/operator-framework/operator-sdk"
@@ -101,8 +101,8 @@ required = [
   revision = "901927aebf15c2eeeace75b2521f985726b7d3fb"
 
 [[constraint]]
-  name = "github.com/akashshinde/devconsole-api"
-  revision = "b7257fe2b39c0f6eb198cfb0c6cb87c6eae4ef09"
+  name = "github.com/redhat-developer/devconsole-api"
+  branch="get_deploymentconfig_label"
   packages = [
     "pkg/apis",
     "pkg/apis/devconsole/v1alpha1",

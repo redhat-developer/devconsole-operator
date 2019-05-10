@@ -4,6 +4,7 @@ import (
 	"context"
 	e "errors"
 	"fmt"
+
 	v1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
 	imagev1 "github.com/openshift/api/image/v1"
@@ -203,8 +204,9 @@ func (r *ReconcileComponent) ObserveBuildConfig(cp *devconsoleapi.Component, bcL
 		LabelSelector: labels.SelectorFromSet(lbls),
 	}
 	err := r.client.List(context.TODO(),
-		&opts,
-		bcList)
+		bcList,
+		client.UseListOptions(&opts),
+	)
 	if err != nil {
 		log.Error(err, "failed to list existing BuildConfig")
 		return err
@@ -229,8 +231,9 @@ func (r *ReconcileComponent) ObserveDeploymentConfig(cp *devconsoleapi.Component
 		LabelSelector: labels.SelectorFromSet(lbls),
 	}
 	err := r.client.List(context.TODO(),
-		&opts,
-		dcList)
+		dcList,
+		client.UseListOptions(&opts),
+	)
 	if err != nil {
 		log.Error(err, "failed to list existing DeploymentConfig")
 		return err
