@@ -40,11 +40,17 @@ def csv_upgrade(current_version, new_version):
             space = " " * (len(line) - len(line.lstrip()))
             new_line = space + "name: devconsole-operator.v" + new_version
             new_csv_content.append(new_line)
-            new_csv_content.extend("\n")
+            new_csv_content.append("\n")
         elif version_pattern.match(line):
             space = " " * (len(line) - len(line.lstrip()))
             new_line = space + "version: " + new_version
             new_csv_content.append(new_line)
+        elif line.strip().startswith("maturity:"):
+            new_csv_content.append(line)
+            space = " " * (len(line) - len(line.lstrip()))
+            new_line = space + "replaces: devconsole-operator.v" + current_version
+            new_csv_content.append(new_line)
+            new_csv_content.append("\n")
         else:
             new_csv_content.append(line)
     fd = open(new_csv, "w")
