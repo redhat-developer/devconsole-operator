@@ -13,14 +13,14 @@ import (
 
 const ShellToUse = "bash"
 
-func Shellout(command string) (error, string, string) {
+func Shellout(command string) (string, string, error) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.Command(ShellToUse, "-c", command)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-	return err, stdout.String(), stderr.String()
+	return stdout.String(), stderr.String(), err
 }
 
 func Test_OperatorSource_oc_commands(t *testing.T) {
@@ -35,7 +35,7 @@ func Test_OperatorSource_oc_commands(t *testing.T) {
 
 func Login(t *testing.T) {
 	// Start - Login to oc
-	err, out, _ := Shellout("oc login -u " + os.Getenv("OC_LOGIN_USERNAME") + " -p " + os.Getenv("OC_LOGIN_PASSWORD"))
+	out, _, err := Shellout("oc login -u " + os.Getenv("OC_LOGIN_USERNAME") + " -p " + os.Getenv("OC_LOGIN_PASSWORD"))
 	if err != nil {
 		t.Fatalf("error: %v\n", err)
 	} else {
@@ -45,7 +45,7 @@ func Login(t *testing.T) {
 
 func Subscription(t *testing.T) {
 	// 1) Verify that the subscription was created
-	err, out, _ := Shellout("oc get sub devconsole -n openshift-operators")
+	out, _, err := Shellout("oc get sub devconsole -n openshift-operators")
 	if err != nil {
 		t.Fatalf("error: %v\n", err)
 	} else {
@@ -58,7 +58,7 @@ func Subscription(t *testing.T) {
 
 func InstallPlan(t *testing.T) {
 	// 2) Find the name of the install plan
-	err, out, _ := Shellout("oc get sub devconsole -n openshift-operators -o jsonpath='{.status.installplan.name}'")
+	out, _, err := Shellout("oc get sub devconsole -n openshift-operators -o jsonpath='{.status.installplan.name}'")
 	var installPlan string
 	if err != nil {
 		t.Fatalf("error: %v\n", err)
@@ -69,7 +69,7 @@ func InstallPlan(t *testing.T) {
 	}
 
 	// 3) Verify the install plan
-	err, out, _ = Shellout(fmt.Sprintf("oc get installplan %s -n openshift-operators", installPlan))
+	out, _, err = Shellout(fmt.Sprintf("oc get installplan %s -n openshift-operators", installPlan))
 	if err != nil {
 		t.Fatalf("error: %v\n", err)
 	} else {
@@ -84,7 +84,7 @@ func InstallPlan(t *testing.T) {
 
 func OperatorPod(t *testing.T) {
 	// Verify that the operator's pod is running
-	err, out, _ := Shellout("oc get pods  -l name=devconsole-operator -n openshift-operators -o jsonpath='{.items[*].status.phase}'")
+	out, _, err := Shellout("oc get pods  -l name=devconsole-operator -n openshift-operators -o jsonpath='{.items[*].status.phase}'")
 	if err != nil {
 		t.Fatalf("error: %v\n", err)
 	} else {
@@ -99,7 +99,7 @@ func CleanUp(t *testing.T) {
 	operatorSourceName := os.Getenv("OPSRC_NAME")
 	operatorVersion := os.Getenv("DEVCONSOLE_OPERATOR_VERSION")
 
-	err, out, _ := Shellout(fmt.Sprintf("oc delete opsrc %s -n openshift-marketplace", operatorSourceName))
+	out, _, err := Shellout(fmt.Sprintf("oc delete opsrc %s -n openshift-marketplace", operatorSourceName))
 	require.NoError(t, err)
 	if err != nil {
 		t.Logf("error: %v\n", err)
@@ -107,29 +107,31 @@ func CleanUp(t *testing.T) {
 		t.Logf(out)
 	}
 
-	err, out, _ = Shellout("oc delete sub devconsole -n openshift-operators")
+	out, _, err = Shellout("oc delete sub devconsole -n openshift-operators")
 	if err != nil {
 		t.Logf("error: %v\n", err)
 	} else {
 		t.Logf(out)
 	}
 
-	err, out, _ = Shellout("oc delete catsrc installed-custom-openshift-operators -n openshift-operators")
+	out, _, err = Shellout("oc delete catsrc installed-custom-openshift-operators -n openshift-operators")
 	if err != nil {
 		t.Logf("error: %v\n", err)
 	} else {
 		t.Logf(out)
 	}
 
-	err, out, _ = Shellout("oc delete csc installed-custom-openshift-operators -n openshift-marketplace")
+	out, _, err = Shellout("oc delete csc installed-custom-openshift-operators -n openshift-marketplace")
 	if err != nil {
 		t.Logf("error: %v\n", err)
 	} else {
 		t.Logf(out)
 	}
 
-	err, out, _ = Shellout(fmt.Sprintf("oc delete csv devconsole-operator.v%s -n openshift-operators", operatorVersion))
+	out, _, err = Shellout(fmt.Sprintf("oc delete csv devconsole-operator.v%s -n openshift-operators", operatorVersion))
 	if err != nil {
 		t.Logf("error: %v\n", err)
+	} else {
+		t.Logf(out)
 	}
 }
