@@ -14,7 +14,7 @@ export DEPLOYED_NAMESPACE:=
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
 test: ./vendor
-	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v /test/e2e) -failfast
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v -E '(/test/e2e|/test/operatorsource)') -failfast
 
 .PHONY: test-coverage
 ## Runs Go package tests and produces coverage information
@@ -26,7 +26,7 @@ test-coverage-html: ./vendor ./out/cover.out
 	$(Q)go tool cover -html=./out/cover.out
 
 ./out/cover.out: ./vendor
-	$(Q)go test ${V_FLAG} -race $(shell go list ./... | grep -v /test/e2e) -failfast -coverprofile=cover.out -covermode=atomic -outputdir=./out
+	$(Q)go test ${V_FLAG} -race $(shell go list ./... | grep -v -E '(/test/e2e|/test/operatorsource)') -failfast -coverprofile=cover.out -covermode=atomic -outputdir=./out
 
 .PHONY: get-test-namespace
 get-test-namespace: ./out/test-namespace
@@ -86,7 +86,11 @@ olm-integration-setup: olm-integration-cleanup
 	$(Q)oc new-project $(TEST_NAMESPACE)
 
 .PHONY: push-operator-app-registry
-push-operator-app-registry: push-operator-image get-operator-version
+ifdef DO_NOT_PUSH_OPERATOR_IMAGE
+push-operator-app-registry: get-operator-version 
+else
+push-operator-app-registry: get-operator-version push-operator-image
+endif
 	$(eval OPERATOR_MANIFESTS := tmp/manifests/$(TAG))
 	$(Q)operator-courier flatten manifests/devconsole/ $(OPERATOR_MANIFESTS)
 	$(Q)cp -vf deploy/crds/* $(OPERATOR_MANIFESTS)
@@ -94,6 +98,19 @@ push-operator-app-registry: push-operator-image get-operator-version
 	$(Q)operator-courier verify $(OPERATOR_MANIFESTS)
 	$(eval QUAY_API_TOKEN := $(shell curl -sH "Content-Type: application/json" -XPOST https://quay.io/cnr/api/v1/users/login -d '{"user":{"username":"'${QUAY_USERNAME}'","password":"'${QUAY_PASSWORD}'"}}' | jq -r '.token'))
 	$(Q)operator-courier push $(OPERATOR_MANIFESTS) $(DEVCONSOLE_APPR_NAMESPACE) $(DEVCONSOLE_APPR_REPOSITORY) $(DEVCONSOLE_OPERATOR_VERSION)-$(TAG) "$(QUAY_API_TOKEN)"
+
+.PHONY: test-operator-source
+test-operator-source: push-operator-app-registry
+	$(eval OPSRC_NAME := devconsole-operators-$(TAG))
+	$(eval OPSRC_DIR := test/operatorsource)
+	$(Q)oc project openshift-marketplace 
+	$(Q)sed -e "s,REPLACE_NAMESPACE,$(DEVCONSOLE_APPR_NAMESPACE)," ./$(OPSRC_DIR)/operatorsource.yaml | sed -e "s,REPLACE_OPERATOR_SOURCE_NAME,$(OPSRC_NAME)," | oc apply -f -
+	$(Q)sed -e "s,REPLACE_APPR_REPOSITORY,$(DEVCONSOLE_APPR_REPOSITORY)," ./$(OPSRC_DIR)/catalogsourceconfig.yaml | oc apply -f -
+	$(Q)sed -e "s,REPLACE_APPR_REPOSITORY,$(DEVCONSOLE_APPR_REPOSITORY)," ./$(OPSRC_DIR)/subscription.yaml | oc apply -f -
+	$(Q)sleep 30
+	$(Q)OPSRC_NAME=$(OPSRC_NAME) \
+	DEVCONSOLE_OPERATOR_VERSION=$(DEVCONSOLE_OPERATOR_VERSION) \
+	go test -vet off ${V_FLAG} $(shell go list ./... | grep $(OPSRC_DIR)) -failfast
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace

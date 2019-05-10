@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1
+kind: CatalogSourceConfig
+metadata:
+  name: installed-custom-openshift-operators
+  namespace: openshift-marketplace
+spec:
+  targetNamespace: openshift-operators
+  packages: REPLACE_APPR_REPOSITORY
+  csDisplayName: "Custom Operators"
+  csPublisher: "Red Hat"
