@@ -1,4 +1,4 @@
-package opsrc
+package operatorsource
 
 import (
 	"bytes"

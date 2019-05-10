@@ -102,12 +102,13 @@ endif
 .PHONY: test-operator-source
 test-operator-source: push-operator-app-registry
 	$(eval OPSRC_NAME := devconsole-operators-$(TAG))
+	$(eval OPSRC_DIR := test/operatorsource)
 	$(Q)oc project openshift-marketplace 
-	$(Q)sed -e "s,REPLACE_NAMESPACE,$(DEVCONSOLE_APPR_NAMESPACE)," ./test/opsrc/operator_source.yaml | sed -e "s,REPLACE_OPERATOR_SOURCE_NAME,$(OPSRC_NAME)," | oc apply -f -
-	$(Q)oc apply -f ./test/opsrc/catalog_source.yaml
-	$(Q)oc apply -f ./test/opsrc/subscription.yaml
+	$(Q)sed -e "s,REPLACE_NAMESPACE,$(DEVCONSOLE_APPR_NAMESPACE)," ./$(OPSRC_DIR)/operatorsource.yaml | sed -e "s,REPLACE_OPERATOR_SOURCE_NAME,$(OPSRC_NAME)," | oc apply -f -
+	$(Q)oc apply -f ./$(OPSRC_DIR)/catalogsourceconfig.yaml
+	$(Q)oc apply -f ./$(OPSRC_DIR)/subscription.yaml
 	$(Q)sleep 30
-	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep /test/opsrc) -failfast
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep $(OPSRC_DIR)) -failfast
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
