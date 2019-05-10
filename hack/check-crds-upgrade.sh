@@ -1,4 +1,4 @@
 #!/bin/bash
 source ./hack/check-crds.sh
 
-check_crds upgrade.devconsole.openshift.io
+check_crds upgrades.devconsole.openshift.io
