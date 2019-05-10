@@ -14,7 +14,7 @@ export DEPLOYED_NAMESPACE:=
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
 test: ./vendor
-	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v /test/e2e) -failfast
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v -E '(/test/e2e|/test/operatorsource)') -failfast
 
 .PHONY: test-coverage
 ## Runs Go package tests and produces coverage information
@@ -26,7 +26,7 @@ test-coverage-html: ./vendor ./out/cover.out
 	$(Q)go tool cover -html=./out/cover.out
 
 ./out/cover.out: ./vendor
-	$(Q)go test ${V_FLAG} -race $(shell go list ./... | grep -v /test/e2e) -failfast -coverprofile=cover.out -covermode=atomic -outputdir=./out
+	$(Q)go test ${V_FLAG} -race $(shell go list ./... | grep -v -E '(/test/e2e|/test/operatorsource)') -failfast -coverprofile=cover.out -covermode=atomic -outputdir=./out
 
 .PHONY: get-test-namespace
 get-test-namespace: ./out/test-namespace
