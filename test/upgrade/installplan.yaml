@@ -1,0 +1,9 @@
+apiVersion: app.coreos.com/v1alpha1
+kind: InstallPlan
+metadata:
+  namespace: openshift-operators
+  name: my-devconsole
+spec:
+  clusterServiceVersionNames:
+  - devconsole-operator.vREPLACE_VERSION
+  approval: Automatic
