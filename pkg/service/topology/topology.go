@@ -65,8 +65,6 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 
 	// TODO: Create a service, if absent
 
-	// TODO: Create a route, if absent
-
 	return &ReconcileService{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
@@ -106,7 +104,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 }
 
 // Reconcile handles events related to changes to the App Topology Service deployment.
-// This includes events from service/route/dc named "ServiceName" in the namespace "ServiceNameSpace"
+// This includes events from service/dc named "ServiceName" in the namespace "ServiceNameSpace"
 func (r *ReconcileService) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// TODO: Watch changes to the DeploymentConfig ( .. and the service, and the route )
 	// something happened to the specific DC, please react..
