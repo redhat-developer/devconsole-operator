@@ -8,6 +8,7 @@ type CRLabelGetter interface {
 	GetLabelInstance() string
 	GetLabelPartOf() string
 	GetLabelVersion() string
+	GetLabelDeploymentConfig() string
 }
 
 // GetLabelsForCR retrieves labels for the custom resource.
@@ -38,6 +39,11 @@ func GetLabelsForCR(cr CRLabelGetter) map[string]string {
 	version := cr.GetLabelVersion()
 	if version != "" {
 		labels["app.kubernetes.io/version"] = version
+	}
+
+	deploymentconfig := cr.GetLabelDeploymentConfig()
+	if deploymentconfig != "" {
+		labels["deploymentconfig"] = deploymentconfig
 	}
 
 	return labels

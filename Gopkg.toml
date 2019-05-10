@@ -101,8 +101,8 @@ required = [
   revision = "901927aebf15c2eeeace75b2521f985726b7d3fb"
 
 [[constraint]]
-  name = "github.com/redhat-developer/devconsole-api"
-  revision = "e9de16b0f6bbc760546eb19e3cec6e043855f8fa"
+  name = "github.com/akashshinde/devconsole-api"
+  revision = "b7257fe2b39c0f6eb198cfb0c6cb87c6eae4ef09"
   packages = [
     "pkg/apis",
     "pkg/apis/devconsole/v1alpha1",
