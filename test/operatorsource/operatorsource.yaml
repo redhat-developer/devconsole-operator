@@ -1,9 +1,9 @@
 apiVersion: operators.coreos.com/v1
 kind: OperatorSource
-metadata: 
+metadata:
   name: REPLACE_OPERATOR_SOURCE_NAME
   namespace: openshift-marketplace
-spec: 
+spec:
   type: appregistry
   endpoint: https://quay.io/cnr
   registryNamespace: REPLACE_NAMESPACE
