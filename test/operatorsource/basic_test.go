@@ -100,7 +100,6 @@ func CleanUp(t *testing.T) {
 	operatorVersion := os.Getenv("DEVCONSOLE_OPERATOR_VERSION")
 
 	out, _, err := Shellout(fmt.Sprintf("oc delete opsrc %s -n openshift-marketplace", operatorSourceName))
-	require.NoError(t, err)
 	if err != nil {
 		t.Logf("error: %v\n", err)
 	} else {
