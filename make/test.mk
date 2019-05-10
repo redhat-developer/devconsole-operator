@@ -108,7 +108,9 @@ test-operator-source: push-operator-app-registry
 	$(Q)oc apply -f ./$(OPSRC_DIR)/catalogsourceconfig.yaml
 	$(Q)oc apply -f ./$(OPSRC_DIR)/subscription.yaml
 	$(Q)sleep 30
-	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep $(OPSRC_DIR)) -failfast
+	$(Q)OPSRC_NAME=$(OPSRC_NAME) \
+	DEVCONSOLE_OPERATOR_VERSION=$(DEVCONSOLE_OPERATOR_VERSION) \
+	go test -vet off ${V_FLAG} $(shell go list ./... | grep $(OPSRC_DIR)) -failfast
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
