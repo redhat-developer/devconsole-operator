@@ -40,5 +40,7 @@ func GetLabelsForCR(cr CRLabelGetter) map[string]string {
 		labels["app.kubernetes.io/version"] = version
 	}
 
+	labels["deploymentconfig"] = cr.GetLabelInstance()
+
 	return labels
 }
