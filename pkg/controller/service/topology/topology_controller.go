@@ -42,7 +42,7 @@ func Add(mgr manager.Manager) error {
 
 const (
 	// ServicesNamespace is the name of the namespace where this operator would install the Rest Service
-	ServicesNamespace = "akash-operators" // move this out to env var ?
+	ServicesNamespace = "openshift-operators" // move this out to env var ?
 
 	// ServiceName is the name that would be assigned to all objects associated with the Rest Service
 	ServiceName = "devconsole-app" // move this out to env var ?
