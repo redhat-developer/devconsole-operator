@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: devconsole
+  namespace: openshift-operators
+spec:
+  channel: alpha
+  name: REPLACE_APPR_REPOSITORY
+  source: installed-custom-openshift-operators
+  sourceNamespace: openshift-operators

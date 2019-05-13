@@ -4,12 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/openshift/api/image/docker10"
 	"os"
 	"runtime"
 
 	appsv1 "github.com/openshift/api/apps/v1"
 	buildv1 "github.com/openshift/api/build/v1"
+	"github.com/openshift/api/image/docker10"
 	imagev1 "github.com/openshift/api/image/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -19,6 +19,7 @@ import (
 	devconsoleapi "github.com/redhat-developer/devconsole-api/pkg/apis"
 	"github.com/redhat-developer/devconsole-operator/pkg/apis"
 	"github.com/redhat-developer/devconsole-operator/pkg/controller"
+	"github.com/redhat-developer/devconsole-operator/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -32,6 +33,7 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
+	log.Info(fmt.Sprintf("DevCosole Operator Version: %v", version.Version))
 }
 
 func main() {
