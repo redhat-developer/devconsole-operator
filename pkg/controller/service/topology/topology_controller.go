@@ -126,7 +126,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 // Reconcile handles events related to changes to the App Topology Service deployment.
 // This includes events from service/dc named "ServiceName" in the namespace "ServiceNameSpace"
 func (r *ReconcileService) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	// Check if deployment exist or not, create one is if absent
+	// Check if deployment exist or not, create one if absent
 	dExist, err := r.coreClient.AppsV1().Deployments(ServicesNamespace).Get(ServiceName, metav1.GetOptions{})
 	if dExist.Name == ServiceName {
 		log.Info("Deployment already exist with the name : %s", dExist.Name)
@@ -139,7 +139,7 @@ func (r *ReconcileService) Reconcile(request reconcile.Request) (reconcile.Resul
 		}
 	}
 
-	// Check if service exist or not, create one is if absent
+	// Check if service exist or not, create one if absent
 	svcExist, err := r.coreClient.CoreV1().Services(ServicesNamespace).Get(ServiceName, metav1.GetOptions{})
 	if svcExist.Name == ServiceName {
 		return reconcile.Result{}, err
