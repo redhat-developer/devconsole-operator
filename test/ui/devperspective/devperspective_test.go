@@ -23,8 +23,7 @@ func TestDevPerspective(t *testing.T) {
 		chPort,
 	)
 
-	defer svc.Stop()
-	defer wd.Quit()
+	defer tearDown(t, wd, svc)
 
 	defaultWait := 10 * time.Second
 
@@ -35,7 +34,7 @@ func TestDevPerspective(t *testing.T) {
 
 	elem := FindElementBy(t, wd, selenium.ByLinkText, "consoledeveloper")
 	WaitForElementToBeDisplayed(t, wd, elem, defaultWait)
-	elem.Click()
+	ClickToElement(t, elem)
 
 	elem = FindElementBy(t, wd, selenium.ByID, "inputUsername")
 	WaitForElementToBeDisplayed(t, wd, elem, defaultWait)
@@ -46,14 +45,25 @@ func TestDevPerspective(t *testing.T) {
 	SendKeysToElement(t, elem, Getenv("DEVONSOLE_PASSWORD", "developer"))
 
 	elem = FindElementBy(t, wd, selenium.ByXPATH, "//*/button[contains(text(),'Log In')]")
-	elem.Click()
+	ClickToElement(t, elem)
 
 	elem = FindElementBy(t, wd, selenium.ByID, "nav-toggle")
 	WaitForElementToBeDisplayed(t, wd, elem, defaultWait)
-	elem.Click()
+	ClickToElement(t, elem)
 
 	elem = FindElementBy(t, wd, selenium.ByXPATH, "//*/a[@target][contains(text(),'Developer')]")
 	WaitForElementToBeDisplayed(t, wd, elem, defaultWait)
+}
+
+func tearDown(t *testing.T, wd selenium.WebDriver, svc *selenium.Service) {
+	err := wd.Quit()
+	if err != nil {
+		t.Log(err)
+	}
+	err = svc.Stop()
+	if err != nil {
+		t.Log(err)
+	}
 }
 
 func FindElementBy(t *testing.T, wd selenium.WebDriver, by string, selector string) selenium.WebElement {
@@ -82,6 +92,11 @@ func WaitForURLToContain(t *testing.T, wd selenium.WebDriver, text string, durat
 func SendKeysToElement(t *testing.T, element selenium.WebElement, keys string) {
 	err := element.SendKeys(keys)
 	require.NoError(t, err, fmt.Sprintf("Send keys to element '%s'", element))
+}
+
+func ClickToElement(t *testing.T, element selenium.WebElement) {
+	err := element.Click()
+	require.NoErrorf(t, err, "Click to element %s", element)
 }
 
 func InitSelenium(t *testing.T, chromedriverPath string, chromedriverPort int) (selenium.WebDriver, *selenium.Service) {
