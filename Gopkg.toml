@@ -108,3 +108,7 @@ required = [
     "pkg/apis",
     "pkg/apis/devconsole/v1alpha1",
   ]
+
+[[constraint]]
+  name = "github.com/tebeka/selenium"
+  branch = "master"

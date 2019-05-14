@@ -81,6 +81,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:dafc9bfdb2d9816587ca63844a722b36525183e14423b1f356fd9a8a805b6230"
+  name = "github.com/blang/semver"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "ba2c2ddd89069b46a7011d4106f6868f17ee1705"
+  version = "v3.6.1"
+
+[[projects]]
   digest = "1:13af3d205c774ec0bbda45fee1a4089f3cd9a55c5367b527698b34550ec15e71"
   name = "github.com/census-instrumentation/opencensus-proto"
   packages = [
@@ -758,12 +766,18 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:6eb2ff006ba643721abefba0ee785c4c122bdbc553172b9f08e21b2c78a76afc"
+  branch = "master"
+  digest = "1:6cca2701b85cc807c552444eca3273868f7f1251f4c2ed0e8ac4312944a8d807"
   name = "github.com/tebeka/selenium"
-  packages = ["."]
+  packages = [
+    ".",
+    "chrome",
+    "firefox",
+    "internal/zip",
+    "log",
+  ]
   pruneopts = "NT"
-  revision = "2ccea6e0c0e7425dd3bb6ab291215e2048fd8743"
-  version = "v0.9.3"
+  revision = "edf31bb7fd715ad505d9190f8d65d13f39a7c825"
 
 [[projects]]
   digest = "1:00dde67969c6b5ac2d7bfe189a394095d7be3adff2bb915909235cb697e05d13"
