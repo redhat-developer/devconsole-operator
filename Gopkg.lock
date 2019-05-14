@@ -758,6 +758,14 @@
   version = "v1.3.0"
 
 [[projects]]
+  digest = "1:6eb2ff006ba643721abefba0ee785c4c122bdbc553172b9f08e21b2c78a76afc"
+  name = "github.com/tebeka/selenium"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "2ccea6e0c0e7425dd3bb6ab291215e2048fd8743"
+  version = "v0.9.3"
+
+[[projects]]
   digest = "1:00dde67969c6b5ac2d7bfe189a394095d7be3adff2bb915909235cb697e05d13"
   name = "github.com/toqueteos/trie"
   packages = ["."]
@@ -1527,6 +1535,7 @@
     "github.com/redhat-developer/devconsole-git/pkg/controller/gitsourceanalysis",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
+    "github.com/tebeka/selenium",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
