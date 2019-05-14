@@ -115,13 +115,13 @@ test-operator-source: push-operator-app-registry
 .PHONY: test-ui-dev-perspective
 test-ui-dev-perspective:
 	$(Q)oc login -u system:admin
-	$(Q)./hack/install_devconsole/consoledeveloper.sh
+	$(Q)sh ./hack/install_devconsole/consoledeveloper.sh
 	$(eval DEVCONSOLE_USERNAME := consoledeveloper)
 	$(eval DEVCONSOLE_PASSWORD := developer)
-	$(Q)oc login -u $(DEVCONSOLE_USERNAME) -p $(DEVCONSOLE_PASSWORD)
 	$(eval CONSOLE_TARGET_PORT := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.port.targetPort}'))
 	$(eval CONSOLE_HOST := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.host}'))
 	$(eval OS_CONSOLE_URL := $(CONSOLE_TARGET_PORT)://$(CONSOLE_HOST))
+	$(Q)oc login -u $(DEVCONSOLE_USERNAME) -p $(DEVCONSOLE_PASSWORD)
 	$(Q)OS_CONSOLE_URL=$(OS_CONSOLE_URL) \
 	go test -vet off ${V_FLAG} $(shell go list ./... | grep test/ui/devperspective) -failfast
 
