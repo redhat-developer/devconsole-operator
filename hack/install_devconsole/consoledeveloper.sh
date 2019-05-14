@@ -1,7 +1,7 @@
 #!/bin/bash
 set +x
 
-cd $(dirname $(readlink -f $(which $0)))
+cd $(dirname $(readlink -f $0))
 
 oc apply -f ./yamls/unmanage.yaml
 oc scale --replicas 0 deployment console-operator --namespace openshift-console-operator
