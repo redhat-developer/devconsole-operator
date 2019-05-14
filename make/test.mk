@@ -112,6 +112,19 @@ test-operator-source: push-operator-app-registry
 	DEVCONSOLE_OPERATOR_VERSION=$(DEVCONSOLE_OPERATOR_VERSION) \
 	go test -vet off ${V_FLAG} $(shell go list ./... | grep $(OPSRC_DIR)) -failfast
 
+.PHONY: test-ui-dev-perspective
+test-ui-dev-perspective:
+	$(Q)oc login -u system:admin
+	$(Q)./hack/install_devconsole/consoledeveloper.sh
+	$(eval DEVCONSOLE_USERNAME := consoledeveloper)
+	$(eval DEVCONSOLE_PASSWORD := developer)
+	$(Q)oc login -u $(DEVCONSOLE_USERNAME) -p $(DEVCONSOLE_PASSWORD)
+	$(eval CONSOLE_TARGET_PORT := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.port.targetPort}'))
+	$(eval CONSOLE_HOST := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.host}'))
+	$(eval OS_CONSOLE_URL := $(CONSOLE_TARGET_PORT)://$(CONSOLE_HOST))
+	$(Q)OS_CONSOLE_URL=$(OS_CONSOLE_URL) \
+	go test -vet off ${V_FLAG} $(shell go list ./... | grep test/ui/devperspective) -failfast
+
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace
 ifeq ($(OPENSHIFT_VERSION),3)
