@@ -1,5 +1,9 @@
 package resource
 
+import (
+	"strings"
+)
+
 // CRLabelGetter is an interface which contains getter functions
 // to retrieve data from the custom resource.
 type CRLabelGetter interface {
@@ -39,6 +43,8 @@ func GetLabelsForCR(cr CRLabelGetter) map[string]string {
 	if version != "" {
 		labels["app.kubernetes.io/version"] = version
 	}
+
+	labels["deploymentconfig"] = strings.ToLower(cr.GetLabelInstance())
 
 	return labels
 }

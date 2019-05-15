@@ -654,7 +654,7 @@
   source = "github.com/corinnekrych/devconsole-api"
 
 [[projects]]
-  digest = "1:f0988454715cc92c944f7c82089ea62de7b89e33a26233ea5acd3ef27a90989d"
+  digest = "1:d08555f5becd60863db2ec355b4611fa0590524ee0fca69cb2282a33e84ec3f1"
   name = "github.com/redhat-developer/devconsole-git"
   packages = [
     "pkg/controller/gitsource",
@@ -671,7 +671,7 @@
     "pkg/log",
   ]
   pruneopts = "NT"
-  revision = "b5ac7c18ca5de088b4b00c7220c0f97896b4400a"
+  revision = "901927aebf15c2eeeace75b2521f985726b7d3fb"
 
 [[projects]]
   digest = "1:a4644e85e1f29f9825a4e61dcdd8244fe7c4db02eead3f508d5a5bdf7924dbbd"

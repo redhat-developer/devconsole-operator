@@ -22,6 +22,7 @@ build: ./out/operator
 clean:
 	$(Q)-rm -rf ${V_FLAG} ./out
 	$(Q)-rm -rf ${V_FLAG} ./vendor
+	$(Q)-rm -rf ${V_FLAG} ./tmp
 	$(Q)go clean ${X_FLAG} ./...
 
 ./vendor: Gopkg.toml Gopkg.lock
@@ -41,3 +42,22 @@ copy-crds:
 	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
 	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
 	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
+
+.PHONY: upgrade-build
+upgrade-build: upgrade-csv-build
+	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
+	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
+	$(Q)cp ./test/upgrade/devconsole_v1alpha1_upgrade_crd.yaml ./manifests/devconsole/$(devconsole_version)/
+	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator," \
+		-i ./manifests/devconsole/${devconsole_version}/devconsole-operator.v${devconsole_version}.clusterserviceversion.yaml
+	$(Q)tar -zcvf ./out/manifests.tar.gz manifests/
+
+.PHONY: upgrade-csv-build
+upgrade-csv-build:
+	$(eval package_yaml := ./manifests/devconsole/devconsole.package.yaml)
+	$(eval devconsole_version := $(shell cat $(package_yaml) | grep "currentCSV"| cut -d "." -f2- | cut -d "v" -f2 | tr -d '[:space:]'))
+	$(Q)cp ./deploy/crds/*.yaml ./manifests/devconsole/$(devconsole_version)/
+	$(Q)sed -e "s,REPLACE_IMAGE,registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}/stable:devconsole-operator," \
+		-i ./manifests/devconsole/${devconsole_version}/devconsole-operator.v${devconsole_version}.clusterserviceversion.yaml
+	$(Q)python3 ./test/upgrade/upgrade.py
