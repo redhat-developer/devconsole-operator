@@ -14,7 +14,7 @@ import (
 )
 
 func TestDevPerspective(t *testing.T) {
-	chBin := Getenv("CHROMEDRIVER_BINARY", "chromedriver")
+	chBin := Getenv("CHROMEDRIVER_BINARY", "/usr/bin/chromedriver")
 	chPort, err := strconv.Atoi(Getenv("CHROMEDRIVER_PORT", "9515"))
 	require.NoError(t, err, "Chromedriver port")
 	wd, svc := InitSelenium(
