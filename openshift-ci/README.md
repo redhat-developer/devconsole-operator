@@ -80,7 +80,7 @@ The above line ensures the cloned source code goes into the specified
 path: `$GOPATH/src/<canonical_go_repository>`.
 
 Note: If your pull request depends on any package installed through
-`dnf install` inside the `root` image, those changes should be sent
+`yum install` inside the `root` image, those changes should be sent
 through a different PR and merged first.  As you can see from the
 above diagrams, the `src` image gets built after the `root` image,
 whereas the pull request branch gets merged in the `src` image.
