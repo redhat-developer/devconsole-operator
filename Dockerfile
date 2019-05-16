@@ -19,6 +19,9 @@ RUN yum install epel-release -y \
     kubectl \
     yamllint \
     python36-virtualenv \
+    chromium \
+    chromium-headless \
+    chromedriver \
     && yum clean all
 
 # install dep
