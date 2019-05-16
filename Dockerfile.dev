@@ -7,3 +7,5 @@ COPY manifests /manifests
 COPY deploy/crds/*.yaml /manifests/devconsole/${version}/
 COPY build/_output/bin/devconsole-operator /usr/local/bin/devconsole-operator
 USER 10001
+
+ENTRYPOINT [ "/usr/local/bin/devconsole-operator" ]
