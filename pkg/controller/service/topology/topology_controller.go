@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -16,7 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -31,7 +31,10 @@ type ReconcileService struct {
 	scheme *runtime.Scheme
 
 	// coreClient is kubernetes go client which gets intialized using mgr.Config().
-	coreClient *kubernetes.Clientset
+	coreClient kubernetes.Interface
+
+	DeploymentName      string
+	DeploymentNamespace string
 }
 
 // Add creates a new Component Controller and adds it to the Manager. The Manager will set fields on the Controller
@@ -71,7 +74,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	// Moving ahead to create service assuming deployment is created succesfully.
 	_, err = cl.CoreV1().Services(ServicesNamespace).Get(ServiceName, metav1.GetOptions{})
 	if err != nil {
-		svc, _ := newService(8080)
+		svc, _ := newService(ServicesNamespace, ServiceName, 8080)
 		_, err = cl.CoreV1().Services(ServicesNamespace).Create(svc)
 		if err != nil {
 			log.Error(err, "Failed to create service")
@@ -127,29 +130,31 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 // This includes events from service/dc named "ServiceName" in the namespace "ServiceNameSpace"
 func (r *ReconcileService) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Check if deployment exist or not, create one if absent
-	dExist, err := r.coreClient.AppsV1().Deployments(ServicesNamespace).Get(ServiceName, metav1.GetOptions{})
-	if dExist.Name == ServiceName {
-		log.Info("Deployment already exist with the name : %s", dExist.Name)
-	}
+	namespace := request.Namespace
+	name := request.Name
+	dExist, err := r.coreClient.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		_, err = r.coreClient.AppsV1().Deployments(ServicesNamespace).Create(newDeploymentConfigForAppService(nil, ServiceName, ServicesNamespace))
+		_, err = r.coreClient.AppsV1().Deployments(namespace).Create(newDeploymentConfigForAppService(nil, name, namespace))
 		if err != nil {
 			log.Error(err, "Failed to redeploy deployment")
 			return reconcile.Result{}, err
 		}
 	}
+	if dExist != nil && dExist.Name == name {
+		log.Info("Deployment already exist with the name : %s", dExist.Name)
+	}
 
 	// Check if service exist or not, create one if absent
-	svcExist, err := r.coreClient.CoreV1().Services(ServicesNamespace).Get(ServiceName, metav1.GetOptions{})
-	if svcExist.Name == ServiceName {
+	svcExist, err := r.coreClient.CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+	if svcExist != nil && svcExist.Name == name {
 		return reconcile.Result{}, err
 	}
 	if err != nil {
-		newSvc, err := newService(8080)
+		newSvc, err := newService(namespace, name, 8080)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		_, err = r.coreClient.CoreV1().Services(ServicesNamespace).Create(newSvc)
+		_, err = r.coreClient.CoreV1().Services(namespace).Create(newSvc)
 		if err != nil {
 			fmt.Println("Failed to redeploy dc")
 		}
@@ -201,14 +206,14 @@ func newDeploymentConfigForAppService(containerPorts []corev1.ContainerPort, ser
 	}
 }
 
-func newService(port int32) (*corev1.Service, error) {
+func newService(namespace, name string, port int32) (*corev1.Service, error) {
 	labels := getLabelsForServiceDeployments(ServiceName)
 	if port > 65536 || port < 1024 {
 		return nil, fmt.Errorf("port %d is out of range [1024-65535]", port)
 	}
 	var svcPorts []corev1.ServicePort
 	svcPort := corev1.ServicePort{
-		Name:       ServiceName + "-tcp",
+		Name:       name + "-tcp",
 		Port:       port,
 		Protocol:   corev1.ProtocolTCP,
 		TargetPort: intstr.FromInt(int(port)),
@@ -216,14 +221,14 @@ func newService(port int32) (*corev1.Service, error) {
 	svcPorts = append(svcPorts, svcPort)
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ServiceName,
-			Namespace: ServicesNamespace,
+			Name:      name,
+			Namespace: namespace,
 			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: svcPorts,
 			Selector: map[string]string{
-				"deploymentconfig": ServiceName,
+				"deploymentconfig": name,
 			},
 		},
 	}
