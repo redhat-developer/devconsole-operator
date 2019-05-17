@@ -1,146 +1,108 @@
 package operatorsource
 
 import (
-	"bytes"
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
-	"testing"
-
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
+	"os"
+	"testing"
+	"time"
 )
 
-const ShellToUse = "bash"
+var (
+	Client               = NewTestClient()
+	namespace            = "openshift-operators"
+	subName              = "devconsole"
+	label                = "name=devconsole-operator"
+	subscription, suberr = Client.GetSubscription(subName, namespace)
+)
 
-func Shellout(command string) (string, string, error) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd := exec.Command(ShellToUse, "-c", command)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	return stdout.String(), stderr.String(), err
-}
+func Test_OperatorSource(t *testing.T) {
 
-func Test_OperatorSource_oc_commands(t *testing.T) {
-
-	defer CleanUp(t)
-
-	t.Run("login", func(t *testing.T) { Login(t) })
-	t.Run("subscription", func(t *testing.T) { Subscription(t) })
-	t.Run("install plan", func(t *testing.T) { InstallPlan(t) })
-	t.Run("operator pod", func(t *testing.T) { OperatorPod(t) })
-}
-
-func Login(t *testing.T) {
-	// Start - Login to oc
-	out, _, err := Shellout("oc login -u " + os.Getenv("OC_LOGIN_USERNAME") + " -p " + os.Getenv("OC_LOGIN_PASSWORD"))
+	pod, err := Client.GetPodByLabel(label, namespace)
 	if err != nil {
-		t.Fatalf("error: %v\n", err)
+		t.Fatal(err)
+	}
+	defer CleanUp(t, pod)
+	retryInterval := time.Second * 10
+	timeout := time.Second * 120
+
+	err = Client.WaitForOperatorDeployment(t, pod.Name, namespace, retryInterval, timeout)
+	if err != nil {
+		t.Fatal(err)
 	} else {
-		require.True(t, strings.Contains(out, "Login successful."), "Expecting successful login")
+		t.Run("subscription", func(t *testing.T) { Subscription(t) })
+		t.Run("install plan", func(t *testing.T) { InstallPlan(t) })
+		t.Run("operator pod", func(t *testing.T) { OperatorPod(t) })
 	}
 }
 
 func Subscription(t *testing.T) {
 	// 1) Verify that the subscription was created
-	out, errout, err := Shellout("oc get sub devconsole -n openshift-operators")
-	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Fatalf("error: %v\n", err)
-	} else {
-		require.True(t, strings.Contains(out, "devconsole"), "Expecting the subscription name to be found")
-		require.True(t, strings.Contains(out, "installed-custom-openshift-operators"), "Expecting the subscription namespace to be found")
+	if suberr != nil {
+		t.Fatal(suberr)
 	}
+	fmt.Printf("Subscription Name: %s\nCatalog Source: %s\n", subscription.Name, subscription.Spec.CatalogSource)
+	require.Equal(t, subName, subscription.Name)
+	require.Equal(t, "installed-custom-openshift-operators", subscription.Spec.CatalogSource)
 }
 
 func InstallPlan(t *testing.T) {
 	// 2) Find the name of the install plan
-	out, errout, err := Shellout("oc get sub devconsole -n openshift-operators -o jsonpath='{.status.installplan.name}'")
-	var installPlan string
+	installPlanName := subscription.Status.Install.Name
+	fmt.Printf("Install Plan Name: %s\n", installPlanName)
+	installPlan, err := Client.GetInstallPlan(installPlanName, namespace)
 	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Fatalf("error: %v\n", err)
-	} else {
-		installPlan = out
+		t.Fatal(err)
 	}
+	fmt.Printf("CSV: %v\n", installPlan.Spec.ClusterServiceVersionNames[0])
+	fmt.Printf("Install Plan Approval: %v\n", installPlan.Spec.Approval)
+	fmt.Printf("Install Plan Approved: %v\n", installPlan.Spec.Approved)
 
-	// 3) Verify the install plan
-	out, errout, err = Shellout(fmt.Sprintf("oc get installplan %s -n openshift-operators", installPlan))
-	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Fatalf("error: %v\n", err)
-	} else {
-		require.True(t, strings.Contains(out, installPlan), "Expecting the Install Plan name to be found")
-		require.True(t, strings.Contains(out, "devconsole-operator.v0.1.0"), "Expecting the Operator release to be found")
-		require.True(t, strings.Contains(out, "Automatic"), "Expecting the approval method to be found")
-		require.True(t, strings.Contains(out, "true"), "Expecting the approved state to be found")
+	require.Equal(t, "devconsole-operator.v0.1.0", installPlan.Spec.ClusterServiceVersionNames[0])
+	require.Equal(t, "Automatic", string(installPlan.Spec.Approval))
+	if !installPlan.Spec.Approved {
+		require.FailNow(t, "Install plan approved is false")
 	}
 }
 
 func OperatorPod(t *testing.T) {
-	// Verify that the operator's pod is running
-	out, errout, err := Shellout("oc get pods  -l name=devconsole-operator -n openshift-operators -o jsonpath='{.items[*].status.phase}'")
+	// 3) Check operator pod status, fail status != Running
+	pod, err := Client.GetPodByLabel(label, namespace)
 	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Fatalf("error: %v\n", err)
-	} else {
-		require.True(t, strings.Contains(out, "Running"), "Expecting the state of the Operator pod to be running")
+		t.Fatal(err)
 	}
+	fmt.Printf("Pod Name: %v\nPod status: %v\n", pod.Name, pod.Status.Phase)
+	require.Equal(t, pod.Status.Phase, corev1.PodRunning)
 }
 
-func CleanUp(t *testing.T) {
+func CleanUp(t *testing.T, pod *corev1.Pod) {
 	// Clean up resources
-	operatorSourceName := os.Getenv("OPSRC_NAME")
 	operatorVersion := os.Getenv("DEVCONSOLE_OPERATOR_VERSION")
 
-	out, errout, err := Shellout(fmt.Sprintf("oc delete opsrc %s -n openshift-marketplace", operatorSourceName))
+	err := Client.Delete("installplan", subscription.Status.Install.Name, namespace)
 	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Logf("error: %v\n", err)
-	} else {
-		t.Logf(out)
+		t.Logf("Error: %v\n", err)
 	}
 
-	out, errout, err = Shellout("oc delete sub devconsole -n openshift-operators")
+	err = Client.Delete("catsrc", subscription.Spec.CatalogSource, namespace)
 	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Logf("error: %v\n", err)
-	} else {
-		t.Logf(out)
+		t.Logf("Error: %v\n", err)
 	}
 
-	out, errout, err = Shellout("oc delete catsrc installed-custom-openshift-operators -n openshift-operators")
+	err = Client.Delete("sub", subName, namespace)
 	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Logf("error: %v\n", err)
-	} else {
-		t.Logf(out)
+		t.Logf("Error: %v\n", err)
 	}
 
-	out, errout, err = Shellout("oc delete csc installed-custom-openshift-operators -n openshift-marketplace")
+	csv := fmt.Sprintf("devconsole-operator.v%s", operatorVersion)
+	err = Client.Delete("csv", csv, namespace)
 	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Logf("error: %v\n", err)
-	} else {
-		t.Logf(out)
+		t.Logf("Error: %v\n", err)
 	}
 
-	out, errout, err = Shellout(fmt.Sprintf("oc delete csv devconsole-operator.v%s -n openshift-operators", operatorVersion))
+	err = Client.Delete("pod", pod.Name, namespace)
 	if err != nil {
-		t.Logf("stdout: %s\n", out)
-		t.Logf("stderr: %s\n", errout)
-		t.Logf("error: %v\n", err)
-	} else {
-		t.Logf(out)
+		t.Logf("Error: %v\n", err)
 	}
 }
