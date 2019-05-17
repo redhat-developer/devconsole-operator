@@ -103,7 +103,7 @@ Set up Minishift (a one time task):
     ```
     make minishift-start
     ```
-**NOTE:** Eventually this setup will be deprecated in favor of [OCP4 installation]().
+**NOTE:** Eventually this setup will be deprecated in favor of OCP4 installation.
 
 ### Deploy the operator in dev mode
 
