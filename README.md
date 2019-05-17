@@ -6,14 +6,13 @@
 
 ## Overview
 The DevConsole operator enables a developer-focused view in the OpenShift 4 web console.
-It provides a view switcher to transition between the traditional Kubernetes cluster administration console referred to as Administrator, to a new Developer perspective.
+It provides a view switcher to transition between Administrator, the traditional administration focused console, to a new Developer perspective.
 
 This new Developer perspective provides a high-level of abstraction over Kubernetes and OpenShift primitives to allow developers to focus on their application development.
 
 ## Key Features
 
-The Developer perspective is under active development. These
-are the main features being developed:
+The Developer perspective is under active development. These are the main features being developed:
 
 * **Add**: Use this page to create and build an application using one of the following methods:
 
@@ -33,15 +32,15 @@ To install the latest console with the developer perspective:
 
 1. Clone the [devconsole repository](https://github.com/redhat-developer/devconsole-operator) locally.
 1. Change directory to the `hack/install_devconsole` directory and run the script:
-```
-sh consoledeveloper.sh
-```
+    ```
+    sh consoledeveloper.sh
+    ```
 
     The script:
-    * Installs the latest console with the developer perspective
-    * Installs the devconsole operator or prompts you if it already exists
-    * Creates a non-admin user with the suitable rolebinding
-    * Prompts you with the credentials to log in to the console
+      * Installs the latest console with the developer perspective
+      * Installs the devconsole operator or prompts you if it already exists
+      * Creates a non-admin user with the suitable rolebinding
+      * Prompts you with the credentials to log in to the console
 
 1. Log in and create a new project.
 1. Run `oc get csvs` in the suitable namespace to see the installed operator.
@@ -67,9 +66,9 @@ make build
 ```
 ### Test
 * To run unit test use:
-```
-make test
-```
+    ```
+    make test
+    ```
 * To run e2e test:
 
     Start Minishift and run:
@@ -79,11 +78,11 @@ make test
 
     **Note:**
 The e2e test deploys the operator in the project `devconsole-e2e-test`. If your tests timeout and you want to debug, run:
-```
-oc project devconsole-e2e-test
-oc get deployment,pod
-oc logs pod/devconsole-operator-5b4bbc7d-4p7hr
-```
+    ```
+    oc project devconsole-e2e-test
+    oc get deployment,pod
+    oc logs pod/devconsole-operator-5b4bbc7d-4p7hr
+    ```
 
 
 ## Deployment
@@ -93,76 +92,76 @@ oc logs pod/devconsole-operator-5b4bbc7d-4p7hr
 Set up Minishift (a one time task):
 
 1. Create a new profile to test the operator.
-```
-minishift profile set devconsole
-```
+    ```
+    minishift profile set devconsole
+    ```
 1. Enable the admin-user add-on.
-```
-minishift addon enable admin-user
-```
+    ```
+    minishift addon enable admin-user
+    ```
 1. Start the instance.
-```
-make minishift-start
-```
+    ```
+    make minishift-start
+    ```
 **NOTE:** Eventually this setup will be deprecated in favor of [OCP4 installation]().
 
 ### Deploy the operator in dev mode
 
 1. In dev mode, simply run your operator locally:
-```
-make local
-```
-**Note:** To watch all namespaces, `APP_NAMESPACE` is set to empty string.
-If a specific namespace is provided only that project is watched.
-As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
+    ```
+    make local
+    ```
+    **Note:** To watch all namespaces, `APP_NAMESPACE` is set to empty string.
+    If a specific namespace is provided only that project is watched.
+    As we reuse `openshift`'s imagestreams for build, we need to access all namespaces.
 
 1. Make sure minishift is running.
 1. Clean previously created resources:
-```
-make deploy-clean
-```
+    ```
+    make deploy-clean
+    ```
 1. Deploy the CR.
-```
-make deploy-test
-```
+    ```
+    make deploy-test
+    ```
 1. Check the freshly created resources.
-```
-oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
-```
+    ```
+    oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
+    ```
 
 ### Deploy the operator with Deployment yaml
 
 1. (Optional) Build the operator image and make it available in the Minishift internal registry.
-```
-oc new-project devconsole
-eval $(minishift docker-env)
-operator-sdk build $(minishift openshift registry)/devconsole/devconsole-operator
-```
-**Note:** To avoid pulling the image and use the docker cached image instead for local dev, in the `operator.yaml`, replace `imagePullPolicy: Always` with `imagePullPolicy: IfNotPresent`.
+    ```
+    oc new-project devconsole
+     $(minishift docker-env)
+    operator-sdk build $(minishift openshift registry)/devconsole/devconsole-operator
+    ```
+    **Note:** To avoid pulling the image and use the docker cached image instead for local dev, in the `operator.yaml`, replace `imagePullPolicy: Always` with `imagePullPolicy: IfNotPresent`.
 
 1. Deploy the CR, role, and rbac in the `devconsole` namespace:
-```
-make deploy-rbac
-make deploy-crd
-make deploy-operator
-```
-**Note:** Make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devconsole/devconsole-operator:latest`
+    ```
+    make deploy-rbac
+    make deploy-crd
+    make deploy-operator
+    ```
+    **Note:** Make sure `deploy/operator.yaml` points to your local image: `172.30.1.1:5000/devconsole/devconsole-operator:latest`
 
 1. Watch the operator pod:
-```
-oc logs pod/devconsole-operator-5b4bbc7d-89crs -f
-```
+    ```
+    oc logs pod/devconsole-operator-5b4bbc7d-89crs -f
+    ```
 
 1. In a different shell, test CR in a different project (`local-test`):
-```
-make deploy-test
-```
-**Note:** Use `make deploy-clean` to delete `local-test` project and start fresh.
+    ```
+    make deploy-test
+    ```
+    **Note:** Use `make deploy-clean` to delete `local-test` project and start fresh.
 
 1. Check if the resources are created:
-```
-oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
-```
+    ```
+    oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
+    ```
 
 ## Directory layout
 
