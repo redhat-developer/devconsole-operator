@@ -48,16 +48,16 @@ func TestDevPerspective(t *testing.T) {
 		require.NoErrorf(t, err, "Refresh URL: %s", openshiftConsoleURL)
 		el, _ := wd.FindElement(selenium.ByXPATH, "//*[contains(text(),'Application is not available')]")
 		if el != nil {
-			t.Logf("Application is not available, try again after 2s.")
+			t.Logf("Openshift Console is not available, try again after 2s.")
 			time.Sleep(2 * time.Second)
 		} else {
-			t.Logf("Application is up.")
+			t.Logf("Openshift Console is up.")
 			consoleIsUp = true
 			break
 		}
 	}
 	if !consoleIsUp {
-		require.FailNow(t, "Console is not available.")
+		require.FailNow(t, "Openshift Console is not available.")
 	}
 
 	require.NoError(t, err, fmt.Sprintf("Open console starting URL: %s", openshiftConsoleURL))
@@ -179,7 +179,7 @@ func Getenv(t *testing.T, key string, defaultValue string) string {
 	} else {
 		retVal = defaultValue
 	}
-	//t.Logf("Using env variable: %s=%s", key, retVal)
+	t.Logf("Using env variable: %s=%s", key, retVal)
 	return retVal
 }
 
