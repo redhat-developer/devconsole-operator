@@ -105,7 +105,7 @@ Set up Minishift (a one time task):
     ```
 **NOTE:** Eventually this setup will be deprecated in favor of OCP4 installation.
 
-### Deploy the operator in dev mode
+### Deploying the operator in dev mode
 
 1. In dev mode, simply run your operator locally:
     ```
@@ -129,7 +129,7 @@ Set up Minishift (a one time task):
     oc get all,dc,svc,dc,bc,route,cp,gitsource,gitsourceanalysis
     ```
 
-### Deploy the operator with Deployment yaml
+### Deploying the operator with Deployment yaml
 
 1. (Optional) Build the operator image and make it available in the Minishift internal registry.
     ```
