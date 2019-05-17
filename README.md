@@ -5,24 +5,29 @@
 [![Docker Repository on Quay](https://quay.io/repository/redhat-developer/operator-registry/status "Docker Repository on Quay")](https://quay.io/repository/redhat-developer/operator-registry)
 
 ## Overview
-The DevConsole operator enables a developer-focused view in the OpenShift 4 web console.
-It provides a view switcher to transition between Administrator, the traditional administration focused console, to a new Developer perspective.
+The DevConsole operator enables a developer-focused view in the OpenShift 4 web
+console. It provides a view switcher to transition between Administrator, the
+traditional administration focused console, to a new Developer perspective.
 
-This new Developer perspective provides a high-level of abstraction over Kubernetes and OpenShift primitives to allow developers to focus on their application development.
+This new Developer perspective provides a high-level of abstraction over
+Kubernetes and OpenShift primitives to allow developers to focus on their
+application development.
 
 ## Key Features
 
-The Developer perspective is under active development. These are the main features being developed:
+The Developer perspective is under active development. These are the main
+features being developed:
 
-* **Add**: Use this page to create and build an application using one of the following methods:
+* **Add**: Use this page to create and build an application using one of the following
+methods:
 
     - Import source code from Git
     - Deploy an existing image
     - Browse the catalog to deploy or connect application services
     - Deploy quick-starts or samples
 
-* **Topology**: The landing page that shows the application structure and
-  health in an easy-to-use graphic representation.
+* **Topology**: The landing page that shows the application structure and health in an
+ easy-to-use graphic representation.
 * **Builds**: This page lists the OpenShift BuildConfig resources for the selected project.
 * **Pipelines**: This page lists the Tekton Pipeline resources for the selected project.
 
@@ -30,7 +35,8 @@ The Developer perspective is under active development. These are the main featur
 
 To install the latest console with the developer perspective:
 
-1. Clone the [devconsole repository](https://github.com/redhat-developer/devconsole-operator) locally.
+1. Clone the [devconsole
+repository](https://github.com/redhat-developer/devconsole-operator) locally.
 1. Change directory to the `hack/install_devconsole` directory and run the script:
     ```
     sh consoledeveloper.sh
@@ -77,7 +83,8 @@ make build
     ```
 
     **Note:**
-The e2e test deploys the operator in the project `devconsole-e2e-test`. If your tests timeout and you want to debug, run:
+The e2e test deploys the operator in the project `devconsole-e2e-test`. If your
+tests timeout and you want to debug, run:
     ```
     oc project devconsole-e2e-test
     oc get deployment,pod
@@ -180,9 +187,11 @@ See [Operator-SDK documentation](https://github.com/operator-framework/operator-
 
 ## Enabling the Developer  perspective in OpenShift
 
-The frontend must check for [the presence of the devconsole Custom Resource Definition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) named `gitsources.devconsole.openshift.io` using the Kubernetes API. This CRD enables the Developer perspective in the OpenShift Console.
+The frontend must check for [the presence of the devconsole Custom Resource Definition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) named `gitsources.devconsole.openshift.io` using the Kubernetes API. This CRD
+enables the Developer perspective in the OpenShift Console.
 
-Refer to the OLM test [README](test/README.md) to install the DevOps Console operator.
+Refer to the OLM test [README](test/README.md) to install the DevOps Console
+operator.
 
 [operator-sdk]: https://github.com/operator-framework/operator-sdk
 [dep_tool]: https://golang.github.io/dep/docs/installation.html
