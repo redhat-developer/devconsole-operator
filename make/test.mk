@@ -112,20 +112,30 @@ test-operator-source: push-operator-app-registry
 	DEVCONSOLE_OPERATOR_VERSION=$(DEVCONSOLE_OPERATOR_VERSION) \
 	go test -vet off ${V_FLAG} $(shell go list ./... | grep $(OPSRC_DIR)) -failfast
 
-.PHONY: test-ui-dev-perspective
-test-ui-dev-perspective:
+.PHONY: test-ui-devperspective-admin
+test-ui-devperspective-admin:
 	$(Q)oc login -u system:admin
 	$(Q)sh ./hack/install_devconsole/consoledeveloper.sh
-	$(eval DEVCONSOLE_USERNAME := consoledeveloper)
-	$(eval DEVCONSOLE_PASSWORD := developer)
-	$(eval CHROMEDRIVER_BINARY := /usr/bin/chromedriver)
+	$(eval export DEVCONSOLE_USERNAME := $(OC_LOGIN_USERNAME))
+	$(eval export DEVCONSOLE_PASSWORD := $(OC_LOGIN_PASSWORD))
+	$(eval export CHROMEDRIVER_BINARY := /usr/bin/chromedriver)
 	$(eval CONSOLE_TARGET_PORT := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.port.targetPort}'))
 	$(eval CONSOLE_HOST := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.host}'))
-	$(eval OS_CONSOLE_URL := $(CONSOLE_TARGET_PORT)://$(CONSOLE_HOST))
-	$(Q)oc login -u $(DEVCONSOLE_USERNAME) -p $(DEVCONSOLE_PASSWORD)
-	$(Q)OS_CONSOLE_URL=$(OS_CONSOLE_URL) \
-	CHROMEDRIVER_BINARY=$(CHROMEDRIVER_BINARY) \
-	go test -vet off ${V_FLAG} $(shell go list ./... | grep test/ui/devperspective) -failfast
+	$(eval export OS_CONSOLE_URL := $(CONSOLE_TARGET_PORT)://$(CONSOLE_HOST))
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep test/ui/devperspective) -failfast
+
+.PHONY: test-ui-devperspective-nonadmin
+test-ui-devperspective-nonadmin:
+	$(Q)oc login -u system:admin
+	$(Q)sh ./hack/install_devconsole/consoledeveloper.sh
+	$(eval export DEVCONSOLE_USERNAME := consoledeveloper)
+	$(eval export DEVCONSOLE_PASSWORD := developer)
+	$(eval export CHROMEDRIVER_BINARY := /usr/bin/chromedriver)
+	$(eval CONSOLE_TARGET_PORT := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.port.targetPort}'))
+	$(eval CONSOLE_HOST := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.host}'))
+	$(eval export OS_CONSOLE_URL := $(CONSOLE_TARGET_PORT)://$(CONSOLE_HOST))
+	$(eval export USER_IS_ADMIN := false)
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep test/ui/devperspective) -failfast
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace

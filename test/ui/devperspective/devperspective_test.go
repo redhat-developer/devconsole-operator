@@ -1,8 +1,12 @@
 package devperspective
 
 import (
+	"bytes"
 	"fmt"
+	"image"
+	"image/png"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"testing"
@@ -13,10 +17,19 @@ import (
 	"github.com/tebeka/selenium"
 )
 
+var tag string
+
 func TestDevPerspective(t *testing.T) {
-	chBin := Getenv("CHROMEDRIVER_BINARY", "/usr/bin/chromedriver")
-	chPort, err := strconv.Atoi(Getenv("CHROMEDRIVER_PORT", "9515"))
+	tag = Getenv(t, "TAG", fmt.Sprintf("%d", time.Now().Unix()))
+	userIsAdmin := Getenv(t, "USER_IS_ADMIN", "true")
+	chBin := Getenv(t, "CHROMEDRIVER_BINARY", "/usr/bin/chromedriver")
+	chPort, err := strconv.Atoi(Getenv(t, "CHROMEDRIVER_PORT", "9515"))
 	require.NoError(t, err, "Chromedriver port")
+
+	devconsoleUsername := Getenv(t, "DEVCONSOLE_USERNAME", "consoledeveloper")
+	devconsolePassword := Getenv(t, "DEVCONSOLE_PASSWORD", "developer")
+	openshiftConsoleURL := Getenv(t, "OS_CONSOLE_URL", "http://localhost")
+
 	wd, svc := InitSelenium(
 		t,
 		chBin,
@@ -27,22 +40,47 @@ func TestDevPerspective(t *testing.T) {
 
 	defaultWait := 10 * time.Second
 
-	startURL := Getenv("OS_CONSOLE_URL", "https://console-openshift-console.apps.pmacik.devcluster.openshift.com")
-	err = wd.Get(startURL)
-	require.NoError(t, err, fmt.Sprintf("Open console starting URL: %s", startURL))
+	err = wd.Get(openshiftConsoleURL)
+	require.NoErrorf(t, err, "Open URL: %s", openshiftConsoleURL)
+	consoleIsUp := false
+	for attempt := 0; attempt < 10; attempt++ {
+		err = wd.Refresh()
+		require.NoErrorf(t, err, "Refresh URL: %s", openshiftConsoleURL)
+		el, _ := wd.FindElement(selenium.ByXPATH, "//*[contains(text(),'Application is not available')]")
+		if el != nil {
+			t.Logf("Application is not available, try again after 2s.")
+			time.Sleep(2 * time.Second)
+		} else {
+			t.Logf("Application is up.")
+			consoleIsUp = true
+			break
+		}
+	}
+	if !consoleIsUp {
+		require.FailNow(t, "Console is not available.")
+	}
+
+	require.NoError(t, err, fmt.Sprintf("Open console starting URL: %s", openshiftConsoleURL))
 	WaitForURLToContain(t, wd, "oauth", defaultWait)
 
-	elem := FindElementBy(t, wd, selenium.ByLinkText, "consoledeveloper")
+	var elem selenium.WebElement
+
+	if userIsAdmin == "true" {
+		elem = FindElementBy(t, wd, selenium.ByLinkText, "kube:admin")
+	} else {
+		elem = FindElementBy(t, wd, selenium.ByLinkText, devconsoleUsername)
+	}
+
 	WaitForElementToBeDisplayed(t, wd, elem, defaultWait)
 	ClickToElement(t, elem)
 
 	elem = FindElementBy(t, wd, selenium.ByID, "inputUsername")
 	WaitForElementToBeDisplayed(t, wd, elem, defaultWait)
-	SendKeysToElement(t, elem, Getenv("DEVCONSOLE_USERNAME", "consoledeveloper"))
+	SendKeysToElement(t, elem, devconsoleUsername)
 
 	elem = FindElementBy(t, wd, selenium.ByID, "inputPassword")
 	WaitForElementToBeDisplayed(t, wd, elem, defaultWait)
-	SendKeysToElement(t, elem, Getenv("DEVONSOLE_PASSWORD", "developer"))
+	SendKeysToElement(t, elem, devconsolePassword)
 
 	elem = FindElementBy(t, wd, selenium.ByXPATH, "//*/button[contains(text(),'Log In')]")
 	ClickToElement(t, elem)
@@ -80,8 +118,12 @@ func WaitForElementToBeDisplayed(t *testing.T, wd selenium.WebDriver, element se
 }
 
 func WaitForURLToContain(t *testing.T, wd selenium.WebDriver, text string, duration time.Duration) {
+	counter := 1
 	err := wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
 		currentURL, err2 := wd.CurrentURL()
+		//t.Logf("current url = %s", currentURL)
+		//SaveScreenShotToPNG(t, wd, fmt.Sprintf("%s/%s/%d.png", tag, text, counter))
+		counter++
 		return strings.Contains(currentURL, text), err2
 	}, duration)
 	currentURL, err2 := wd.CurrentURL()
@@ -106,12 +148,14 @@ func InitSelenium(t *testing.T, chromedriverPath string, chromedriverPort int) (
 
 	chromeOptions := map[string]interface{}{
 		"args": []string{
+			"--verbose",
 			"--no-cache",
 			"--no-sandbox",
 			"--headless",
 			"--window-size=1920,1080",
 			"--window-position=0,0",
-			"--enable-features=NetworkService",
+			"--enable-features=NetworkService", // to ignore invalid HTTPS certificates
+			//"--whitelisted-ips=''",             // to support running in a container
 		},
 	}
 
@@ -127,10 +171,30 @@ func InitSelenium(t *testing.T, chromedriverPath string, chromedriverPort int) (
 
 // Getenv returns a value of environment variable, if it exists.
 // Returns the default value otherwise.
-func Getenv(key string, defaultValue string) string {
+func Getenv(t *testing.T, key string, defaultValue string) string {
 	value, found := os.LookupEnv(key)
+	var retVal string
 	if found {
-		return value
+		retVal = value
+	} else {
+		retVal = defaultValue
 	}
-	return defaultValue
+	//t.Logf("Using env variable: %s=%s", key, retVal)
+	return retVal
+}
+
+func SaveScreenShotToPNG(t *testing.T, wd selenium.WebDriver, filename string) {
+	err := os.MkdirAll(path.Dir(filename), 0775)
+	require.NoError(t, err, "Create screenshot directory")
+	// convert []byte to image for saving to file
+	imgByte, err := wd.Screenshot()
+	require.NoError(t, err, "Taking screenshot")
+	img, _, _ := image.Decode(bytes.NewReader(imgByte))
+
+	//save the imgByte to file
+	out, err := os.Create(filename)
+	defer out.Close()
+	require.NoError(t, err, "Creating a file for the screenshot")
+
+	err = png.Encode(out, img)
 }
