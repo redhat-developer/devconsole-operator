@@ -56,7 +56,7 @@ func NewTestClient() *TestClient {
 }
 
 // GetPodByLabel is a function that takes label and namespace and returns the pod and error
-func (tc *TestClient) GetPodByLabel(label string, namespace string) (*corev1.Pod, error) {
+func (tc *TestClient) GetPodByLabel(label string, namespace string) (*corev1.PodList, error) {
 
 	pods, err := tc.K8sClient.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: label})
 	if err != nil {
@@ -65,7 +65,7 @@ func (tc *TestClient) GetPodByLabel(label string, namespace string) (*corev1.Pod
 	if len(pods.Items) == 0 {
 		return nil, nil
 	}
-	return &pods.Items[0], nil
+	return pods, nil
 }
 
 //GetSubscription returns subscription struct
@@ -92,35 +92,15 @@ func (tc *TestClient) GetInstallPlan(installPlanName, namespace string) (*apis_v
 func (tc *TestClient) Delete(resource, name, namespace string) error {
 	switch resource {
 	case "subscription", "sub":
-		err := tc.OperatorClient.Subscriptions(namespace).Delete(name, &metav1.DeleteOptions{})
-		if err != nil {
-			return err
-		}
-		return nil
+		return tc.OperatorClient.Subscriptions(namespace).Delete(name, &metav1.DeleteOptions{})
 	case "installplan":
-		err := tc.OperatorClient.InstallPlans(namespace).Delete(name, &metav1.DeleteOptions{})
-		if err != nil {
-			return err
-		}
-		return nil
-	case "catalogsource", "catsrc":
-		err := tc.OperatorClient.CatalogSources(namespace).Delete(name, &metav1.DeleteOptions{})
-		if err != nil {
-			return err
-		}
-		return nil
+		return tc.OperatorClient.InstallPlans(namespace).Delete(name, &metav1.DeleteOptions{})
+	case "catalogsource", "catsrc", "csc":
+		return tc.OperatorClient.CatalogSources(namespace).Delete(name, &metav1.DeleteOptions{})
 	case "clusterserviceversion", "csv":
-		err := tc.OperatorClient.ClusterServiceVersions(namespace).Delete(name, &metav1.DeleteOptions{})
-		if err != nil {
-			return err
-		}
-		return nil
+		return tc.OperatorClient.ClusterServiceVersions(namespace).Delete(name, &metav1.DeleteOptions{})
 	case "pod":
-		err := tc.K8sClient.CoreV1().Pods(namespace).Delete(name, &metav1.DeleteOptions{})
-		if err != nil {
-			return err
-		}
-		return nil
+		return tc.K8sClient.CoreV1().Pods(namespace).Delete(name, &metav1.DeleteOptions{})
 	default:
 		option := fmt.Sprintf("Invalid resource: %s", resource)
 		return errors.New(option)
@@ -128,9 +108,9 @@ func (tc *TestClient) Delete(resource, name, namespace string) error {
 	}
 }
 
-//WaitForOperatorDeployment takes pod struct and wait till pods gets in runnig state
+//WaitForOperatorDeployment takes pod name and wait till pod gets in runnig state
 func (tc *TestClient) WaitForOperatorDeployment(t *testing.T, name, namespace string, retryInterval, timeout time.Duration) error {
-	err := wait.Poll(retryInterval, timeout, func() (bool, error) {
+	return wait.Poll(retryInterval, timeout, func() (bool, error) {
 		pod, err := tc.K8sClient.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -141,11 +121,7 @@ func (tc *TestClient) WaitForOperatorDeployment(t *testing.T, name, namespace st
 		if pod.Status.Phase == corev1.PodRunning {
 			return true, nil
 		}
-		t.Logf("Pod %s Status: %s", pod.Name, pod.Status.Phase)
+		t.Logf("Waiting for pod %s to get running, Current Status: %s\n", pod.Name, pod.Status.Phase)
 		return false, nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }

@@ -18,16 +18,15 @@ var (
 )
 
 func Test_OperatorSource(t *testing.T) {
-
-	pod, err := Client.GetPodByLabel(label, namespace)
+	pods, err := Client.GetPodByLabel(label, namespace)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CleanUp(t, pod)
+	defer CleanUp(t, &pods.Items[0])
 	retryInterval := time.Second * 10
 	timeout := time.Second * 120
 
-	err = Client.WaitForOperatorDeployment(t, pod.Name, namespace, retryInterval, timeout)
+	err = Client.WaitForOperatorDeployment(t, pods.Items[0].Name, namespace, retryInterval, timeout)
 	if err != nil {
 		t.Fatal(err)
 	} else {
@@ -42,7 +41,6 @@ func Subscription(t *testing.T) {
 	if suberr != nil {
 		t.Fatal(suberr)
 	}
-	fmt.Printf("Subscription Name: %s\nCatalog Source: %s\n", subscription.Name, subscription.Spec.CatalogSource)
 	require.Equal(t, subName, subscription.Name)
 	require.Equal(t, "installed-custom-openshift-operators", subscription.Spec.CatalogSource)
 }
@@ -50,15 +48,10 @@ func Subscription(t *testing.T) {
 func InstallPlan(t *testing.T) {
 	// 2) Find the name of the install plan
 	installPlanName := subscription.Status.Install.Name
-	fmt.Printf("Install Plan Name: %s\n", installPlanName)
 	installPlan, err := Client.GetInstallPlan(installPlanName, namespace)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("CSV: %v\n", installPlan.Spec.ClusterServiceVersionNames[0])
-	fmt.Printf("Install Plan Approval: %v\n", installPlan.Spec.Approval)
-	fmt.Printf("Install Plan Approved: %v\n", installPlan.Spec.Approved)
-
 	require.Equal(t, "devconsole-operator.v0.1.0", installPlan.Spec.ClusterServiceVersionNames[0])
 	require.Equal(t, "Automatic", string(installPlan.Spec.Approval))
 	if !installPlan.Spec.Approved {
@@ -68,11 +61,11 @@ func InstallPlan(t *testing.T) {
 
 func OperatorPod(t *testing.T) {
 	// 3) Check operator pod status, fail status != Running
-	pod, err := Client.GetPodByLabel(label, namespace)
+	pods, err := Client.GetPodByLabel(label, namespace)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("Pod Name: %v\nPod status: %v\n", pod.Name, pod.Status.Phase)
+	pod := pods.Items[0]
 	require.Equal(t, pod.Status.Phase, corev1.PodRunning)
 }
 
