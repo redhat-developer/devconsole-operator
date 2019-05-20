@@ -10,6 +10,7 @@ required = [
   "k8s.io/gengo/args",
   "sigs.k8s.io/controller-tools/pkg/crd/generator",
   "github.com/golang/protobuf/proto",
+  "github.com/coreos/go-semver",
 ]
 
 [[override]]
@@ -107,3 +108,12 @@ required = [
     "pkg/apis",
     "pkg/apis/devconsole/v1alpha1",
   ]
+
+  [[constraint]]
+  name = "github.com/operator-framework/operator-lifecycle-manager"
+  revision = "aeb24aeb363b25c8f9e8267f27579c1483dacc42"
+ 
+  [[constraint]]
+  name = "github.com/coreos/go-semver"
+  revision = "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
+
