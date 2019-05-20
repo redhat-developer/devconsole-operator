@@ -88,7 +88,7 @@ tests timeout and you want to debug, run:
     ```
     oc project devconsole-e2e-test
     oc get deployment,pod
-    oc logs pod/devconsole-operator-5b4bbc7d-4p7hr
+    oc logs pod/devconsole-operator-<pod_number>
     ```
 
 
@@ -110,7 +110,7 @@ Set up Minishift (a one time task):
     ```
     make minishift-start
     ```
-**NOTE:** Eventually this setup will be deprecated in favor of OCP4 installation.
+**NOTE:** Eventually this setup will be deprecated in favor of [Code Ready Containers]() installation.
 
 ### Deploying the operator in dev mode
 
@@ -185,13 +185,14 @@ See [Operator-SDK documentation](https://github.com/operator-framework/operator-
 | vendor | The golang [Vendor](https://golang.org/cmd/go/#hdr-Vendor_Directories) folder that contains the local copies of the external dependencies that satisfy the imports of this project. [dep](https://github.com/golang/dep) manages the vendor directly.|
 
 
-## Enabling the Developer  perspective in OpenShift
+## Enabling the Developer perspective in OpenShift
 
-The frontend must check for [the presence of the devconsole Custom Resource Definition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions) named `gitsources.devconsole.openshift.io` using the Kubernetes API. This CRD
+The frontend must check for [the presence of the devconsole Custom Resource
+Definition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#list-customresourcedefinition-v1beta1-apiextensions)
+named `gitsources.devconsole.openshift.io` using the Kubernetes API. This CRD
 enables the Developer perspective in the OpenShift Console.
 
-Refer to the OLM test [README](test/README.md) to install the DevOps Console
-operator.
+Refer to the OLM test [README](test/README.md) to run the end to end (E2E) tests.
 
 [operator-sdk]: https://github.com/operator-framework/operator-sdk
 [dep_tool]: https://golang.github.io/dep/docs/installation.html
@@ -201,3 +202,4 @@ operator.
 [go_tool]: https://golang.org/dl/
 [docker_tool]: https://docs.docker.com/install/
 [Go]: https://golang.org
+[Code Ready Containers]: https://github.com/code-ready/crc
