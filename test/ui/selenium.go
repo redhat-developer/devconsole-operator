@@ -17,9 +17,27 @@ import (
 
 //FindElementBy look for a web element by a given selector and returs it back when found.
 func FindElementBy(t *testing.T, wd selenium.WebDriver, by string, selector string) selenium.WebElement {
-	elem, err := wd.FindElement(by, selector)
-	require.NoError(t, err, fmt.Sprintf("Find element by %s=%s", by, selector))
-	return elem
+
+	maxAttempts := 10
+	attemptInterval := 100 * time.Millisecond
+
+	// To avoid a problem where the element is yet not present
+	counter := 0
+	for {
+		elems, err := wd.FindElements(by, selector)
+		if err != nil {
+			if counter <= maxAttempts {
+				t.Logf("Element for %s=%s not found, trying again...", by, selector)
+				time.Sleep(attemptInterval)
+				counter++
+			} else {
+				require.NoError(t, err, fmt.Sprintf("Find element by %s=%s", by, selector))
+				return nil
+			}
+		} else {
+			return elems[0]
+		}
+	}
 }
 
 //WaitForElementToBeDisplayed for a given web element to be displayed/visible for a given time duration.

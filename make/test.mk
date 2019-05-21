@@ -48,7 +48,7 @@ ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)oc login -u system:admin
 endif
 	$(Q)operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --up-local --go-test-flags "-v -timeout=15m"
-	$(Q)$(MAKE) test-ui-devperspective-admin
+	$(Q)$(MAKE) test-ui-devperspective-nonadmin
 
 
 .PHONY: e2e-setup
