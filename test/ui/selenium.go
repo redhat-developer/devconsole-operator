@@ -25,7 +25,7 @@ func FindElementBy(t *testing.T, wd selenium.WebDriver, by string, selector stri
 	counter := 0
 	for {
 		elems, err := wd.FindElements(by, selector)
-		if err != nil {
+		if err != nil || len(elems) == 0 {
 			if counter <= maxAttempts {
 				t.Logf("Element for %s=%s not found, trying again...", by, selector)
 				time.Sleep(attemptInterval)
