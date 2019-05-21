@@ -36,6 +36,7 @@ func TestDevPerspective(t *testing.T) {
 
 	defaultWait := 10 * time.Second
 
+	t.Logf("Open URL: %s", openshiftConsoleURL)
 	err = wd.Get(openshiftConsoleURL)
 	require.NoErrorf(t, err, "Open URL: %s", openshiftConsoleURL)
 	consoleIsUp := false

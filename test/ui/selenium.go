@@ -17,7 +17,7 @@ import (
 
 //FindElementBy look for a web element by a given selector and returs it back when found.
 func FindElementBy(t *testing.T, wd selenium.WebDriver, by string, selector string) selenium.WebElement {
-
+	t.Logf("Find element by %s=%s", by, selector)
 	maxAttempts := 10
 	attemptInterval := 100 * time.Millisecond
 
@@ -41,14 +41,16 @@ func FindElementBy(t *testing.T, wd selenium.WebDriver, by string, selector stri
 
 //WaitForElementToBeDisplayed for a given web element to be displayed/visible for a given time duration.
 func WaitForElementToBeDisplayed(t *testing.T, wd selenium.WebDriver, element selenium.WebElement, duration time.Duration) {
+	t.Logf("Wait for element to be displayed")
 	err := wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
 		return element.IsDisplayed()
 	}, duration)
-	require.NoError(t, err, fmt.Sprintf("Wait for element %s to be displayed", element))
+	require.NoError(t, err, "Wait for element to be displayed")
 }
 
 //WaitForURLToContain waits for a current URL to contain the given text. It waits for a given time duration.
 func WaitForURLToContain(t *testing.T, wd selenium.WebDriver, text string, duration time.Duration) {
+	t.Logf("Wait for URL to contain test '%s'...", text)
 	counter := 1
 	err := wd.WaitWithTimeout(func(wd selenium.WebDriver) (bool, error) {
 		currentURL, err2 := wd.CurrentURL()
@@ -62,14 +64,16 @@ func WaitForURLToContain(t *testing.T, wd selenium.WebDriver, text string, durat
 
 //SendKeysToElement sends keys to a given web element
 func SendKeysToElement(t *testing.T, element selenium.WebElement, keys string) {
+	t.Log("Send keys to element")
 	err := element.SendKeys(keys)
-	require.NoError(t, err, fmt.Sprintf("Send keys to element '%s'", element))
+	require.NoError(t, err, "Send keys to element")
 }
 
 //ClickToElement performs a click on a given web element.
 func ClickToElement(t *testing.T, element selenium.WebElement) {
+	t.Log("Click to element")
 	err := element.Click()
-	require.NoErrorf(t, err, "Click to element %s", element)
+	require.NoError(t, err, "Click to element")
 }
 
 //InitSelenium creates and initializes a new ChromeDriver service.
@@ -103,6 +107,7 @@ func InitSelenium(t *testing.T, chromedriverPath string, chromedriverPort int) (
 
 //SaveScreenShotToPNG saves current screen to a given PNG file.
 func SaveScreenShotToPNG(t *testing.T, wd selenium.WebDriver, filename string) {
+	t.Logf("Save screenshot to '%s'", filename)
 	err := os.MkdirAll(path.Dir(filename), 0775)
 	require.NoError(t, err, "Create screenshot directory")
 	// convert []byte to image for saving to file
