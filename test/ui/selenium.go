@@ -31,8 +31,7 @@ func FindElementBy(t *testing.T, wd selenium.WebDriver, by string, selector stri
 				time.Sleep(attemptInterval)
 				counter++
 			} else {
-				require.NoError(t, err, fmt.Sprintf("Find element by %s=%s", by, selector))
-				return nil
+				require.NoError(t, fmt.Errorf("element for %s=%s not found", by, selector))
 			}
 		} else {
 			return elems[0]
