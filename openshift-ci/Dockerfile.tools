@@ -25,6 +25,7 @@ RUN yum install epel-release -y \
     chromium \
     chromium-headless \
     chromedriver \
+    httpd-tools \
     && yum clean all
 
 # install dep
