@@ -107,7 +107,7 @@ test-operator-source: push-operator-app-registry
 	$(Q)sed -e "s,REPLACE_NAMESPACE,$(DEVCONSOLE_APPR_NAMESPACE)," ./$(OPSRC_DIR)/operatorsource.yaml | sed -e "s,REPLACE_OPERATOR_SOURCE_NAME,$(OPSRC_NAME)," | oc apply -f -
 	$(Q)sed -e "s,REPLACE_APPR_REPOSITORY,$(DEVCONSOLE_APPR_REPOSITORY)," ./$(OPSRC_DIR)/catalogsourceconfig.yaml | oc apply -f -
 	$(Q)sed -e "s,REPLACE_APPR_REPOSITORY,$(DEVCONSOLE_APPR_REPOSITORY)," ./$(OPSRC_DIR)/subscription.yaml | oc apply -f -
-	$(Q)sleep 30
+	$(Q)./hack/check-crds.sh
 	$(Q)OPSRC_NAME=$(OPSRC_NAME) \
 	DEVCONSOLE_OPERATOR_VERSION=$(DEVCONSOLE_OPERATOR_VERSION) \
 	go test -vet off ${V_FLAG} $(shell go list ./... | grep $(OPSRC_DIR)) -failfast
