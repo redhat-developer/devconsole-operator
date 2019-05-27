@@ -14,7 +14,7 @@ export DEPLOYED_NAMESPACE:=
 .PHONY: test
 ## Runs Go package tests and stops when the first one fails
 test: ./vendor
-	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v -E '(/test/e2e|/test/operatorsource)') -failfast
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep -v -E '(/test/e2e|/test/operatorsource|/test/ui)') -failfast
 
 .PHONY: test-coverage
 ## Runs Go package tests and produces coverage information
@@ -26,7 +26,7 @@ test-coverage-html: ./vendor ./out/cover.out
 	$(Q)go tool cover -html=./out/cover.out
 
 ./out/cover.out: ./vendor
-	$(Q)go test ${V_FLAG} -race $(shell go list ./... | grep -v -E '(/test/e2e|/test/operatorsource)') -failfast -coverprofile=cover.out -covermode=atomic -outputdir=./out
+	$(Q)go test ${V_FLAG} -race $(shell go list ./... | grep -v -E '(/test/e2e|/test/operatorsource|/test/ui)') -failfast -coverprofile=cover.out -covermode=atomic -outputdir=./out
 
 .PHONY: get-test-namespace
 get-test-namespace: ./out/test-namespace
@@ -48,7 +48,6 @@ ifeq ($(OPENSHIFT_VERSION),3)
 	$(Q)oc login -u system:admin
 endif
 	$(Q)operator-sdk test local ./test/e2e --namespace $(TEST_NAMESPACE) --up-local --go-test-flags "-v -timeout=15m"
-
 
 .PHONY: e2e-setup
 e2e-setup: e2e-cleanup 
@@ -111,6 +110,31 @@ test-operator-source: push-operator-app-registry
 	$(Q)OPSRC_NAME=$(OPSRC_NAME) \
 	DEVCONSOLE_OPERATOR_VERSION=$(DEVCONSOLE_OPERATOR_VERSION) \
 	go test -vet off ${V_FLAG} $(shell go list ./... | grep $(OPSRC_DIR)) -failfast
+
+.PHONY: test-ui-devperspective-admin
+test-ui-devperspective-admin:
+	$(Q)oc login -u system:admin
+	$(Q)sh ./hack/install_devconsole/consoledeveloper.sh
+	$(eval export DEVCONSOLE_USERNAME := $(OC_LOGIN_USERNAME))
+	$(eval export DEVCONSOLE_PASSWORD := $(OC_LOGIN_PASSWORD))
+	$(eval export CHROMEDRIVER_BINARY := /usr/bin/chromedriver)
+	$(eval CONSOLE_TARGET_PORT := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.port.targetPort}'))
+	$(eval CONSOLE_HOST := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.host}'))
+	$(eval export OS_CONSOLE_URL := $(CONSOLE_TARGET_PORT)://$(CONSOLE_HOST))
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep test/ui/devperspective) -failfast
+
+.PHONY: test-ui-devperspective-nonadmin
+test-ui-devperspective-nonadmin:
+	$(Q)oc login -u system:admin
+	$(Q)sh ./hack/install_devconsole/consoledeveloper.sh
+	$(eval export DEVCONSOLE_USERNAME := consoledeveloper)
+	$(eval export DEVCONSOLE_PASSWORD := developer)
+	$(eval export CHROMEDRIVER_BINARY := /usr/bin/chromedriver)
+	$(eval CONSOLE_TARGET_PORT := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.port.targetPort}'))
+	$(eval CONSOLE_HOST := $(shell oc get routes console -n openshift-console -o jsonpath='{.spec.host}'))
+	$(eval export OS_CONSOLE_URL := $(CONSOLE_TARGET_PORT)://$(CONSOLE_HOST))
+	$(eval export USER_IS_ADMIN := false)
+	$(Q)go test -vet off ${V_FLAG} $(shell go list ./... | grep test/ui/devperspective) -failfast
 
 .PHONY: olm-integration-cleanup
 olm-integration-cleanup: get-test-namespace

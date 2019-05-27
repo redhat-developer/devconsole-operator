@@ -10,6 +10,7 @@ required = [
   "k8s.io/gengo/args",
   "sigs.k8s.io/controller-tools/pkg/crd/generator",
   "github.com/golang/protobuf/proto",
+  "github.com/tebeka/selenium",
 ]
 
 [[override]]
@@ -107,3 +108,7 @@ required = [
     "pkg/apis",
     "pkg/apis/devconsole/v1alpha1",
   ]
+
+[[constraint]]
+  name = "github.com/tebeka/selenium"
+  branch = "master"
