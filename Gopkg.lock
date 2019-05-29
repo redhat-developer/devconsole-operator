@@ -96,6 +96,16 @@
   version = "v0.2.0"
 
 [[projects]]
+  digest = "1:ef796be125d656ea1556ea57c6b1911092c9c763085644ef9035c63ac3f2b573"
+  name = "github.com/coreos/go-semver"
+  packages = [
+    ".",
+    "semver",
+  ]
+  pruneopts = "NT"
+  revision = "8ab6407b697782a06568d4b7f1db25550ec2e4c6"
+
+[[projects]]
   digest = "1:8449bb0c1da0fd7ec4706afb5ae46ad0ad658fd87f17a7eb067c5a307ffe3818"
   name = "github.com/cyphar/filepath-securejoin"
   packages = ["."]
@@ -528,6 +538,22 @@
   ]
   pruneopts = "NT"
   revision = "84c2b942258aea2462e675e03aeb8eb4cb5f3c29"
+
+[[projects]]
+  digest = "1:e23f911287c9b01dd85ad7d21ec1913cb562ff46c06f5b399eb19bd26ae82a2e"
+  name = "github.com/operator-framework/operator-lifecycle-manager"
+  packages = [
+    "pkg/api/apis/operators",
+    "pkg/api/apis/operators/v1",
+    "pkg/api/apis/operators/v1alpha1",
+    "pkg/api/client",
+    "pkg/api/client/clientset/versioned",
+    "pkg/api/client/clientset/versioned/scheme",
+    "pkg/api/client/clientset/versioned/typed/operators/v1",
+    "pkg/api/client/clientset/versioned/typed/operators/v1alpha1",
+  ]
+  pruneopts = "NT"
+  revision = "aeb24aeb363b25c8f9e8267f27579c1483dacc42"
 
 [[projects]]
   digest = "1:674610d54812d3c36ab7861fc826176bf581a9426cc09abec0107414c17f89cd"
@@ -1507,6 +1533,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/coreos/go-semver",
     "github.com/golang/protobuf/proto",
     "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
@@ -1515,6 +1542,9 @@
     "github.com/openshift/api/route/v1",
     "github.com/openshift/client-go/image/clientset/versioned/fake",
     "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
+    "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1",
+    "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client",
+    "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/typed/operators/v1alpha1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/ready",
@@ -1535,8 +1565,11 @@
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/intstr",
+    "k8s.io/apimachinery/pkg/util/wait",
+    "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
+    "k8s.io/client-go/tools/clientcmd",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/conversion-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
