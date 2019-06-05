@@ -1,7 +1,11 @@
 #!/bin/bash
 set +x
 
-cd $(dirname $(readlink -f $0))
+function pathname() {
+  DIR="${1%/*}"
+  (cd "$DIR" && echo "$(pwd -P)")
+}
+cd $(pathname $0)
 
 oc apply -f ./yamls/unmanage.yaml
 oc scale --replicas 0 deployment console-operator --namespace openshift-console-operator
