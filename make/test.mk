@@ -178,7 +178,7 @@ test-e2e-local: build-image-local
 	$(Q)-oc create -f ./deploy/crds/devconsole_v1alpha1_gitsource_crd.yaml
 	$(Q)-oc create -f ./deploy/service_account.yaml --namespace $(TEST_NAMESPACE)
 	$(Q)-oc create -f ./deploy/role.yaml --namespace $(TEST_NAMESPACE)
-ifeq ($(UNAME_S),Darwin	)
+ifeq ($(UNAME_S),Darwin)
 	$(Q)sed -i "" 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml
 else
 	$(Q)sed -i 's|REPLACE_NAMESPACE|$(TEST_NAMESPACE)|g' ./deploy/test/role_binding_test.yaml
